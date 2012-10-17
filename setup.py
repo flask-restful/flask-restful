@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='Flask-RESTful',
@@ -9,7 +9,7 @@ setup(
     author='Kyle Conroy',
     author_email='kyle@twilio.com',
     description='Simple framework for creating REST APIs',
-    packages=['flask_restful'],
+    packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
     platforms='any',
