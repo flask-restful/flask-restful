@@ -1,0 +1,161 @@
+from flask import request
+import flask_restful
+
+
+class Argument(object):
+
+    def __init__(self, name, default=None, dest=None, required=False,
+                 ignore=False, type=unicode, location='values',
+                 choices=(), action='store', help=None, operators=('=',),
+                 case_sensitive=True):
+        """
+        :param name: Either a name or a list of option strings, e.g. foo or
+                        -f, --foo.
+        :param default: The value produced if the argument is absent from the
+            request.
+        :param dest: The name of the attribute to be added to the object
+            returned by parse_args(req).
+        :param required: Whether or not the argument may be omitted (optionals
+            only).
+        :param action: The basic type of action to be taken when this argument
+            is encountered in the request.
+        :param ignore: Whether to ignore cases where the argument fails type
+            conversion
+        :param type: The type to which the request argument should be
+            converted. If a type raises a ValidationError, the message in the
+            error will be returned in the response.
+        :param location: Where to source the arguments from the Flask request
+            (ex: headers, args, etc.)
+        :param choices: A container of the allowable values for the argument.
+        :param help: A brief description of the argument, returned in the
+            response when the argument is invalid. This takes precedence over
+            the message passed to a ValidationError raised by a type converter.
+        :param case_sensitive: Whether the arguments in the request are case
+            sensitive or not
+        """
+
+        self.name = name
+        self.default = default
+        self.dest = dest
+        self.required = required
+        self.ignore = ignore
+        self.location = location
+        self.type = type
+        self.choices = choices
+        self.action = action
+        self.help = help
+        self.case_sensitive = case_sensitive
+        self.operators = operators
+
+    def source(self, request):
+        """Pulls values off the request in the provided location
+        :param request: The flask request object to parse arguments from
+        """
+        return getattr(request, self.location, request.values)
+
+    def convert(self, value, op):
+        try:
+            return self.type(value, self.name, op)
+        except TypeError:
+            try:
+                return self.type(value, self.name)
+            except TypeError:
+                return self.type(value)
+
+    def handle_validation_error(self, error):
+        """Called when an error is raised while parsing. Aborts the request
+        with a 400 status and an error message
+
+        :param error: the error that was raised
+        """
+        msg = self.help if self.help is not None else str(error)
+        flask_restful.abort(400, message=msg)
+
+    def parse(self, request):
+        """Parses argument value(s) from the request, converting according to
+        the argument's type.
+
+        :param request: The flask request object to parse arguments from
+        """
+        source = self.source(request)
+
+        results = []
+
+        for operator in self.operators:
+            name = self.name + operator.replace("=", "", 1)
+            if name in source:
+                try:
+                    values = source.getlist(name)
+                except:
+                    # FIXME : what is the case of that ?
+                    values = source.getall(name)
+
+                for value in values:
+                    if not self.case_sensitive:
+                        value = value.lower()
+                    if self.choices and value not in self.choices:
+                        self.handle_validation_error(ValueError(
+                            u"{} is not a valid choice".format(value)))
+                    try:
+                        value = self.convert(value, operator)
+                    except Exception as error:
+                        if self.ignore:
+                            continue
+
+                        self.handle_validation_error(error)
+
+                    results.append(value)
+
+        if not results and self.required:
+            self.handle_validation_error(ValueError(
+                u"{} is required".format(self.name)))
+
+        if not results:
+            return self.default
+
+        if self.action == 'store' or len(results) == 1:
+            return results[0]
+        return results
+
+
+class RequestParser(object):
+    """Enables adding and parsing of multiple arguments in the context of a
+    single request. Ex:
+
+    from flask import request
+
+    parser = RequestParser()
+    parser.add_argument('foo')
+    parser.add_argument('int_bar', type=int)
+    args = parser.parse_args()
+    """
+
+    def __init__(self, argument_class=Argument):
+        self.args = []
+        self.argument_class = argument_class
+
+    def add_argument(self, *args, **kwargs):
+        """Adds an argument to be parsed. See Argument's constructor for
+        documentation on the available options.
+        """
+
+        self.args.append(self.argument_class(*args, **kwargs))
+
+    def parse_args(self, req=None):
+        """Parse all arguments from the provided request and return the results
+        as a dictionary
+        """
+        if req is None:
+            req = request
+
+        if hasattr(req, 'view_args') and req.view_args is not None:
+            self.url_matches = req.view_args
+            namespace = dict(req.view_args.iteritems())
+        else:
+            self.url_matches = {}
+            namespace = {}
+
+        for arg in self.args:
+            namespace[arg.dest or arg.name] = arg.parse(req)
+
+        return namespace
