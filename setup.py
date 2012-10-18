@@ -15,5 +15,5 @@ setup(
     platforms='any',
     install_requires=[
         'Flask>=0.8',
-    ],
+    ]
 )

@@ -1,11 +1,16 @@
 from functools import wraps
-from collections import OrderedDict
 from flask import request, Response
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
+
+try:
+    #noinspection PyUnresolvedReferences
+    from collections import OrderedDict
+except ImportError:
+    from utils.ordereddict import OrderedDict
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'abort')
 
