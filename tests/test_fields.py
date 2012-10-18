@@ -19,11 +19,12 @@ def check_field(expected, field, value):
 def test_float():
     values = [
         ("-3.13", "-3.13"),
-        (-3.13, "-3.13"),
-        (3, "3.0"),
+        (str(-3.13), "-3.13"),
+        (3, "3"),
     ]
     for value, expected in values:
-        yield check_field, expected, fields.Float(), value
+        yield check_field, expected, fields.Arbitrary(), value
+
 
 def test_boolean():
     values = [
