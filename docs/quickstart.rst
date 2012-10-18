@@ -197,7 +197,7 @@ the structure of your response. ::
         def get(self, **kwargs):
             return TodoDao(todo_id='my_todo', task='Remember the milk')
 
-The above example takes a python object and prepares it to be serialized. The marshall_with decorator will apply the transformation described by resource_fields. The only fields extracted
+The above example takes a python object and prepares it to be serialized. The marshal_with decorator will apply the transformation described by resource_fields. The only fields extracted
 from the object is ``task``. The ``Url`` field is a special field that
 takes an endpoint name and generates a Url for that endpoint in the response.
 Many of the field types you need are already included. See the `Fields` guide

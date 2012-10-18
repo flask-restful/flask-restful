@@ -46,6 +46,9 @@ The decorator ``marshal_with`` is what actually takes your data object and appli
 field filtering.  The marshalling can work on single objects, dicts, or
 lists of objects.
 
+Note: marshal_with is a convenience decorator, that is functionally equivalent to the following ``return marshal(db_get_todo(), resource_fields), 200``.
+This explicit expression can be used to return other HTTP status codes than 200 along with a successful response (see ``abort`` for errors).
+
 
 Renaming Attributes
 -------------------
@@ -123,7 +126,7 @@ your data object. ::
 Complex Structures
 ------------------
 
-You can have a flat structure that marshall_with will transform to a nested structure ::
+You can have a flat structure that marshal_with will transform to a nested structure ::
 
     >>> from flask.ext.restful import fields, marshal
     >>> import json
