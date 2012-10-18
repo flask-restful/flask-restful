@@ -183,7 +183,7 @@ class Float(Raw):
     """
     def format(self, value):
         try:
-            return unicode(float(value))
+            return repr(float(value))
         except ValueError as ve:
             raise MarshallingException(ve)
 
