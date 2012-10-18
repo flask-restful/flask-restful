@@ -13,3 +13,4 @@ You'll find the user guide and all documentation [here](http://flask-restful.rea
 - Ryan Horn
 - Adam Ballai
 - Guillaume Binet
+- Dan Yang
