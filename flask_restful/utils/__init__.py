@@ -8,7 +8,7 @@ def http_status_message(code):
 
 def challenge(authentication, realm):
     """Constructs the string to be sent in the WWW-Authenticate header"""
-    return u"{} realm=\"{}\"".format(authentication, realm)
+    return u"{0} realm=\"{1}\"".format(authentication, realm)
 
 
 def unauthorized(response, realm):

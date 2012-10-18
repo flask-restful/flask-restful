@@ -95,7 +95,7 @@ class Argument(object):
                         value = value.lower()
                     if self.choices and value not in self.choices:
                         self.handle_validation_error(ValueError(
-                            u"{} is not a valid choice".format(value)))
+                            u"{0} is not a valid choice".format(value)))
                     try:
                         value = self.convert(value, operator)
                     except Exception as error:
@@ -108,7 +108,7 @@ class Argument(object):
 
         if not results and self.required:
             self.handle_validation_error(ValueError(
-                u"{} is required".format(self.name)))
+                u"{0} is required".format(self.name)))
 
         if not results:
             return self.default
