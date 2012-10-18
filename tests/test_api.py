@@ -393,16 +393,14 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         resource = flask_restful.Resource()
         with app.test_request_context("/foo"):
-            with self.assertRaises(AssertionError):
-                resource.dispatch_request()
+            self.assertRaises(AssertionError, lambda: resource.dispatch_request())
 
 
     def test_resource_head(self):
         app = Flask(__name__)
         resource = flask_restful.Resource()
         with app.test_request_context("/foo", method="HEAD"):
-            with self.assertRaises(AssertionError):
-                resource.dispatch_request()
+            self.assertRaises(AssertionError, lambda: resource.dispatch_request())
 
 
     def test_abort_data(self):
@@ -414,8 +412,7 @@ class APITestCase(unittest.TestCase):
 
 
     def test_abort_type(self):
-        with self.assertRaises(werkzeug.exceptions.HTTPException):
-            flask_restful.abort(404)
+        self.assertRaises(werkzeug.exceptions.HTTPException, lambda: flask_restful.abort(404))
 
 if __name__ == '__main__':
     unittest.main()
