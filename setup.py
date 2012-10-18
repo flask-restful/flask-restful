@@ -2,16 +2,6 @@
 
 from setuptools import setup, find_packages
 
-install_requires=[
-    'Flask>=0.8',
-]
-
-try:
-    #noinspection PyUnresolvedReferences
-    from collections import OrderedDict
-except ImportError:
-    install_requires.append('ordereddict')
-
 setup(
     name='Flask-RESTful',
     version='0.1',
@@ -23,5 +13,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
-    install_requires=install_requires
+    install_requires=[
+        'Flask>=0.8',
+    ]
 )

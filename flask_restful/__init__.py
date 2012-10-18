@@ -7,13 +7,11 @@ from werkzeug.exceptions import HTTPException
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 
-if sys.version_info >= (2, 7):
+try:
+    #noinspection PyUnresolvedReferences
     from collections import OrderedDict
-    sys.modules['OrderedDict'] = OrderedDict
-else:
-    from ordereddict import OrderedDict #@UnresolvedImport @Reimport
-    sys.modules['OrderedDict'] = OrderedDict
-
+except ImportError:
+    from utils.ordereddict import OrderedDict
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'abort')
 
