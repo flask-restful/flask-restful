@@ -2,7 +2,6 @@ from functools import wraps
 from flask import request, Response
 from flask import abort as original_flask_abort
 from flask.views import MethodView
-import sys
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
