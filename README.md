@@ -1,5 +1,7 @@
 # Flask-RESTful
 
+[![Build Status](https://secure.travis-ci.org/twilio/flask-restful.png)](http://travis-ci.org/twilio/flask-restful)
+
 Flask-RESTful provides the building blocks for creating a great REST API.
 
 ## User Guide
