@@ -1,6 +1,6 @@
-# Flask-Rest
+# Flask-RESTful
 
-Flask-Rest provides the building blocks for creating a great REST API.
+Flask-RESTful provides the building blocks for creating a great REST API.
 
 ## User Guide
 
