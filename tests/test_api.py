@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import unittest
 from flask import Flask, views
 from mock import Mock
@@ -8,6 +7,7 @@ from werkzeug.exceptions import HTTPException
 from flask.ext.restful.utils import http_status_message, challenge, unauthorized, error_data, unpack
 import flask_restful
 import flask_restful.fields
+from flask_restful import OrderedDict
 from json import dumps
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals # you need it for tests in form of continuations

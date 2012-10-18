@@ -1,11 +1,19 @@
 from functools import wraps
-from collections import OrderedDict
 from flask import request, Response
 from flask import abort as original_flask_abort
 from flask.views import MethodView
+import sys
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
+
+if sys.version_info >= (2, 7):
+    from collections import OrderedDict
+    sys.modules['OrderedDict'] = OrderedDict
+else:
+    from ordereddict import OrderedDict #@UnresolvedImport @Reimport
+    sys.modules['OrderedDict'] = OrderedDict
+
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'abort')
 
