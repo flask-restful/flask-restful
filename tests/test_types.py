@@ -56,8 +56,7 @@ def test_urls():
         yield assert_equals, types.url(value), value
 
 def check_raises(exception, func, value):
-    with assert_raises(exception):
-        func(value)
+    assert_raises(exception, lambda: func(value))
 
 def test_bad_urls():
     values = [
@@ -101,28 +100,24 @@ class TypesTestCase(unittest.TestCase):
     
     
     def test_date_too_early(self):
-        with self.assertRaises(ValueError):
-            types.date("0001-01-01")
+        self.assertRaises(ValueError, lambda: types.date("0001-01-01"))
     
     
     def test_date_input_error(self):
-        with self.assertRaises(ValueError):
-            types.date("2008-13-13")
+        self.assertRaises(ValueError, lambda: types.date("2008-13-13"))
     
     def test_date_input(self):
         self.assertEquals(types.date("2008-08-01"), datetime.datetime(2008, 8, 1))
     
     def test_natual_negative(self):
-        with self.assertRaises(ValueError):
-            types.natural(-1)
+        self.assertRaises(ValueError, lambda: types.natural(-1))
     
     def test_natual(self):
         self.assertEquals(3, types.natural(3))
     
     
     def test_natual_string(self):
-        with self.assertRaises(ValueError):
-            types.natural('foo')
+        self.assertRaises(ValueError, lambda: types.natural('foo'))
 
 
 if __name__ == '__main__':

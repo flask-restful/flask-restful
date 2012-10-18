@@ -41,8 +41,7 @@ def test_boolean():
 class FieldsTestCase(unittest.TestCase):
 
     def test_decimal_trash(self):
-        with self.assertRaises(MarshallingException):
-            fields.Float().output('a', {'a': 'Foo'})
+        self.assertRaises(MarshallingException, lambda: fields.Float().output('a', {'a': 'Foo'}))
 
     def test_basic_dictionary(self):
         obj = {"foo": 3}
@@ -59,8 +58,7 @@ class FieldsTestCase(unittest.TestCase):
     def test_date_field_invalid(self):
         obj = {"bar": 3}
         field = fields.DateTime()
-        with self.assertRaises(MarshallingException):
-            field.output("bar", obj)
+        self.assertRaises(MarshallingException, lambda: field.output("bar", obj))
 
 
     def test_attribute(self):
@@ -72,15 +70,13 @@ class FieldsTestCase(unittest.TestCase):
     def test_formatting_field_none(self):
         obj = {}
         field = fields.FormattedString("/foo/{0[account_sid]}/{0[sid]}/")
-        with self.assertRaises(MarshallingException):
-            field.output("foo", obj)
+        self.assertRaises(MarshallingException, lambda: field.output("foo", obj))
 
 
     def test_formatting_field_tuple(self):
         obj = (3, 4)
         field = fields.FormattedString("/foo/{0[account_sid]}/{0[sid]}/")
-        with self.assertRaises(MarshallingException):
-            field.output("foo", obj)
+        self.assertRaises(MarshallingException, lambda: field.output("foo", obj))
 
 
     def test_formatting_field_dict(self):
@@ -116,8 +112,7 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_formatted_string_invalid_obj(self):
         field = fields.FormattedString("{hey}")
-        with self.assertRaises(MarshallingException):
-            field.output("hey", None)
+        self.assertRaises(MarshallingException, lambda: field.output("hey", None))
 
 
     def test_formatted_string(self):
@@ -136,8 +131,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url("foobar")
 
         with app.test_request_context("/"):
-            with self.assertRaises(MarshallingException):
-                field.output("hey", None)
+            self.assertRaises(MarshallingException, lambda: field.output("hey", None))
 
 
     def test_url(self):
@@ -165,8 +159,7 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_int_decode_error(self):
         field = fields.Integer()
-        with self.assertRaises(MarshallingException):
-            field.output("hey", {'hey': 'Explode please I am nowhere looking like an int'})
+        self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': 'Explode please I am nowhere looking like an int'}))
 
     def test_float(self):
         field = fields.Float()
@@ -174,8 +167,7 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_float_decode_error(self):
         field = fields.Float()
-        with self.assertRaises(MarshallingException):
-            field.output("hey", {'hey': 'Explode!'})
+        self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': 'Explode!'}))
 
     PI_STR = u'3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861'
     PI = Decimal(PI_STR)
