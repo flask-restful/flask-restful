@@ -38,15 +38,25 @@ class Api(object):
     """
 
     def __init__(self, app, prefix='', default_mediatype='application/json',
-                 decorators=None):
+                 decorators=None, output_json_errors = True):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.app = app
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
-        app.handle_exception = self.handle_error
-        app.handle_user_exception = self.handle_error
+        if output_json_errors and hasattr(app, 'handle_exception'):
+            self.original_handle_exception, app.handle_exception = app.handle_exception, self.handle_exception
+            self.original_handle_user_exception, app.handle_user_exception = app.handle_user_exception, self.handle_user_exception
+
+
+    def handle_exception(self, e):
+        self.original_handle_exception(e) # hijack the handler but at least play nice by calling it
+        return self.handle_error(e) # but return the JSON
+
+    def handle_user_exception(self, e):
+        self.original_handle_user_exception(e) # hijack the handler but at least play nice by calling it
+        return self.handle_error(e) # but return the JSON
 
     def handle_error(self, e):
         """Error handler for the API transforms a raised exception into a Flask
