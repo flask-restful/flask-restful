@@ -230,6 +230,22 @@ class APITestCase(unittest.TestCase):
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
 
+    def test_output_json_error(self):
+        app = Flask(__name__)
+        flask_restful.Api(app, output_json_errors=True)
+        app = app.test_client()
+        resp = app.get("/foo")
+        self.assertEquals(resp.status_code, 404)
+        self.assertEquals(resp.data, dumps(error_data(404)))
+
+    def test_output_standard_error(self):
+        app = Flask(__name__)
+        flask_restful.Api(app, output_json_errors=False)
+        app = app.test_client()
+        resp = app.get("/foo")
+        self.assertEquals(resp.status_code, 404)
+        self.assertNotEqual(resp.data.find("404 Not Found"),-1)
+
     def test_handle_real_error(self):
         app = Flask(__name__)
         flask_restful.Api(app)
