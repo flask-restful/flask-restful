@@ -81,8 +81,7 @@ class Api(object):
         :type resource: Resource
         :param urls: one or more url routes to match for the resource, standard
                      flask routing rules apply.  Any url variables will be
-                     passed to the resource
-        method as args.
+                     passed to the resource method as args.
         :type urls: str
 
         :param endpoint: endpoint name (defaults to Resource.__name__.lower()

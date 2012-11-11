@@ -38,3 +38,7 @@ docs/_build
 
 #Pycharm
 .idea
+
+#Eclipse/Aptana
+.project
+.pydevproject
