@@ -232,7 +232,7 @@ class APITestCase(unittest.TestCase):
 
     def test_output_json_error(self):
         app = Flask(__name__)
-        flask_restful.Api(app, output_json_errors=True)
+        flask_restful.Api(app, output_errors=True)
         app = app.test_client()
         resp = app.get("/foo")
         self.assertEquals(resp.status_code, 404)
@@ -240,7 +240,7 @@ class APITestCase(unittest.TestCase):
 
     def test_output_standard_error(self):
         app = Flask(__name__)
-        flask_restful.Api(app, output_json_errors=False)
+        flask_restful.Api(app, output_errors=False)
         app = app.test_client()
         resp = app.get("/foo")
         self.assertEquals(resp.status_code, 404)
