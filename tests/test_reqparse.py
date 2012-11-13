@@ -420,5 +420,9 @@ class FieldsTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], None)
 
+    def test_chaining(self):
+        parser = RequestParser()
+        self.assertTrue(parser is parser.add_argument("foo"))
+
 if __name__ == '__main__':
     unittest.main()
