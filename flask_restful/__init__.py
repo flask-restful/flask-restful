@@ -1,7 +1,8 @@
 from functools import wraps
-from flask import request, Response
+import os
+from flask import request, Response, render_template
 from flask import abort as original_flask_abort
-from flask.views import MethodView
+from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
@@ -48,6 +49,16 @@ class Api(object):
         if output_errors and hasattr(app, 'handle_exception'):
             self.original_handle_exception, app.handle_exception = app.handle_exception, self.handle_exception
             self.original_handle_user_exception, app.handle_user_exception = app.handle_user_exception, self.handle_user_exception
+
+        # FIXME, just hacked my way around Flask
+        from jinja2 import FileSystemLoader
+        if isinstance(app.jinja_loader,FileSystemLoader):
+            app.jinja_loader.searchpath += [os.path.dirname(__file__) + os.sep + 'templates']
+
+        @app.route('/testview')
+        def debug():
+            return render_template('testview.html', registry=Resource._registry)
+
 
 
     def handle_exception(self, e):
@@ -110,6 +121,10 @@ class Api(object):
         endpoint = kwargs.get('endpoint') or resource.__name__.lower()
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
+
+        Resource._registry[(resource.__name__, urls)] = Resource._registry[resource.__name__]
+        del(Resource._registry[resource.__name__])
+
         resource_func = self.output(resource.as_view(endpoint))
 
         for decorator in self.decorators:
@@ -177,6 +192,17 @@ class Api(object):
             return func
         return wrapper
 
+class ResourceMetaClass(MethodViewType):
+    def __new__(mcs, classname, bases, classDict):
+        new_class = type.__new__(mcs, classname, bases, classDict)
+        if classname != 'Resource':
+            methods = {}
+            for verb in ('get', 'put', 'post', 'head', 'delete'):
+                f = classDict.get(verb, None)
+                if f:
+                    methods[verb] = f
+            Resource._registry[classname] = methods
+        return new_class
 
 class Resource(MethodView):
     """
@@ -189,6 +215,8 @@ class Resource(MethodView):
     """
     representations = None
     method_decorators = []
+    _registry = {}
+    __metaclass__ = ResourceMetaClass
 
     def dispatch_request(self, *args, **kwargs):
 

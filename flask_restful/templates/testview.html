@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+<title>Available API</title>
+</head>
+<body>
+{% for (name, urls), methods in registry.iteritems() %}
+    <h1>{{ name }} on {% for url in urls %} {{url}} {% endfor %} </h1>
+    {% for method, func in methods.iteritems() %}
+        <h2>{{ method }} </h2>
+        <p>{{func.__doc__}}</p>
+        <form action="{{urls[0]}}" method="{{ method }}" >
+        {% for arg in func._parser.args %}
+            [{{arg.default.__name__}}] {{arg.name}} {{arg.help}} <input name="{{arg.name}}"/>
+        {% endfor %}
+
+        <p>Returns:
+        {% for field, type in func._fields.iteritems() %}
+            [{{type.__name__}}] {{field}}
+        {% endfor %}
+        </p>
+        <input type="submit" value="Submit">
+        </form>
+    {% endfor %}
+{% endfor %}
+</body>
+</html>
