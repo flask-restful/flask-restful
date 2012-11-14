@@ -217,7 +217,7 @@ class Api(object):
 
 class ResourceMetaClass(MethodViewType):
     def __new__(mcs, classname, bases, classDict):
-        new_class = type.__new__(mcs, classname, bases, classDict)
+        new_class = MethodViewType.__new__(mcs, classname, bases, classDict)
         if classname != 'Resource':
             methods = {}
             for verb in ('get', 'put', 'post', 'head', 'delete'):
