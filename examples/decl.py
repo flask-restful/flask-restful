@@ -22,8 +22,8 @@ class Declarative(Resource):
 
     # backward verbose compatible representation
     parser = RequestParser()
-    parser.add_argument('param1', int, help = 'This is the explanation of the param 1')
-    parser.add_argument('param2', int, help = 'This is the explanation of the param 2')
+    parser.add_argument('param1', type = int, help = 'This is the explanation of the param 1')
+    parser.add_argument('param2', type = int, help = 'This is the explanation of the param 2')
     post_out_params = output(result = Integer)
 
     @Verb(parser, post_out_params)

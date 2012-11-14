@@ -11,7 +11,7 @@
         <p>{{func.__doc__}}</p>
         <form action="{{urls[0]}}" method="{{ method }}" >
         {% for arg in func._parser.args %}
-            [{{arg.default.__name__}}] {{arg.name}} {{arg.help}} <input name="{{arg.name}}"/>
+            [{{arg.type.__name__}}] {{arg.name}} {{arg.help}} <input name="{{arg.name}}"/>
         {% endfor %}
 
         <p>Returns:
