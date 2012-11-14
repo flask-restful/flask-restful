@@ -5,7 +5,7 @@ from reqparse import RequestParser
 def parameters(*args, **kwargs):
     parser = RequestParser()
     for key, type in kwargs.iteritems():
-        parser.add_argument(key, type)
+        parser.add_argument(key, type = type)
     return parser
 
 def output(*args, **kwargs):
