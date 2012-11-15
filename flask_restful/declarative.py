@@ -4,8 +4,13 @@ from reqparse import RequestParser
 
 def parameters(*args, **kwargs):
     parser = RequestParser()
-    for key, type in kwargs.iteritems():
-        parser.add_argument(key, type = type)
+    for key, value in kwargs.iteritems():
+        if isinstance(value, parser.argument_class):
+            value.name = key
+            parser.args.append(value)
+        else:
+            parser.add_argument(key, type = value)
+
     return parser
 
 def output(*args, **kwargs):
