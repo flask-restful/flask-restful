@@ -1,13 +1,6 @@
 body {
     background-color: #F4F5F5;
     padding-top: 40px; /* 40px to make the container go all the way to the bottom of the topbar */
-
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -o-user-select: none;
-    user-select: none;
 }
 
 body > .container-fluid {
@@ -60,11 +53,12 @@ body > .container-fluid {
 }
 
 .page {
-    padding-bottom: 0px;
+    padding-bottom: 10px
 }
 
 .page .form-stacked {
     padding-left: 0px;
+    padding-top: 10px;
 }
 
 .page form .clearfix {
@@ -131,24 +125,14 @@ textarea {
 }
 
 pre {
-    -webkit-user-select: text;
-    -khtml-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    -o-user-select: text;
-    user-select: text;
-
+    background-color: #eeeeee;
     overflow: auto;
-
-    max-width: 900px;
-    max-height: 900px;
-
     white-space: pre;
     word-wrap: normal;
-}
+    border: 0px;
+    padding: 0px 0px 0px 0px;
+    margin: 5px 5px 5px 5px;
 
-pre:empty:before {
-    content: 'No Request Initiated';
 }
 
 .form-stacked div.clearfix.error {
@@ -276,20 +260,13 @@ font-size: 12px;
 }
 
 .container {
-    width: 960px
+    width: 660px
 }
 
 .sidebar {
     display: none;
 }
 
-.paypal {
-    box-shadow: none;
-    padding: 0px;
-    border: none;
-    width: auto;
-    height: auto;
-}
 
 form[name="request"] {
     padding:0px;

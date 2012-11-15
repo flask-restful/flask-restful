@@ -64,7 +64,7 @@ class Api(object):
             return send_from_directory(thisdir + os.sep + 'static', filename)
 
         @app.route('/apiexplorer')
-        def debug():
+        def apiexplorer():
             return render_template('apiexplorer.html', registry=Resource._registry)
 
 
@@ -116,7 +116,7 @@ class Api(object):
     def add_resource(self, resource, *urls, **kwargs):
         """Adds a resource to the api.
 
-        :param resource: the class name of your resource
+        :param resource: the class of your resource
         :type resource: Resource
         :param urls: one or more url routes to match for the resource, standard
                      flask routing rules apply.  Any url variables will be
@@ -145,8 +145,8 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
 
-        Resource._registry[(resource.__name__, urls)] = Resource._registry[resource.__name__]
-        del(Resource._registry[resource.__name__])
+        Resource._registry[(resource, urls)] = Resource._registry[resource]
+        del(Resource._registry[resource])
 
         resource_func = self.output(resource.as_view(endpoint))
 
@@ -225,7 +225,7 @@ class ResourceMetaClass(MethodViewType):
                 f = classDict.get(verb, None)
                 if f:
                     methods[verb] = f
-            Resource._registry[classname] = methods
+            Resource._registry[new_class] = methods
         return new_class
 
 class Resource(MethodView):
@@ -242,10 +242,17 @@ class Resource(MethodView):
     _registry = {}
     __metaclass__ = ResourceMetaClass
 
+    def explore(self, *args, **kwargs):
+        return 'html rep'
+
     def dispatch_request(self, *args, **kwargs):
 
         # Taken from flask
         #noinspection PyUnresolvedReferences
+        #for mime, _ in request.accept_mimetypes:
+        #    if mime.find('html') != -1:
+        #        return self.explore(self, *args, **kwargs)
+
         meth = getattr(self, request.method.lower(), None)
         if meth is None and request.method == 'HEAD':
             meth = getattr(self, 'get', None)
