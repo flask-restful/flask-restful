@@ -17,8 +17,8 @@
             </div>
 
             <ul class="nav">
-                {% for (name, _) in registry %}
-                    <li><a href="#{{ name }}" scroll><span>{{ name[0] }}</span>{{ name[1:] }}</a></li>
+                {% for (clazz, _) in registry %}
+                    <li><a href="#{{ clazz.__name__ }}" scroll><span>{{ clazz.__name__[0] }}</span>{{ clazz.__name__[1:] }}</a></li>
                 {% endfor %}
             </ul>
         </div>
@@ -27,43 +27,44 @@
 
 <div class="container">
     <div class="content">
-        {% for (name, urls), methods in registry.iteritems() %}
-            <div class="page" id="{{ name }}">
+        {% for (clazz,urls),methods in registry.iteritems() %}
+            <div class="page" id="{{ clazz.__name__ }}">
                 <div class="page-header">
-                    <h1><a href="#" class="minimize"><img src="{{ url_for('ae_static', filename='images/minimize.png') }}"/></a> {{ name }} [{% for url in urls %} {{url}} {% endfor %}]</h1>
+                    <h1>{{ clazz.__name__ }} [{% for url in urls %} {{ url }} {% endfor %}]
+                    </h1>
                 </div>
                 <section>
                     <div class="row">
-                        <div class="span8">
-                            <p>
-                                This is the documentation for the endpoint [TODO]
-                            </p>
+                        <div class="span11">
+                            <pre>{{- clazz.__doc__ -}}</pre>
                         </div>
                     </div>
 
                     {% for method, func in methods.iteritems() %}
-                        <form class="form-stacked" action="{{urls[0]}}" method="{{ method }}">
+                        <form id="{{ clazz.__name__ }}_{{ method }}" class="form-stacked" action="{{ urls[0] }}" method="{{ method }}">
                             <div class="row">
-                                <div class="span8">
+                                <div class="span12">
                                     <fieldset>
                                         <legend>{{ method|upper }}</legend>
-                                        <div class="clearfix">
-                                            {{func.__doc__}}
-                                        </div>
+                                        <div class="clearfix"
+                                             style="white-space: pre; font-size: 12px; line-height: 16px; font-family: Monaco, Andale Mono, Courier New, monospace;">{{- func.__doc__ -}}</div>
                                         <div class="clearfix">
                                             {% for arg in func._parser.args %}
-                                            <div class="input">
-                                                <label for="{{name}}_{{method}}_{{arg.name}}">{{arg.name}}</label>
-                                                <input class="span8" type="text" name="{{arg.name}}" id="{{name}}_{{method}}_{{arg.name}}" placeholder="{{arg.default}}" required/>
-                                                <span class="help-block">{{arg.help}}</span>
-                                            </div>
-                                             {% endfor %}
+                                                <div class="input">
+                                                    <label for="{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}">{{ arg.name }}</label>
+                                                    <input class="span8" type="text" name="{{ arg.name }}" id="{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}"
+                                                           placeholder="{{ arg.default if arg.default != None }}" required/>
+                                                    <span class="help-block">{{ arg.help if arg.help != None }}</span>
+                                                </div>
+                                            {% endfor %}
                                         </div>
 
                                     </fieldset>
                                 </div>
-                                <div class="pull-right">
-                                    <input type="submit" data-action="submit" class="btn primary" value="Send"/>
+                                <div class="span8" id="{{ clazz.__name__ }}_{{ method }}_result">
+                                </div>
+                                <div class="span3" style="float:right">
+                                    <input id="{{ clazz.__name__ }}_{{ method }}_submit" type="submit" data-action="submit" class="btn primary" value="Send"/>
                                     <input type="reset" data-action="reset" class="btn danger" value="Reset"/>
                                 </div>
                             </div>
@@ -76,7 +77,43 @@
 
     </div>
 </div>
-<script src="{{ url_for('ae_static', filename='js/app.js') }}"></script>
 
+<script src="{{ url_for('ae_static', filename='js/jquery-1.8.2.js') }}"></script>
+<script src="{{ url_for('ae_static', filename='js/app.js') }}"></script>
+<script>
+    $(document).ready(function () {
+        {% for (clazz,urls),methods in registry.iteritems() %}
+            {% for method, func in methods.iteritems() %}
+
+                $("#{{ clazz.__name__ }}_{{ method }}").submit(function () {
+                    var $form = $(this), $inputs = $form.find("input, select, button, textarea"), serializedData = $form.serialize();
+                    $inputs.attr("disabled", "disabled");
+                    $.ajax({
+                        url: "{{ urls[0] }}",
+                        type: "{{ method }}",
+                        data: serializedData,
+
+                        success: function (response, textStatus, jqXHR) {
+                            var result_html = "";
+                            for (var key in response) {
+                                result_html += "<tr><td>" +  key + "</td><td>" + response[key] + "</td></tr>";
+                            }
+                            $("#{{ clazz.__name__ }}_{{ method }}_result").html("<table><tr> <th>Name</th> <th>Value</th> </tr>" + result_html + "</table>");
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            console.log("The following error occured: " + textStatus, errorThrown);
+                        },
+                        complete: function () {
+                            $inputs.removeAttr("disabled");
+                        }
+                    });
+
+                    event.preventDefault();
+                });
+
+            {% endfor %}
+        {% endfor %}
+    });
+</script>
 </body>
 </html>
