@@ -2,7 +2,7 @@ import difflib
 from functools import wraps
 import os
 import re
-from flask import request, Response, render_template
+from flask import request, Response, render_template, send_from_directory
 from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
@@ -53,13 +53,19 @@ class Api(object):
             self.original_handle_user_exception, app.handle_user_exception = app.handle_user_exception, self.handle_user_exception
 
         # FIXME, just hacked my way around Flask
+        thisdir = os.path.dirname(__file__)
+
         from jinja2 import FileSystemLoader
         if isinstance(app.jinja_loader,FileSystemLoader):
-            app.jinja_loader.searchpath += [os.path.dirname(__file__) + os.sep + 'templates']
+            app.jinja_loader.searchpath += [thisdir + os.sep + 'templates']
 
-        @app.route('/testview')
+        @app.route('/apiexplorer/<path:filename>')
+        def ae_static(filename):
+            return send_from_directory(thisdir + os.sep + 'static', filename)
+
+        @app.route('/apiexplorer')
         def debug():
-            return render_template('testview.html', registry=Resource._registry)
+            return render_template('apiexplorer.html', registry=Resource._registry)
 
 
 
