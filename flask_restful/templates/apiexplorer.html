@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Flask-RESTFul Console</title>
+    <link rel="shortcut icon" href="{{ url_for('ae_static', filename='images/favicon.ico') }}"/>
+    <link rel="stylesheet" href="{{ url_for('ae_static', filename='css/bootstrap-1.3.0.css') }}"/>
+    <link rel="stylesheet" type="text/css" media="all" href="{{ url_for('ae_static', filename='css/style.css') }}"/>
+</head>
+
+<body>
+<div class="topbar">
+    <div class="fill">
+        <div class="container">
+            <div class="brand"><img src="{{ url_for('ae_static', filename='images/logo.png') }}" align="left"/> Flask-RESTFul Console
+                <small>API Explorer</small>
+            </div>
+
+            <ul class="nav">
+                {% for (name, _) in registry %}
+                    <li><a href="#{{ name }}" scroll><span>{{ name[0] }}</span>{{ name[1:] }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="content">
+        {% for (name, urls), methods in registry.iteritems() %}
+            <div class="page" id="{{ name }}">
+                <div class="page-header">
+                    <h1><a href="#" class="minimize"><img src="{{ url_for('ae_static', filename='images/minimize.png') }}"/></a> {{ name }} [{% for url in urls %} {{url}} {% endfor %}]</h1>
+                </div>
+                <section>
+                    <div class="row">
+                        <div class="span8">
+                            <p>
+                                This is the documentation for the endpoint [TODO]
+                            </p>
+                        </div>
+                    </div>
+
+                    {% for method, func in methods.iteritems() %}
+                        <form class="form-stacked" action="{{urls[0]}}" method="{{ method }}">
+                            <div class="row">
+                                <div class="span8">
+                                    <fieldset>
+                                        <legend>{{ method|upper }}</legend>
+                                        <div class="clearfix">
+                                            {{func.__doc__}}
+                                        </div>
+                                        <div class="clearfix">
+                                            {% for arg in func._parser.args %}
+                                            <div class="input">
+                                                <label for="{{name}}_{{method}}_{{arg.name}}">{{arg.name}}</label>
+                                                <input class="span8" type="text" name="{{arg.name}}" id="{{name}}_{{method}}_{{arg.name}}" placeholder="{{arg.default}}" required/>
+                                                <span class="help-block">{{arg.help}}</span>
+                                            </div>
+                                             {% endfor %}
+                                        </div>
+
+                                    </fieldset>
+                                </div>
+                                <div class="pull-right">
+                                    <input type="submit" data-action="submit" class="btn primary" value="Send"/>
+                                    <input type="reset" data-action="reset" class="btn danger" value="Reset"/>
+                                </div>
+                            </div>
+                        </form>
+                    {% endfor %}
+                </section>
+
+            </div>
+        {% endfor %} <!-- per Resource -->
+
+    </div>
+</div>
+<script src="{{ url_for('ae_static', filename='js/app.js') }}"></script>
+
+</body>
+</html>

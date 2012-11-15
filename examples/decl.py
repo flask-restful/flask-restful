@@ -1,40 +1,61 @@
 from flask import Flask, request, render_template
 from flask.ext.restful import Resource, Api
 from flask.ext.restful.declarative import parameters, output, Verb
-from flask.ext.restful.fields import Integer, String
+from flask.ext.restful.fields import Integer, String, Float
 from flask.ext.restful.reqparse import RequestParser
 
 app = Flask(__name__)
 api = Api(app, output_errors=False)
 
-todos = {}
+class Arithmetic(Resource):
+    """
+    This provides basic arithmetics.
+    """
 
-class Declarative(Resource):
-    @Verb(parameters(one = int, two = str),
-          output(a = Integer, b = String))
-    def get(self, one = None, two = None):
+    @Verb(parameters(numerator = float, denominator = float),
+          output(result = Float))
+    def get(self, numerator, denominator):
         """
-        Documentation of the get verb, it takes one and two and returns the same thing as a and b.
-        Enjoy reading the rest.
+        This makes the division of numerator and denominator.
+        It only supports floats.
+        The result will be put in "result"
         """
-        return {'a': one, 'b' : two}
+        return {'result': numerator/denominator}
 
 
     # backward verbose compatible representation
     parser = RequestParser()
-    parser.add_argument('param1', type = int, help = 'This is the explanation of the param 1')
-    parser.add_argument('param2', type = int, help = 'This is the explanation of the param 2')
+    parser.add_argument('left', type = int, help = 'This is the left member of the addition')
+    parser.add_argument('right', type = int, help = 'This is the right member of the addition')
     post_out_params = output(result = Integer)
 
     @Verb(parser, post_out_params)
-    def post(self, param1, param2):
+    def post(self, left, right):
         """
-        This makes the addition of param1 and param2
+        This makes the addition of left and right.
+        It only supports integer.
+        The result will be put in "result"
         """
-        return {'result': param1 + param2}
+        return {'result': left + right}
+
+class Words(Resource):
+    """
+    This provides words services !
+    """
+
+    @Verb(parameters(subject = str, verb = str),
+          output(result = String))
+    def post(self, subject, verb):
+        """
+        This concatenates the 2 words given.
+        It only supports strings
+        The result will be put in "result"
+        """
+        return {'result': subject + ' ' + verb}
 
 
-api.add_resource(Declarative, '/')
+api.add_resource(Arithmetic, '/arithmetics')
+api.add_resource(Words, '/words')
 
 if __name__ == '__main__':
     app.run(debug=True)
