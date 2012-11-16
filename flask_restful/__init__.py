@@ -149,15 +149,19 @@ class Api(object):
                 raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
-
-        Resource._registry[(resource, urls)] = Resource._registry[resource]
-        del(Resource._registry[resource])
-
         resource_func = self.output(resource.as_view(endpoint))
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
 
+        # Hacks for the API explorer
+        Resource._registry[(resource, urls)] = Resource._registry[resource]
+        del(Resource._registry[resource])
+
+        # patch the resource_func for at least "GET" for the API explorer
+        if 'GET' not in resource_func.methods:
+            resource_func.methods.append('GET')
+        # End of hacks for the API explorer
 
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func)
@@ -248,16 +252,18 @@ class Resource(MethodView):
     __metaclass__ = ResourceMetaClass
 
     def explore(self, *args, **kwargs):
-        return 'html rep'
+        for clazz, name in Resource._registry:
+            if clazz == self.__class__:
+                return Response(render_template('apiexplorer.html', registry={ (clazz, name) : Resource._registry[(clazz, name)]} ), mimetype='text/html')
 
     def dispatch_request(self, *args, **kwargs):
 
+        for mime, _ in request.accept_mimetypes:
+            if mime.find('html') != -1:
+                return self.explore(self, *args, **kwargs)
+
         # Taken from flask
         #noinspection PyUnresolvedReferences
-        #for mime, _ in request.accept_mimetypes:
-        #    if mime.find('html') != -1:
-        #        return self.explore(self, *args, **kwargs)
-
         meth = getattr(self, request.method.lower(), None)
         if meth is None and request.method == 'HEAD':
             meth = getattr(self, 'get', None)
