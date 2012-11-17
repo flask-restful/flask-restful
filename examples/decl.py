@@ -14,22 +14,22 @@ class Arithmetic(Resource):
     It should appear correctly.
     """
 
-    @Verb(parameters(numerator = float, denominator = float),
-          output(result = Float))
+    @Verb(parameters(numerator=float, denominator=float),
+          output(result=Float))
     def get(self, numerator, denominator):
         """
         This makes the division of numerator and denominator.
         It only supports floats.
         The result will be put in "result"
         """
-        return {'result': numerator/denominator}
+        return {'result': numerator / denominator}
 
 
     # backward verbose compatible representation
     parser = RequestParser()
-    parser.add_argument('left', 'this is a default from the code', type = int, help = 'This is the left member of the addition')
-    parser.add_argument('right',  'this is another default from the code', type = int, help = 'This is the right member of the addition')
-    post_out_params = output(result = Integer)
+    parser.add_argument('left', 'this is a default from the code', type=int, help='This is the left member of the addition')
+    parser.add_argument('right', 'this is another default from the code', type=int, help='This is the right member of the addition')
+    post_out_params = output(result=Integer)
 
     @Verb(parser, post_out_params)
     def post(self, left, right):
@@ -38,22 +38,25 @@ class Arithmetic(Resource):
         It only supports integer.
         The result will be put in "result"
         """
-        return {'result': left + right}
+        return output(result=left + right)
+
 
 class Words(Resource):
     """
     This provides words services !
     """
 
-    @Verb(parameters(subject = Argument(type = str, default='from the code too !', help='inline help'), verb = str),
-          output(result = String))
+    @Verb(parameters(subject=Argument(type=str, default='from the code too !', help='This is the description of the subject'), verb=str),
+          output(result=String, length=Integer))
     def put(self, subject, verb):
         """
         This concatenates the 2 words given.
         It only supports strings
-        The result will be put in "result"
+        The result will be put in "result".
+        The length of the result will be in length
         """
-        return {'result': subject + ' ' + verb}
+        answer = subject + ' ' + verb
+        return output(result=answer, length=len(answer))
 
 
 api.add_resource(Words, '/words')
