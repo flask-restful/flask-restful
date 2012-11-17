@@ -176,6 +176,22 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Arbitrary()
         self.assertEquals(self.PI_STR, field.output("hey", {'hey': self.PI}))
 
+    def test_fixed(self):
+        field5 = fields.Fixed(5)
+        field4 = fields.Fixed(4)
+
+        self.assertEquals('3.14159', field5.output("hey", {'hey': self.PI}))
+        self.assertEquals('3.1416', field4.output("hey", {'hey': self.PI}))
+        self.assertEquals('3.0000', field4.output("hey", {'hey': '3'}))
+        self.assertEquals('3.0000', field4.output("hey", {'hey': '03'}))
+        self.assertEquals('3.0000', field4.output("hey", {'hey': '03.0'}))
+
+
+    def test_advanced_fixed(self):
+        field = fields.Fixed()
+        self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': 'NaN'}))
+
+
     def test_string(self):
         field = fields.String()
         self.assertEquals("3", field.output("hey", Foo()))

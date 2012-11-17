@@ -1,4 +1,4 @@
-from decimal import Decimal as MyDecimal
+from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
 import urlparse
 from flask_restful import types, marshal
 from flask import url_for
@@ -11,6 +11,7 @@ class MarshallingException(Exception):
     """
     This is an encapsulating Exception in case of marshalling error.
     """
+
     def __init__(self, underlying_exception):
         # just put the contextual representation of the error to hint on what
         # went wrong without exposing internals
@@ -181,6 +182,7 @@ class Float(Raw):
     A double as IEEE-754 double precision.
     ex : 3.141592653589793 3.1415926535897933e-06 3.141592653589793e+24 nan inf -inf
     """
+
     def format(self, value):
         try:
             return repr(float(value))
@@ -193,14 +195,30 @@ class Arbitrary(Raw):
         A floating point number with an arbitrary precision
           ex: 634271127864378216478362784632784678324.23432
     """
+
     def format(self, value):
         return unicode(MyDecimal(value))
 
 
 class DateTime(Raw):
     """Return a RFC822-formatted datetime string in UTC"""
+
     def format(self, value):
         try:
             return types.rfc822(value)
         except AttributeError as ae:
             raise MarshallingException(ae)
+
+
+class Fixed(Raw):
+    def __init__(self, decimals=5):
+        super(Fixed, self).__init__()
+        self.precision = MyDecimal('0.' + '0' * (decimals - 1) + '1')
+
+    def format(self, value):
+        dvalue = MyDecimal(value)
+        if not dvalue.is_normal():
+            raise MarshallingException('Invalid Fixed precision number.')
+        return unicode(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
+
+Price = Fixed
