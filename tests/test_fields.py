@@ -190,6 +190,12 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Fixed()
         self.assertEquals('0.00000', field.output('hey', {'hey': 0}))
 
+    def test_infinite_fixed(self):
+        field = fields.Fixed()
+        self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': '+inf'}))
+        self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': '-inf'}))
+
+
     def test_advanced_fixed(self):
         field = fields.Fixed()
         self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': 'NaN'}))
