@@ -186,6 +186,9 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals('3.0000', field4.output("hey", {'hey': '03'}))
         self.assertEquals('3.0000', field4.output("hey", {'hey': '03.0'}))
 
+    def test_zero_fixed(self):
+        field = fields.Fixed()
+        self.assertEquals('0.00000', field.output('hey', {'hey': 0}))
 
     def test_advanced_fixed(self):
         field = fields.Fixed()

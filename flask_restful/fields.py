@@ -217,7 +217,7 @@ class Fixed(Raw):
 
     def format(self, value):
         dvalue = MyDecimal(value)
-        if not dvalue.is_normal():
+        if dvalue.is_nan():
             raise MarshallingException('Invalid Fixed precision number.')
         return unicode(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
