@@ -3,6 +3,14 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.1.2
+-------------
+
+Released on Nov 19th, 2012
+
+- Fixed a bug in fields.Fixed when formatting a value of 0
+
+
 Version 0.1.1
 -------------
 
