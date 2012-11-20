@@ -209,6 +209,7 @@ class DateTime(Raw):
         except AttributeError as ae:
             raise MarshallingException(ae)
 
+ZERO = MyDecimal()
 
 class Fixed(Raw):
     def __init__(self, decimals=5):
@@ -217,7 +218,7 @@ class Fixed(Raw):
 
     def format(self, value):
         dvalue = MyDecimal(value)
-        if dvalue.is_nan():
+        if not dvalue.is_normal() and dvalue != ZERO:
             raise MarshallingException('Invalid Fixed precision number.')
         return unicode(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
