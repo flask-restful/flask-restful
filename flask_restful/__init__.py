@@ -15,7 +15,7 @@ try:
 except ImportError:
     from utils.ordereddict import OrderedDict
 
-__all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'abort')
+__all__ = ('Api', 'Resource', 'LinkedResource', 'marshal', 'marshal_with', 'abort')
 
 
 def abort(http_status_code, **kwargs):
@@ -149,10 +149,6 @@ class Api(object):
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
 
-        # Hacks for the API explorer
-        Resource._registry[(resource, urls)] = Resource._registry[resource]
-        del(Resource._registry[resource])
-
         # patch the resource_func for at least "GET" for the API explorer
         if 'GET' not in resource_func.methods:
             resource_func.methods.append('GET')
@@ -160,6 +156,11 @@ class Api(object):
 
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func)
+
+    def add_root(self, resource_class, **kwargs):
+        # Todo add resources recursively
+        self.add_resource(resource_class, resource_class._self, **kwargs)
+
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
@@ -220,18 +221,6 @@ class Api(object):
             return func
         return wrapper
 
-class ResourceMetaClass(MethodViewType):
-    def __new__(mcs, classname, bases, classDict):
-        new_class = MethodViewType.__new__(mcs, classname, bases, classDict)
-        if classname != 'Resource':
-            methods = {}
-            for verb in ('get', 'put', 'post', 'head', 'delete'):
-                f = classDict.get(verb, None)
-                if f:
-                    methods[verb] = f
-            Resource._registry[new_class] = methods
-        return new_class
-
 class Resource(MethodView):
     """
     Represents an abstract RESTful resource. Concrete resources should extend
@@ -243,13 +232,17 @@ class Resource(MethodView):
     """
     representations = None
     method_decorators = []
-    _registry = {}
-    __metaclass__ = ResourceMetaClass
 
     def explore(self, *args, **kwargs):
-        for clazz, name in Resource._registry:
+        for clazz in LinkedResource.__subclasses__():
             if clazz == self.__class__:
-                return Response(render_template('apiexplorer.html', registry={ (clazz, name) : Resource._registry[(clazz, name)]} ), mimetype='text/html')
+                methods = {}
+                class_dict = clazz.__dict__
+                for verb in ('get', 'put', 'post', 'head', 'delete'):
+                    f = class_dict.get(verb, None)
+                    if f:
+                        methods[verb] = f
+                return Response(render_template('apiexplorer.html', clazz = clazz, url = clazz._self, methods = methods, mimetype='text/html'))
 
     def dispatch_request(self, *args, **kwargs):
 
@@ -283,6 +276,24 @@ class Resource(MethodView):
                 return resp
 
         return resp
+
+
+class LinkedResource(Resource):
+
+    # override that for your own linked resource
+    _self = 'undefined'
+
+    @classmethod
+    def output(cls, k, data):
+        """
+        This is ducktyping the Resource as a Field so you can specify links between resources.
+
+        :param k: the key of the link
+        :param data: the class of the targetted resource
+        :return:
+        """
+        return data[k]._self
+
 
 
 def marshal(data, fields):
