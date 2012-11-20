@@ -16,6 +16,10 @@ def parameters(*args, **kwargs):
 def output(*args, **kwargs):
     return kwargs
 
+def link(*args, **kwargs):
+    return kwargs
+
+
 class Verb(object):
     """A decorator that describes the input and outputs of your REST action.
 
@@ -31,11 +35,12 @@ class Verb(object):
 
     see :meth:`flask.ext.restful.marshal`
     """
-    def __init__(self, parser, fields):
+    def __init__(self, parser, fields, links = None):
         """:param fields: a dict of whose keys will make up the final
                           serialized response output"""
         self.parser = parser
         self.fields = fields
+        self.links = links
 
     def __call__(self, f):
         @wraps(f)
@@ -45,4 +50,5 @@ class Verb(object):
             return marshal(f(*args, **kwargs), self.fields)
         wrapper._parser = self.parser
         wrapper._fields = self.fields
+        wrapper._links = self.links
         return wrapper
