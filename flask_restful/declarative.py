@@ -1,5 +1,5 @@
 from functools import wraps
-from flask.ext.restful import marshal, Resource
+from flask.ext.restful import marshal, Resource, LinkedResource
 from reqparse import RequestParser
 
 def parameters(*args, **kwargs):
@@ -46,8 +46,15 @@ class Verb(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             # injects the parameters as kwargs
+            resource_self = args[0]
             kwargs = dict(kwargs.items() + self.parser.parse_args().items())
-            return marshal(f(*args, **kwargs), self.fields)
+            result = f(*args, **kwargs)
+
+            if isinstance(resource_self, LinkedResource):
+                links = {'self': {'href': resource_self.__class__._self}}
+                result['_links'] = links
+
+            return marshal(result, self.fields, self.links)
         wrapper._parser = self.parser
         wrapper._fields = self.fields
         wrapper._links = self.links
