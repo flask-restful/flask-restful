@@ -1,9 +1,11 @@
 from functools import wraps
+import logging
 import os
 from flask import request, Response, render_template, send_from_directory
 from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
+from flask.ext.restful.links import Link
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 
@@ -60,11 +62,6 @@ class Api(object):
         @app.route('/apiexplorer/<path:filename>')
         def ae_static(filename):
             return send_from_directory(thisdir + os.sep + 'static', filename)
-
-        @app.route('/apiexplorer')
-        def apiexplorer():
-            return render_template('apiexplorer.html', registry=Resource._registry)
-
 
 
     def handle_exception(self, e):
@@ -142,7 +139,11 @@ class Api(object):
 
     def add_root(self, resource_class, **kwargs):
         # Todo add resources recursively
-        self.add_resource(resource_class, resource_class._self, **kwargs)
+        #import re
+        #match = re.search(r"\{(.*)\}", resource_class._self)
+        uri = resource_class._self
+        uri = uri.replace('{', '<').replace('}', '>') # hack to transform url conventions, FIXME
+        self.add_resource(resource_class, uri, **kwargs)
 
 
     def output(self, resource):
@@ -242,8 +243,12 @@ class Resource(MethodView):
 
         for decorator in self.method_decorators:
             meth = decorator(meth)
+        try:
+            resp = meth(*args, **kwargs)
+        except Exception as e:
+            logging.exception(e)
+            raise e
 
-        resp = meth(*args, **kwargs)
 
         if isinstance(resp, Response):  # There may be a better way to test
             return resp
@@ -279,7 +284,7 @@ class LinkedResource(Resource):
 
 
 
-def marshal(data, fields):
+def marshal(data, fields, links = None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
@@ -304,9 +309,21 @@ def marshal(data, fields):
     if isinstance(data, (list, tuple)):
         return [marshal(d, fields) for d in data]
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
+    # handle the magic JSON HAL section
+    items = [(k, marshal(data, v) if isinstance(v, dict)
                                   else make(v).output(k, data))
-                                  for k, v in fields.items())
+                                  for k, v in fields.items()]
+    if data.has_key('_links'):
+        ls = data['_links'].items() # preset links like self
+        for link_key, link_value in links.items():
+            if isinstance(link_value, LinkedResource): # simple straigh linked resource
+                ls.append((link_key, {'href': data[link_key]._self}))
+            elif isinstance(link_value, list): # an array of resources
+                list_of_links = [link_obj.to_dict()  for link_obj in data[link_key]]
+                ls.append((link_key, list_of_links))
+
+        items =  [('_links', dict(ls))] + items
+
     return OrderedDict(items)
 
 
