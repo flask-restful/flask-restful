@@ -1,3 +1,4 @@
+import logging
 from flask import request
 from werkzeug.datastructures import MultiDict
 import flask_restful
@@ -103,6 +104,7 @@ class Argument(object):
                     try:
                         value = self.convert(value, operator)
                     except Exception as error:
+                        logging.exception(error)
                         if self.ignore:
                             continue
 
