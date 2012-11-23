@@ -139,7 +139,7 @@ Resource Method Decorators
 --------------------------
 
 There is a property on the ``flask.ext.restful.Resource`` called
-method_decorators.  You can sublcass the Resource and add your own decorators
+method_decorators.  You can subclass the Resource and add your own decorators
 that will be added to all ``method`` functions in resource.  For instance, if
 you want to build custom authentication into every request ::
 
