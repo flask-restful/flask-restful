@@ -79,7 +79,7 @@
                                                 {% for field, type in func._fields.iteritems() %}
                                                     <tr>
                                                         <td>{{ field }}</td>
-                                                        <td style="color: #999999">[{{ type.__name__ }}]</td>
+                                                        <td style="color: #999999">{{ type.__name__ }}</td>
                                                     </tr>
                                                 {% endfor %}
 
@@ -100,12 +100,16 @@
                                                 </tr>
                                                 <tr>
                                                     <td>self</td>
-                                                    <td style="color: #999999">[{{ clazz.__name__ }}]</td>
+                                                    <td style="color: #999999">{{ clazz.__name__ }}</td>
                                                 </tr>
                                                 {% for field, type in func._links.iteritems() %}
                                                     <tr>
                                                         <td>{{ field }}</td>
-                                                        <td style="color: #999999">[{{ type.__name__ }}]</td>
+                                                        {% if type.__getitem__ is defined %}
+                                                            <td style="color: #999999">{{ type[0].__name__ }} []</td>
+                                                        {% else %}
+                                                            <td style="color: #999999">{{ type.__name__ }}</td>
+                                                        {% endif %}
                                                     </tr>
                                                 {% endfor %}
 
@@ -140,14 +144,13 @@
 <script src="{{ url_for('ae_static', filename='js/app.js') }}"></script>
 <script>
 
-    function link2html(link)
-    {
-        var result  = "<a href='" + link['href'] + "'>";
+    function link2html(link) {
+        var result = "<a href='" + link['href'] + "'>";
         if (link['title'] == undefined) {
-            result +=  link['href'];
+            result += link['href'];
         }
-        else{
-            result += link['title'] + "&nbsp;(" + link['href'] +")";
+        else {
+            result += link['title'] + "&nbsp;(" + link['href'] + ")";
         }
         return result + "</a>";
     }
@@ -173,7 +176,7 @@
                                 links_html += "<tr><td>" + key + "</td><td style='background-color:yellow'>";
                                 var link_element = response['_links'][key];
                                 if (link_element instanceof Array) {
-                                    for(var i in link_element) {
+                                    for (var i in link_element) {
                                         links_html += link2html(link_element[i]) + "<br>";
                                     }
                                 }
@@ -196,7 +199,7 @@
                             $("#{{ clazz.__name__ }}_{{ method }}_result").html("Empty")
                         }
                         $("#{{ clazz.__name__ }}_{{ method }}_links").html("<table><tr> <th>Name</th> <th>Value</th> </tr>" + links_html + "</table>");
-                        $("#{{ clazz.__name__ }}_{{ method }}_bare").html("<pre>" + JSON.stringify(response) + "</pre>");
+                        $("#{{ clazz.__name__ }}_{{ method }}_bare").html("<pre>"+ syntaxHighlight(response) + "</pre>");
                     },
                     error:function (jqXHR, textStatus, errorThrown) {
                         console.log("The following error occured: " + textStatus, errorThrown);
