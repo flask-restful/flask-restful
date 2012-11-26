@@ -45,3 +45,6 @@ def unpack(value):
         pass
 
     return value, 200, {}
+
+def hal(link, parameters):
+    return link.format(**parameters) # FIXME improve that to be really HAL compliant for parsing URLs
