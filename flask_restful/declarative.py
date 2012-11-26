@@ -1,5 +1,5 @@
 from functools import wraps
-from flask.ext.restful import marshal, Resource, LinkedResource
+from flask.ext.restful import marshal, Resource, LinkedResource, hal
 from reqparse import RequestParser
 
 def parameters(*args, **kwargs):
@@ -9,12 +9,14 @@ def parameters(*args, **kwargs):
             value.name = key
             parser.args.append(value)
         else:
-            parser.add_argument(key, type = value)
+            parser.add_argument(key, type=value)
 
     return parser
 
+
 def output(*args, **kwargs):
     return kwargs
+
 
 def link(*args, **kwargs):
     return kwargs
@@ -35,7 +37,8 @@ class Verb(object):
 
     see :meth:`flask.ext.restful.marshal`
     """
-    def __init__(self, parser, fields, links = None):
+
+    def __init__(self, parser, fields, links=None):
         """:param fields: a dict of whose keys will make up the final
                           serialized response output"""
         self.parser = parser
@@ -51,10 +54,11 @@ class Verb(object):
             result = f(*args, **kwargs)
 
             if isinstance(resource_self, LinkedResource):
-                links = {'self': {'href': resource_self.__class__._self}}
+                links = {'self': {'href': hal(resource_self.__class__._self, kwargs)}}
                 result['_links'] = links
 
-            return marshal(result, self.fields, self.links)
+            return marshal(result, self.fields, links=self.links, hal_context = kwargs)
+
         wrapper._parser = self.parser
         wrapper._fields = self.fields
         wrapper._links = self.links
