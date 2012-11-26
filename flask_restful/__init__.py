@@ -8,7 +8,7 @@ from flask import request, Response, render_template, send_from_directory
 from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
-from flask.ext.restful.links import Link
+from flask.ext.restful.links import Link, Embed
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 
@@ -162,8 +162,6 @@ class Api(object):
 
     def add_root(self, resource_class, **kwargs):
         # Todo add resources recursively
-        #import re
-        #match = re.search(r"\{(.*)\}", resource_class._self)
         uri = resource_class._self
         uri = uri.replace('{', '<').replace('}', '>') # hack to transform url conventions, FIXME
         self.add_resource(resource_class, uri, **kwargs)
@@ -332,10 +330,19 @@ def marshal(data, fields, links = None):
     if isinstance(data, (list, tuple)):
         return [marshal(d, fields) for d in data]
 
-    # handle the magic JSON HAL section
-    items = [(k, marshal(data, v) if isinstance(v, dict)
-                                  else make(v).output(k, data))
-                                  for k, v in fields.items()]
+    # handle the magic JSON HAL sections
+    items = []
+    embedded = []
+    for k, v in fields.items():
+        if inspect.isclass(v) and issubclass(v, LinkedResource): # this is the special case of embedded resources
+            embedded.append((k, data[k].to_dict()))
+        elif isinstance(v, list) and inspect.isclass(v[0]) and issubclass(v[0], LinkedResource) : # an array of resources
+            embedded.append((k, [resource.to_dict() for resource in data[k]]))
+        elif isinstance(v, dict):
+            items.append((k, marshal(data, v))) # recursively go down the dictionaries
+        else:
+            items.append((k, make(v).output(k, data))) # normal field output
+
     if data.has_key('_links'):
         ls = data['_links'].items() # preset links like self
         for link_key, link_value in links.items():
@@ -346,6 +353,10 @@ def marshal(data, fields, links = None):
                 ls.append((link_key, list_of_links))
 
         items =  [('_links', dict(ls))] + items
+
+    if embedded:
+        items.append(('_embedded', OrderedDict(embedded)))
+
 
     return OrderedDict(items)
 

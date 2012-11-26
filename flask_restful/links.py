@@ -27,3 +27,16 @@ class Link(object):
             answer['title'] = self.title
         answer['href'] = self.href
         return answer
+
+class Embed(object):
+    def __init__(self, linked_resource_class, get_parameters):
+        self.linked_resource = linked_resource_class
+        self.params = get_parameters
+
+    def to_dict(self):
+        """
+        Emulate a rendering from flask for the embedding
+        :return: the dictionary to embed in the response
+        """
+        return self.linked_resource().get(**self.params)
+
