@@ -79,7 +79,19 @@
                                                 {% for field, type in func._fields.iteritems() %}
                                                     <tr>
                                                         <td>{{ field }}</td>
-                                                        <td style="color: #999999">{{ type.__name__ }}</td>
+                                                        <td style="color: #999999">
+                                                            {% if type.__getitem__ is defined %}
+                                                                {% if type[0]._self is defined %}
+                                                                    (embedded)
+                                                                {% endif %}
+                                                                {{ type[0].__name__ }} []
+                                                            {% else %}
+                                                                {% if type._self is defined %}
+                                                                    (embedded)
+                                                                {% endif %}
+                                                                {{ type.__name__ }}
+                                                            {% endif %}
+                                                        </td>
                                                     </tr>
                                                 {% endfor %}
 
@@ -105,11 +117,13 @@
                                                 {% for field, type in func._links.iteritems() %}
                                                     <tr>
                                                         <td>{{ field }}</td>
-                                                        {% if type.__getitem__ is defined %}
-                                                            <td style="color: #999999">{{ type[0].__name__ }} []</td>
-                                                        {% else %}
-                                                            <td style="color: #999999">{{ type.__name__ }}</td>
-                                                        {% endif %}
+                                                        <td style="color: #999999">
+                                                            {% if type.__getitem__ is defined %}
+                                                                {{ type[0].__name__ }} []
+                                                            {% else %}
+                                                                {{ type.__name__ }}
+                                                            {% endif %}
+                                                        </td>
                                                     </tr>
                                                 {% endfor %}
 
@@ -192,12 +206,12 @@
                     if (value instanceof Array) {
                         for (i in value) {
                             var output_links = resource2html(value[i]);
-                            embedded_html += "<h5>Output "+ i + "</h5><br>" +  output_links[0] + "<br><h5>Links "+ i + "</h5><br>" + output_links[1] + "<br>";
+                            embedded_html += "<h5>Output " + i + "</h5><br>" + output_links[0] + "<br><h5>Links " + i + "</h5><br>" + output_links[1] + "<br>";
                         }
                     }
                     else {
                         var output_links = resource2html(resource[key]);
-                        embedded_html += "<h5>Output</h5><br>" +  output_links[0] + "<br><h5>Links</h5><br>" + output_links[1] + "<br>";
+                        embedded_html += "<h5>Output</h5><br>" + output_links[0] + "<br><h5>Links</h5><br>" + output_links[1] + "<br>";
                     }
                     embedded_html += "</td></tr>";
                 }
