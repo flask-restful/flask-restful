@@ -155,6 +155,61 @@
         return result + "</a>";
     }
 
+    function outer_table(html) {
+        return "<table><tr> <th>Name</th> <th>Value</th> </tr>" + html + "</table>";
+    }
+
+    function resource2html(resource) {
+        var result_html = "";
+        var links_html = "";
+        var i;
+        if ('_links' in resource) {
+            var link;
+            for (var link_key in resource['_links']) {
+                links_html += "<tr><td>" + link_key + "</td><td>";
+                var link_element = resource['_links'][link_key];
+                if (link_element instanceof Array) {
+                    for (i in link_element) {
+                        links_html += link2html(link_element[i]) + "<br>";
+                    }
+                }
+                else {
+                    links_html += link2html(link_element);
+                }
+                links_html += "</td></tr>";
+            }
+
+        }
+        for (var key in resource) {
+            if (key == '_embedded') {
+                var embedded_html = "";
+                var embedded_dict = resource['_embedded'];
+
+                for (var embedded_dict_key in embedded_dict) {
+                    embedded_html += "<tr><td>" + embedded_dict_key + "</td><td>";
+                    var value = embedded_dict[embedded_dict_key];
+
+                    if (value instanceof Array) {
+                        for (i in value) {
+                            var output_links = resource2html(value[i]);
+                            embedded_html += "<h5>Output "+ i + "</h5><br>" +  output_links[0] + "<br><h5>Links "+ i + "</h5><br>" + output_links[1] + "<br>";
+                        }
+                    }
+                    else {
+                        var output_links = resource2html(resource[key]);
+                        embedded_html += "<h5>Output</h5><br>" +  output_links[0] + "<br><h5>Links</h5><br>" + output_links[1] + "<br>";
+                    }
+                    embedded_html += "</td></tr>";
+                }
+                result_html += "<tr><td>(Embedded)</td><td>" + outer_table(embedded_html) + "</td></tr>";
+            }
+            else if (key != '_links') {
+                result_html += "<tr><td>" + key + "</td><td>" + resource[key] + "</td></tr>";
+            }
+        }
+        return [outer_table(result_html), outer_table(links_html)];
+    }
+
     $(document).ready(function () {
         {% for method, func in methods.iteritems() %}
 
@@ -162,44 +217,23 @@
                 var $form = $(this), $inputs = $form.find("input, select, button, textarea"), serializedData = $form.serialize();
                 $inputs.attr("disabled", "disabled");
                 $.ajax({
-                    url: document.URL, /*"{{ url }}",*/
+                    url:document.URL,
                     type:"{{ method }}",
                     data:serializedData,
 
                     success:function (response, textStatus, jqXHR) {
-                        var result_html = "";
-                        var links_html = "";
-                        var key;
-                        if ('_links' in response) {
-                            var link;
-                            for (key in response['_links']) {
-                                links_html += "<tr><td>" + key + "</td><td style='background-color:yellow'>";
-                                var link_element = response['_links'][key];
-                                if (link_element instanceof Array) {
-                                    for (var i in link_element) {
-                                        links_html += link2html(link_element[i]) + "<br>";
-                                    }
-                                }
-                                else {
-                                    links_html += link2html(link_element);
-                                }
-                                links_html += "</td></tr>";
-                            }
+                        var htmls = resource2html(response);
+                        var result_html = htmls[0];
+                        var links_html = htmls[1];
 
-                        }
-                        for (key in response) {
-                            if (key != '_links') {
-                                result_html += "<tr><td>" + key + "</td><td style='background-color:yellow'>" + response[key] + "</td></tr>";
-                            }
-                        }
                         if (result_html) {
-                            $("#{{ clazz.__name__ }}_{{ method }}_result").html("<table><tr> <th>Name</th> <th>Value</th> </tr>" + result_html + "</table>");
+                            $("#{{ clazz.__name__ }}_{{ method }}_result").html(result_html);
                         }
                         else {
                             $("#{{ clazz.__name__ }}_{{ method }}_result").html("Empty")
                         }
-                        $("#{{ clazz.__name__ }}_{{ method }}_links").html("<table><tr> <th>Name</th> <th>Value</th> </tr>" + links_html + "</table>");
-                        $("#{{ clazz.__name__ }}_{{ method }}_bare").html("<pre>"+ syntaxHighlight(response) + "</pre>");
+                        $("#{{ clazz.__name__ }}_{{ method }}_links").html(links_html);
+                        $("#{{ clazz.__name__ }}_{{ method }}_bare").html("<pre>" + syntaxHighlight(response) + "</pre>");
                     },
                     error:function (jqXHR, textStatus, errorThrown) {
                         console.log("The following error occured: " + textStatus, errorThrown);
