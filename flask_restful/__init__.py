@@ -9,7 +9,7 @@ from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.links import Link, Embed
-from flask.ext.restful.utils import unauthorized, error_data, unpack
+from flask.ext.restful.utils import unauthorized, error_data, unpack, hal
 from flask.ext.restful.representations.json import output_json
 
 try:
@@ -59,12 +59,18 @@ class Api(object):
         thisdir = os.path.dirname(__file__)
 
         from jinja2 import FileSystemLoader
-        if isinstance(app.jinja_loader,FileSystemLoader):
+
+        if isinstance(app.jinja_loader, FileSystemLoader):
             app.jinja_loader.searchpath += [thisdir + os.sep + 'templates']
 
         @app.route('/apiexplorer/<path:filename>')
         def ae_static(filename):
             return send_from_directory(thisdir + os.sep + 'static', filename)
+
+        # register the url processing for HAL
+        @app.context_processor
+        def utility_processor():
+            return dict(hal=hal)
 
 
     def handle_exception(self, e):
@@ -107,7 +113,7 @@ class Api(object):
 
         if code == 401:
             resp = unauthorized(resp,
-                self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful"))
+                                self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful"))
 
         return resp
 
@@ -155,7 +161,7 @@ class Api(object):
         # patch the resource_func for at least "GET" for the API explorer
         if 'GET' not in resource_func.methods:
             resource_func.methods.append('GET')
-        # End of hacks for the API explorer
+            # End of hacks for the API explorer
 
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func)
@@ -195,6 +201,7 @@ class Api(object):
 
         :param resource: The resource as a flask view function
         """
+
         @wraps(resource)
         def wrapper(*args, **kwargs):
             resp = resource(*args, **kwargs)
@@ -202,6 +209,7 @@ class Api(object):
                 return resp
             data, code, headers = unpack(resp)
             return self.make_response(data, code, headers=headers)
+
         return wrapper
 
     def make_response(self, data, *args, **kwargs):
@@ -243,10 +251,13 @@ class Api(object):
                 resp.headers.extend(headers)
                 return resp
         """
+
         def wrapper(func):
             self.representations[mediatype] = func
             return func
+
         return wrapper
+
 
 class Resource(MethodView):
     """
@@ -269,10 +280,9 @@ class Resource(MethodView):
                     f = class_dict.get(verb, None)
                     if f:
                         methods[verb] = f
-                return Response(render_template('apiexplorer.html', clazz = clazz, url = clazz._self, methods = methods, mimetype='text/html'))
+                return Response(render_template('apiexplorer.html', clazz=clazz, url=clazz._self, resource_params=kwargs, methods=methods, mimetype='text/html'))
 
     def dispatch_request(self, *args, **kwargs):
-
         for mime, _ in request.accept_mimetypes:
             if mime.find('html') != -1:
                 return self.explore(self, *args, **kwargs)
@@ -292,7 +302,6 @@ class Resource(MethodView):
             logging.exception(e)
             raise e
 
-
         if isinstance(resp, Response):  # There may be a better way to test
             return resp
 
@@ -310,7 +319,6 @@ class Resource(MethodView):
 
 
 class LinkedResource(Resource):
-
     # override that for your own linked resource
     _self = 'undefined'
 
@@ -326,8 +334,7 @@ class LinkedResource(Resource):
         return data[k]._self
 
 
-
-def marshal(data, fields, links = None):
+def marshal(data, fields, links=None, hal_context = None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
@@ -344,6 +351,7 @@ def marshal(data, fields, links = None):
     OrderedDict([('a', 100)])
 
     """
+
     def make(cls):
         if isinstance(cls, type):
             return cls()
@@ -358,7 +366,7 @@ def marshal(data, fields, links = None):
     for k, v in fields.items():
         if inspect.isclass(v) and issubclass(v, LinkedResource): # this is the special case of embedded resources
             embedded.append((k, data[k].to_dict()))
-        elif isinstance(v, list) and inspect.isclass(v[0]) and issubclass(v[0], LinkedResource) : # an array of resources
+        elif isinstance(v, list) and inspect.isclass(v[0]) and issubclass(v[0], LinkedResource): # an array of resources
             embedded.append((k, [resource.to_dict() for resource in data[k]]))
         elif isinstance(v, dict):
             items.append((k, marshal(data, v))) # recursively go down the dictionaries
@@ -369,16 +377,15 @@ def marshal(data, fields, links = None):
         ls = data['_links'].items() # preset links like self
         for link_key, link_value in links.items():
             if inspect.isclass(link_value) and issubclass(link_value, LinkedResource): # simple straigh linked resource
-                ls.append((link_key, {'href': link_value._self})) # data[link_key]
+                ls.append((link_key, {'href': hal(link_value._self, hal_context)}))
             elif isinstance(link_value, list): # an array of resources
                 list_of_links = [link_obj.to_dict()  for link_obj in data[link_key]]
                 ls.append((link_key, list_of_links))
 
-        items =  [('_links', dict(ls))] + items
+        items = [('_links', dict(ls))] + items
 
     if embedded:
         items.append(('_embedded', OrderedDict(embedded)))
-
 
     return OrderedDict(items)
 
@@ -398,6 +405,7 @@ class marshal_with(object):
 
     see :meth:`flask.ext.restful.marshal`
     """
+
     def __init__(self, fields):
         """:param fields: a dict of whose keys will make up the final
                           serialized response output"""
@@ -407,4 +415,5 @@ class marshal_with(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             return marshal(f(*args, **kwargs), self.fields)
+
         return wrapper
