@@ -155,11 +155,33 @@ class Api(object):
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func)
 
+    def recurse_add(self, resource_class, **kwargs):
+        print "Registering: %s" % resource_class
+        if resource_class not in self.registered_resources:
+            uri = resource_class._self
+            uri = uri.replace('{', '<').replace('}', '>') # hack to transform url conventions, FIXME
+            self.add_resource(resource_class, uri, **kwargs)
+            self.registered_resources.append(resource_class)
+        for name, method in inspect.getmembers(resource_class, predicate=inspect.ismethod):
+            if hasattr(method, '_links'):
+                links = method._links
+                for value in links.values():
+                    if isinstance(value, list):
+                        self.recurse_add(value[0])
+                    else:
+                        self.recurse_add(value)
+            if hasattr(method, '_fields'):
+                fields = method._fields
+                for value in fields.values():
+                    if isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource):
+                        self.recurse_add(value[0])
+                    elif inspect.isclass(value) and issubclass(value, LinkedResource):
+                        self.recurse_add(value)
+
     def add_root(self, resource_class, **kwargs):
-        # Todo add resources recursively
-        uri = resource_class._self
-        uri = uri.replace('{', '<').replace('}', '>') # hack to transform url conventions, FIXME
-        self.add_resource(resource_class, uri, **kwargs)
+        self.registered_resources = []
+        self.recurse_add(resource_class, **kwargs)
+        del self.registered_resources
 
 
     def output(self, resource):
