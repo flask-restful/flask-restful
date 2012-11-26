@@ -1,5 +1,6 @@
 import difflib
 from functools import wraps
+import inspect
 import logging
 import os
 import re
@@ -333,8 +334,8 @@ def marshal(data, fields, links = None):
     if data.has_key('_links'):
         ls = data['_links'].items() # preset links like self
         for link_key, link_value in links.items():
-            if isinstance(link_value, LinkedResource): # simple straigh linked resource
-                ls.append((link_key, {'href': data[link_key]._self}))
+            if inspect.isclass(link_value) and issubclass(link_value, LinkedResource): # simple straigh linked resource
+                ls.append((link_key, {'href': link_value._self})) # data[link_key]
             elif isinstance(link_value, list): # an array of resources
                 list_of_links = [link_obj.to_dict()  for link_obj in data[link_key]]
                 ls.append((link_key, list_of_links))
