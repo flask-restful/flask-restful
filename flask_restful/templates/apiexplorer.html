@@ -40,7 +40,7 @@
                 </div>
 
                 {% for method, func in methods.iteritems() %}
-                    <form id="{{ clazz.__name__ }}_{{ method }}" class="form-stacked" action="{{ url }}" method="{{ method }}">
+                    <form id="{{ clazz.__name__ }}_{{ method }}" class="form-stacked" method="{{ method }}"> <!--action="{{ url }}"-->
                         <div class="row">
                             <div class="span12">
                                 <fieldset>
@@ -89,7 +89,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="span8">
-                                        <h4><img src="{{ url_for('ae_static', filename='images/output.png') }}" style="vertical-align:middle">&nbsp;Links</h4>
+                                        <h4><img src="{{ url_for('ae_static', filename='images/link.png') }}" style="vertical-align:middle">&nbsp;Links</h4>
                                     </div>
                                     <div class="span8" id="{{ clazz.__name__ }}_{{ method }}_links">
                                         {% if func._links %}
@@ -119,7 +119,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="span8">
-                                        <h4><img src="{{ url_for('ae_static', filename='images/output.png') }}" style="vertical-align:middle">&nbsp;Bare&nbsp;Response</h4>
+                                        <h4><img src="{{ url_for('ae_static', filename='images/bare.png') }}" style="vertical-align:middle">&nbsp;Bare&nbsp;Response</h4>
                                     </div>
                                     <div class="span8" id="{{ clazz.__name__ }}_{{ method }}_bare">
                                     </div>
@@ -162,7 +162,7 @@
                 var $form = $(this), $inputs = $form.find("input, select, button, textarea"), serializedData = $form.serialize();
                 $inputs.attr("disabled", "disabled");
                 $.ajax({
-                    url:"{{ url }}",
+                    url: document.URL, /*"{{ url }}",*/
                     type:"{{ method }}",
                     data:serializedData,
 
