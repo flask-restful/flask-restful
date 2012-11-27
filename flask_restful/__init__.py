@@ -170,7 +170,7 @@ class Api(object):
             self.add_resource(resource_class, uri, **kwargs)
             self.registered_resources.append(resource_class)
         for name, method in inspect.getmembers(resource_class, predicate=inspect.ismethod):
-            if hasattr(method, '_links'):
+            if hasattr(method, '_links') and method._links is not None:
                 links = method._links
                 for value in links.values():
                     if isinstance(value, list):
@@ -369,7 +369,7 @@ def marshal(data, fields, links=None, hal_context = None):
         else:
             items.append((k, make(v).output(k, data))) # normal field output
 
-    if data.has_key('_links'):
+    if data.has_key('_links') and links is not None:
         ls = data['_links'].items() # preset links like self
         for link_key, link_value in links.items():
             if inspect.isclass(link_value) and issubclass(link_value, LinkedResource): # simple straigh linked resource
