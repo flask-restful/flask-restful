@@ -346,6 +346,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         api.decorators.append(return_zero)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(view, '/foo', endpoint='bar')
 
         app.add_url_rule.assert_called_with('/foo', view_func=0)
@@ -358,6 +359,7 @@ class APITestCase(unittest.TestCase):
 
         api = flask_restful.Api(app)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(view, '/foo', endpoint='bar')
 
         view.as_view.assert_called_with('bar')
@@ -400,6 +402,7 @@ class APITestCase(unittest.TestCase):
         app.view_functions = {}
         api = flask_restful.Api(app)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(views.MethodView, '/foo')
 
         app.add_url_rule.assert_called_with('/foo',
