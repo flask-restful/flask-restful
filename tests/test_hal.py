@@ -134,7 +134,7 @@ class HALTestCase(unittest.TestCase):
             _self = '/bar/{FOO_ID}'
             def get(self):
                 pass
-            
+
         class Bar(LinkedResource):
             _self = '/bar'
 
