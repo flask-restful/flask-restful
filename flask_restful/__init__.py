@@ -359,7 +359,7 @@ def marshal(data, fields, links=None, hal_context = None):
                 additional_link_context = data[link_key].params if data.has_key(link_key) else {}
                 ls.append((link_key, {'href': hal(link_value._self, dict(hal_context.items() + additional_link_context.items()))}))
             elif isinstance(link_value, list): # an array of resources
-                list_of_links = [link_obj.to_dict()  for link_obj in data[link_key]]
+                list_of_links = [link_obj.to_dict(hal_context)  for link_obj in data[link_key]]
                 ls.append((link_key, list_of_links))
 
         items = [('_links', dict(ls))] + items
