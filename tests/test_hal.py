@@ -194,7 +194,7 @@ class HALTestCase(unittest.TestCase):
                   output(),
                   link(My_dear_foo=Foo))
             def get(self):
-                return output(My_dear_foo=Link(Foo, params={"FOO_ID": 42}))
+                return output(My_dear_foo=Link(Foo, title = 'my title', params={"FOO_ID": 42}))
 
 
         app = Flask(__name__)
@@ -204,7 +204,7 @@ class HALTestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get("/bar")
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data, '{"_links": {"self": {"href": "/bar"}, "My_dear_foo": {"href": "/bar/42"}}}')
+        self.assertEquals(resp.data, '{"_links": {"self": {"href": "/bar"}, "My_dear_foo": {"href": "/bar/42", "title": "my title"}}}')
 
     def test_parameterized_links_array_output(self):
         class Foo(LinkedResource):
