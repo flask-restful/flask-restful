@@ -1,6 +1,6 @@
 import unittest
 from flask import Flask
-from flask.ext.restful import LinkedResource, Api, Embed
+from flask.ext.restful import LinkedResource, Api, Embed, Link
 
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals # you need it for tests in form of continuations
@@ -128,6 +128,31 @@ class HALTestCase(unittest.TestCase):
         resp = app.get("/bar")
         self.assertEquals(resp.status_code, 200)
         self.assertEquals(resp.data, '{"_links": {"self": {"href": "/bar"}}, "_embedded": {"My_dear_foo": {"_links": {"self": {"href": "/bar/42"}}, "Some_output": "This is my ID : [42]"}}}')
+
+    def test_parameterized_links_output(self):
+        class Foo(LinkedResource):
+            _self = '/bar/{FOO_ID}'
+            def get(self):
+                pass
+            
+        class Bar(LinkedResource):
+            _self = '/bar'
+
+            @Verb(parameters(),
+                  output(),
+                  link(My_dear_foo=Foo))
+            def get(self):
+                return output(My_dear_foo=Link(Foo, params = {"FOO_ID": 42}))
+
+
+        app = Flask(__name__)
+        api = Api(app)
+        api.add_root(Bar)
+
+        app = app.test_client()
+        resp = app.get("/bar")
+        self.assertEquals(resp.status_code, 200)
+        self.assertEquals(resp.data, '{"_links": {"self": {"href": "/bar"}, "My_dear_foo": {"href": "/bar/42"}}}')
 
 
 if __name__ == '__main__':
