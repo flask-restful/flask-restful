@@ -51,7 +51,7 @@ class Verb(object):
             # injects the parameters as kwargs
             resource_self = args[0]
             hal_context = dict(kwargs.items() + self.parser.parse_args().items())
-            result = f(*args, **kwargs)
+            result = f(*args, **hal_context)
 
             if isinstance(resource_self, LinkedResource):
                 links = {'self': {'href': hal(resource_self.__class__._self, hal_context)}}

@@ -8,6 +8,14 @@ from flask.ext.restful.declarative import Verb, parameters, output, link
 from flask.ext.restful.fields import Integer, String
 
 class HALTestCase(unittest.TestCase):
+    def test_lowlevel_link(self):
+        class Foo(LinkedResource):
+            _self = '/foo/{p}'
+
+        link = Link(Foo, 'my title', {'p': 'foo_p'})
+        self.assertTrue(link.templated)
+        self.assertEquals(link.title, 'my title')
+
     def test_standalone_linked_resource(self):
         class Foo(LinkedResource):
             _self = '/foo'
@@ -26,6 +34,25 @@ class HALTestCase(unittest.TestCase):
         self.assertEquals(resp.status_code, 200)
         self.assertEquals(resp.data, '{"test_out": 42}')
 
+    def test_standalone_linked_resource_with_params(self):
+        class Foo(LinkedResource):
+            _self = '/foo'
+
+            @Verb(parameters(my_int=int),
+                  output(test_out=Integer))
+            def post(self, my_int=None):
+                return output(test_out=my_int)
+
+        app = Flask(__name__)
+        api = Api(app)
+        api.add_root(Foo)
+
+        app = app.test_client()
+        resp = app.post("/foo", data=dict(my_int=42))
+        self.assertEquals(resp.status_code, 200)
+        self.assertEquals(resp.data, '{"test_out": 42}')
+
+
     def test_parameterized_linked_resource(self):
         class Foo(LinkedResource):
             _self = '/foo/{FOO_ID}'
@@ -35,6 +62,7 @@ class HALTestCase(unittest.TestCase):
                   link())
             def get(self, FOO_ID=None):
                 return output(Some_output="This is my ID : [%s]" % FOO_ID)
+
         app = Flask(__name__)
         api = Api(app)
         api.add_root(Foo)
@@ -132,6 +160,7 @@ class HALTestCase(unittest.TestCase):
     def test_parameterized_links_output(self):
         class Foo(LinkedResource):
             _self = '/bar/{FOO_ID}'
+
             def get(self):
                 pass
 
@@ -142,7 +171,7 @@ class HALTestCase(unittest.TestCase):
                   output(),
                   link(My_dear_foo=Foo))
             def get(self):
-                return output(My_dear_foo=Link(Foo, params = {"FOO_ID": 42}))
+                return output(My_dear_foo=Link(Foo, params={"FOO_ID": 42}))
 
 
         app = Flask(__name__)
