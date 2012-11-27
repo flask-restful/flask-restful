@@ -323,17 +323,6 @@ class LinkedResource(Resource):
     # override that for your own linked resource
     _self = 'undefined'
 
-    @classmethod
-    def output(cls, k, data):
-        """
-        This is ducktyping the Resource as a Field so you can specify links between resources.
-
-        :param k: the key of the link
-        :param data: the class of the targetted resource
-        :return:
-        """
-        return data[k]._self
-
 
 def marshal(data, fields, links=None, hal_context = None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
