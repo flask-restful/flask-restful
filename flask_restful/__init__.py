@@ -133,13 +133,13 @@ class Api(object):
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource_func = self.output(resource.as_view(endpoint))
 
-        for decorator in self.decorators:
-            resource_func = decorator(resource_func)
-
         # patch the resource_func for at least "GET" for the API explorer
         if 'GET' not in resource_func.methods:
             resource_func.methods.append('GET')
             # End of hacks for the API explorer
+
+        for decorator in self.decorators:
+            resource_func = decorator(resource_func)
 
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func)
