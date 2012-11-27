@@ -373,7 +373,8 @@ def marshal(data, fields, links=None, hal_context = None):
         ls = data['_links'].items() # preset links like self
         for link_key, link_value in links.items():
             if inspect.isclass(link_value) and issubclass(link_value, LinkedResource): # simple straigh linked resource
-                ls.append((link_key, {'href': hal(link_value._self, hal_context)}))
+                additional_link_context = data[link_key].params
+                ls.append((link_key, {'href': hal(link_value._self, dict(hal_context.items() + additional_link_context.items()))}))
             elif isinstance(link_value, list): # an array of resources
                 list_of_links = [link_obj.to_dict()  for link_obj in data[link_key]]
                 ls.append((link_key, list_of_links))

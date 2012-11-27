@@ -50,14 +50,14 @@ class Verb(object):
         def wrapper(*args, **kwargs):
             # injects the parameters as kwargs
             resource_self = args[0]
-            kwargs = dict(kwargs.items() + self.parser.parse_args().items())
+            hal_context = dict(kwargs.items() + self.parser.parse_args().items())
             result = f(*args, **kwargs)
 
             if isinstance(resource_self, LinkedResource):
-                links = {'self': {'href': hal(resource_self.__class__._self, kwargs)}}
+                links = {'self': {'href': hal(resource_self.__class__._self, hal_context)}}
                 result['_links'] = links
 
-            return marshal(result, self.fields, links=self.links, hal_context = kwargs)
+            return marshal(result, self.fields, links=self.links, hal_context = hal_context)
 
         wrapper._parser = self.parser
         wrapper._fields = self.fields
