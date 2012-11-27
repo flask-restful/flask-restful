@@ -1,3 +1,4 @@
+from flask_restful.utils import hal
 
 class Link(object):
 
@@ -12,7 +13,16 @@ class Link(object):
 
     @property
     def templated(self):
-        return self.params is not None
+        return False
+
+    def to_dict(self, additional_context = None):
+        if not additional_context:
+            additional_context = {}
+        context = dict(self.params.items() + additional_context.items()) if self.params else additional_context
+        response = {'href': hal(self.linked_resource._self, context)}
+        if self.title:
+            response['title'] = self.title
+        return response
 
 class Embed(object):
     def __init__(self, linked_resource_class, get_parameters = None):
