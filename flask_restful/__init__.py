@@ -145,8 +145,9 @@ class Api(object):
             self.app.add_url_rule(self.prefix + url, view_func=resource_func)
 
     def recurse_add(self, resource_class, **kwargs):
-        print "Registering: %s" % resource_class
+
         if resource_class not in self.registered_resources:
+            logging.info("Registering: %s" % resource_class)
             uri = resource_class._self
             uri = uri.replace('{', '<').replace('}', '>') # hack to transform url conventions, FIXME
             self.add_resource(resource_class, uri, **kwargs)
