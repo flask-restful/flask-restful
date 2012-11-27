@@ -29,9 +29,9 @@ class Link(object):
         return answer
 
 class Embed(object):
-    def __init__(self, linked_resource_class, get_parameters):
+    def __init__(self, linked_resource_class, get_parameters = None):
         self.linked_resource = linked_resource_class
-        self.params = get_parameters
+        self.params = get_parameters if get_parameters is not None else {}
 
     def to_dict(self):
         """
