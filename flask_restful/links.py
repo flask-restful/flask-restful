@@ -1,4 +1,4 @@
-from flask_restful.utils import hal
+from flask import url_for
 
 class Link(object):
 
@@ -19,7 +19,7 @@ class Link(object):
         if not additional_context:
             additional_context = {}
         context = dict(self.params.items() + additional_context.items()) if self.params else additional_context
-        response = {'href': hal(self.linked_resource._self, context)}
+        response = {'href': url_for(self.linked_resource._endpoint,**context)}
         if self.title:
             response['title'] = self.title
         return response
