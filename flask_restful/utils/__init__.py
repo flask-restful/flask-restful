@@ -48,3 +48,14 @@ def unpack(value):
 
 def hal(link, parameters):
     return link.format(**parameters) # FIXME improve that to be really HAL compliant for parsing URLs
+
+def dynamic_import(name):
+    """
+    :param name: a fully qualified class name like 'a.b.c.klass'
+    :return: the class
+    """
+    components = name.split('.')
+    mod = __import__(components[0])
+    for comp in components[1:]:
+        mod = getattr(mod, comp)
+    return mod
