@@ -7,7 +7,7 @@ from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.links import Link, Embed
-from flask.ext.restful.utils import unauthorized, error_data, unpack, hal
+from flask.ext.restful.utils import unauthorized, error_data, unpack, hal, dynamic_import
 from flask.ext.restful.representations.json import output_json
 
 try:
@@ -152,21 +152,25 @@ class Api(object):
             uri = uri.replace('{', '<').replace('}', '>') # hack to transform url conventions, FIXME
             self.add_resource(resource_class, uri, **kwargs)
             self.registered_resources.append(resource_class)
-        for name, method in inspect.getmembers(resource_class, predicate=inspect.ismethod):
-            if hasattr(method, '_links') and method._links is not None:
-                links = method._links
-                for value in links.values():
-                    if isinstance(value, list):
-                        self.recurse_add(value[0])
-                    else:
-                        self.recurse_add(value)
-            if hasattr(method, '_fields'):
-                fields = method._fields
-                for value in fields.values():
-                    if isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource):
-                        self.recurse_add(value[0])
-                    elif inspect.isclass(value) and issubclass(value, LinkedResource):
-                        self.recurse_add(value)
+            for name, method in inspect.getmembers(resource_class, predicate=inspect.ismethod):
+                if hasattr(method, '_links') and method._links is not None:
+                    links = method._links
+                    for key, value in links.iteritems():
+                        if isinstance(value, list):
+                            self.recurse_add(value[0])
+                        elif isinstance(value, basestring):
+                            klass = dynamic_import(value)
+                            links[key] = klass # patch the dictionary so it renders
+                            self.recurse_add(klass)
+                        else:
+                            self.recurse_add(value)
+                if hasattr(method, '_fields'):
+                    fields = method._fields
+                    for value in fields.values():
+                        if isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource):
+                            self.recurse_add(value[0])
+                        elif inspect.isclass(value) and issubclass(value, LinkedResource):
+                            self.recurse_add(value)
 
     def add_root(self, resource_class, **kwargs):
         self.registered_resources = []
