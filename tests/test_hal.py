@@ -8,6 +8,26 @@ from flask.ext.restful.declarative import Verb, parameters, output, link
 from flask.ext.restful.fields import Integer, String
 from flask.ext.restful.reqparse import Argument
 
+
+class A(LinkedResource):
+    _self = '/a'
+
+    @Verb(parameters(),
+          output(),
+          link(b = "test_hal.B"))
+    def get(self):
+        return output()
+
+class B(LinkedResource):
+    _self = '/b'
+
+    @Verb(parameters(),
+          output(),
+          link(a = A))
+    def get(self):
+        return output()
+
+
 class HALTestCase(unittest.TestCase):
     def test_lowlevel_link(self):
         class Foo(LinkedResource):
@@ -121,6 +141,18 @@ class HALTestCase(unittest.TestCase):
         resp = app.get("/bar")
         self.assertEquals(resp.status_code, 200)
         self.assertEquals(resp.data, '{"_links": {"self": {"href": "/bar"}, "My_dear_foo": {"href": "/bar/foo"}}}')
+
+    def test_circulardep_linked_resource(self):
+
+        app = Flask(__name__)
+        api = Api(app)
+        api.add_root(A)
+        app = app.test_client()
+        resp = app.get("/a")
+        self.assertEquals(resp.status_code, 200)
+
+        resp = app.get("/b")
+        self.assertEquals(resp.status_code, 200)
 
 
     def test_simple_embedded_linked_resource(self):
