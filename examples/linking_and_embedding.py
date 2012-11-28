@@ -7,7 +7,7 @@ app = Flask(__name__)
 api = Api(app)
 
 class Foo(LinkedResource):
-    _self = '/bar/foo/{FOO_ID}'
+    _self = '/bar/foo/<FOO_ID>'
 
     @Verb(parameters(),
           output(Some_output=String),
@@ -16,7 +16,7 @@ class Foo(LinkedResource):
         return output(Some_output="This is my ID : [%s]" % FOO_ID)
 
 class Baz(LinkedResource):
-    _self = '/bar/baz/{BAZ_ID}'
+    _self = '/bar/baz/<BAZ_ID>'
 
     @Verb(parameters(),
           output(Some_output=String),
