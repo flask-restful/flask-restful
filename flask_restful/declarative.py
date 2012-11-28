@@ -3,6 +3,10 @@ from flask.ext.restful import marshal, Resource, LinkedResource, hal
 from reqparse import RequestParser
 
 def parameters(*args, **kwargs):
+    """Helper to specify the parameters section of the Verb decorator.
+    You can use it with kwargs directly with types or with the Argument class supported by RequestParser.
+    Can be used also for the output itself.
+    """
     parser = RequestParser()
     for key, value in kwargs.iteritems():
         if isinstance(value, parser.argument_class):
@@ -15,15 +19,21 @@ def parameters(*args, **kwargs):
 
 
 def output(*args, **kwargs):
+    """Specify the output section of the Verb decorator.
+    Can be used also for the output itself.
+    """
     return kwargs
 
 
 def link(*args, **kwargs):
+    """Specify the linking section of the Verb decorator.
+    """
     return kwargs
 
 
 class Verb(object):
     """A decorator that describes the input and outputs of your REST action.
+    You can specifies relations with other resources by setting links.
 
     >>> from flask.ext.restful import fields, marshal_with
     >>> mfields = { 'a': fields.Raw }
