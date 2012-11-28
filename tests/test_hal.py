@@ -98,7 +98,7 @@ class HALTestCase(unittest.TestCase):
 
     def test_parameterized_linked_resource(self):
         class Foo(LinkedResource):
-            _self = '/foo/{FOO_ID}'
+            _self = '/foo/<FOO_ID>'
 
             @Verb(parameters(),
                   output(Some_output=String),
@@ -185,7 +185,7 @@ class HALTestCase(unittest.TestCase):
 
     def test_parameterized_embedded_linked_resource(self):
         class Foo(LinkedResource):
-            _self = '/bar/{FOO_ID}'
+            _self = '/bar/<FOO_ID>'
 
             @Verb(parameters(),
                   output(Some_output=String),
@@ -214,7 +214,7 @@ class HALTestCase(unittest.TestCase):
 
     def test_parameterized_links_output(self):
         class Foo(LinkedResource):
-            _self = '/bar/{FOO_ID}'
+            _self = '/bar/<FOO_ID>'
 
             def get(self):
                 pass
@@ -240,7 +240,7 @@ class HALTestCase(unittest.TestCase):
 
     def test_parameterized_links_array_output(self):
         class Foo(LinkedResource):
-            _self = '/bar/{FOO_ID}'
+            _self = '/bar/<FOO_ID>'
 
             def get(self):
                 pass
