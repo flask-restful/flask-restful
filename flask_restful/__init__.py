@@ -2,12 +2,12 @@ from functools import wraps
 import inspect
 import logging
 import os
-from flask import request, Response, render_template, send_from_directory
+from flask import request, Response, render_template, send_from_directory, url_for
 from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.links import Link, Embed
-from flask.ext.restful.utils import unauthorized, error_data, unpack, hal, dynamic_import
+from flask.ext.restful.utils import unauthorized, error_data, unpack, dynamic_import
 from flask.ext.restful.representations.json import output_json
 
 try:
@@ -64,11 +64,6 @@ class Api(object):
         @app.route('/apiexplorer/<path:filename>')
         def ae_static(filename):
             return send_from_directory(thisdir + os.sep + 'static', filename)
-
-        # register the url processing for HAL
-        @app.context_processor
-        def utility_processor():
-            return dict(hal=hal)
 
 
     def handle_exception(self, e):
@@ -132,6 +127,7 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource_func = self.output(resource.as_view(endpoint))
+        resource._endpoint = endpoint # record the endpoint so we can generate parameterized url from it
 
         # patch the resource_func for at least "GET" for the API explorer
         if 'GET' not in resource_func.methods:
@@ -149,7 +145,6 @@ class Api(object):
         if resource_class not in self.registered_resources:
             logging.info("Registering: %s" % resource_class)
             uri = resource_class._self
-            uri = uri.replace('{', '<').replace('}', '>') # hack to transform url conventions, FIXME
             self.add_resource(resource_class, uri, **kwargs)
             self.registered_resources.append(resource_class)
             for name, method in inspect.getmembers(resource_class, predicate=inspect.ismethod):
@@ -304,6 +299,7 @@ class Resource(MethodView):
 class LinkedResource(Resource):
     # override that for your own linked resource
     _self = 'undefined'
+    _endpoint = 'undefined'
 
 
 def marshal(data, fields, links=None, hal_context = None):

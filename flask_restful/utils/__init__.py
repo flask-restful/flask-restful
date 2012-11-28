@@ -46,9 +46,6 @@ def unpack(value):
 
     return value, 200, {}
 
-def hal(link, parameters):
-    return link.format(**parameters) # FIXME improve that to be really HAL compliant for parsing URLs
-
 def dynamic_import(name):
     """
     :param name: a fully qualified class name like 'a.b.c.klass'

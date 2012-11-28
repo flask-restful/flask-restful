@@ -1,5 +1,6 @@
 from functools import wraps
-from flask.ext.restful import marshal, Resource, LinkedResource, hal
+from flask import url_for
+from flask_restful import marshal, LinkedResource
 from reqparse import RequestParser
 
 def parameters(*args, **kwargs):
@@ -64,7 +65,7 @@ class Verb(object):
             result = f(*args, **hal_context)
 
             if isinstance(resource_self, LinkedResource):
-                links = {'self': {'href': hal(resource_self.__class__._self, hal_context)}}
+                links = {'self': {'href': url_for(resource_self._endpoint, **hal_context)}}
                 result['_links'] = links
 
             return marshal(result, self.fields, links=self.links, hal_context = hal_context)
