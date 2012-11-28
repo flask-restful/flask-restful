@@ -25,9 +25,14 @@ class Link(object):
         return response
 
 class Embed(object):
-    def __init__(self, linked_resource_class, get_parameters = None):
+    def __init__(self, linked_resource_class, params = None):
+        """
+        :param linked_resource_class:
+        :param params: the parameters used for calling the get function of the embedded LinkedResource
+        :return:
+        """
         self.linked_resource = linked_resource_class
-        self.params = get_parameters if get_parameters is not None else {}
+        self.params = params if params is not None else {}
 
     def to_dict(self):
         """
