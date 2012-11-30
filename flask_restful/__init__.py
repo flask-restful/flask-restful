@@ -2,7 +2,7 @@ from functools import wraps
 import inspect
 import logging
 import os
-from flask import request, Response, render_template, send_from_directory, url_for
+from flask import request, Response, render_template, send_from_directory
 from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
