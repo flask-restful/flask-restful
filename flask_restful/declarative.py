@@ -1,7 +1,8 @@
+import difflib
 from functools import wraps
 from flask import url_for
 from flask.ext.restful.utils import rest_url_for
-from flask_restful import marshal, LinkedResource
+from flask_restful import marshal, LinkedResource, abort
 from reqparse import RequestParser
 
 def parameters(*args, **kwargs):
@@ -60,6 +61,16 @@ class Verb(object):
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
+
+            # check for unexpected arguments
+            weird_parameters, possible_parameters = self.parser.undeclared_args()
+            if weird_parameters:
+                close_matches = sum([difflib.get_close_matches(weird_parameter, possible_parameters) for weird_parameter in weird_parameters], [])
+                message = 'Unknown parameter(s) [%s].' % ', '.join(weird_parameters)
+                if close_matches:
+                    message += ' Did you mean ' + ' or '.join((match for match in close_matches)) + ' ?'
+                abort(400, message=message)
+
             # injects the parameters as kwargs
             resource_self = args[0]
             hal_context = dict(kwargs.items() + self.parser.parse_args().items())

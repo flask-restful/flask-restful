@@ -96,6 +96,25 @@ class HALTestCase(unittest.TestCase):
         self.assertEquals(resp.data, '{"test_out": 2}')
 
 
+    def test_smart_error_for_arguments(self):
+        class Foo(LinkedResource):
+            _self = '/foo'
+
+            @Verb(parameters(my_int=Argument(type=int, default=2, help='This is the description of the parameter')),
+                  output(test_out=Integer))
+            def post(self, my_int=None):
+                return output(test_out=my_int)
+
+        app = Flask(__name__)
+        api = Api(app)
+        api.add_root(Foo)
+
+        app = app.test_client()
+        resp = app.post("/foo", data=dict(my_flint=42))
+        self.assertEquals(resp.status_code, 400)
+        self.assertEquals(resp.data, '{"message": "Unknown parameter(s) [my_flint]. Did you mean my_int ?"}')
+
+
     def test_parameterized_linked_resource(self):
         class Foo(LinkedResource):
             _self = '/foo/<FOO_ID>'

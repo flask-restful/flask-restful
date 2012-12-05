@@ -149,6 +149,21 @@ class RequestParser(object):
         self.args.append(self.argument_class(*args, **kwargs))
         return self
 
+    def undeclared_args(self, req=None):
+        """
+        :param req: optionally a request
+        :return: a tuple of args present in the expected locations of the request that don't match any declared arguments followed by all the expected arguments
+        """
+        if req is None:
+            req = request
+
+        possible_locations = {arg.location for arg in self.args}
+        all_expected_argument_names = {arg.name for arg in self.args}
+        all_request_argument_names = set()
+        for location in possible_locations:
+            all_request_argument_names.update((name for name, _ in getattr(req, location).iteritems()))
+        return all_request_argument_names - all_expected_argument_names, all_expected_argument_names
+
     def parse_args(self, req=None):
         """Parse all arguments from the provided request and return the results
         as a Namespace
