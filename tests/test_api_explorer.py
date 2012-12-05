@@ -33,10 +33,10 @@ class APIExplorerTestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get("/foo", headers={'Accept': 'text/html'})
         self.assertEquals(resp.status_code, 200)
-        self.assertGreater(resp.data.find('foo'),0)
-        self.assertGreater(resp.data.find('Foo'),0)
-        self.assertGreater(resp.data.find('comment1'),0)
-        self.assertGreater(resp.data.find('comment2'),0)
+        self.assertTrue(resp.data.find('foo') > 0)
+        self.assertTrue(resp.data.find('Foo') > 0)
+        self.assertTrue(resp.data.find('comment1') > 0)
+        self.assertTrue(resp.data.find('comment2') > 0)
 
 
 
@@ -56,8 +56,8 @@ class APIExplorerTestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.post("/foo", data=dict(my_int=42), headers={'Accept': 'text/html'})
         self.assertEquals(resp.status_code, 200)
-        self.assertGreater(resp.data.find('my_int'),0)
-        self.assertGreater(resp.data.find('test_out'),0)
+        self.assertTrue(resp.data.find('my_int') > 0)
+        self.assertTrue(resp.data.find('test_out') > 0)
 
     def test_explorer_linked_resource_with_argument_params(self):
         class Foo(LinkedResource):
@@ -75,7 +75,7 @@ class APIExplorerTestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get("/foo", headers={'Accept': 'text/html'})
         self.assertEquals(resp.status_code, 200)
-        self.assertGreater(resp.data.find('This is the description of the parameter'),0)
+        self.assertTrue(resp.data.find('This is the description of the parameter') > 0)
 
 
     def test_explorer_linked_resource(self):
@@ -122,7 +122,7 @@ class APIExplorerTestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get("/bar", headers={'Accept': 'text/html'})
         self.assertEquals(resp.status_code, 200)
-        self.assertGreater(resp.data.find('My_dear_foo'),0)
+        self.assertTrue(resp.data.find('My_dear_foo') > 0)
 
 
     def test_explorer_embedded_linked_resource(self):
@@ -151,8 +151,8 @@ class APIExplorerTestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get("/bar", headers={'Accept': 'text/html'})
         self.assertEquals(resp.status_code, 200)
-        self.assertGreater(resp.data.find('embedded'),0)
-        self.assertGreater(resp.data.find('Foo'),0)
+        self.assertTrue(resp.data.find('embedded') > 0)
+        self.assertTrue(resp.data.find('Foo') > 0)
 
 if __name__ == '__main__':
     unittest.main()
