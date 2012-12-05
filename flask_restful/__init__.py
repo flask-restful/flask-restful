@@ -144,7 +144,7 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource_func = self.output(resource.as_view(endpoint))
-        resource._endpoint = endpoint # record the endpoint so we can generate parameterized url from it
+        resource._endpoint = endpoint  # record the endpoint so we can generate parameterized url from it
 
         # patch the resource_func for at least "GET" for the API explorer
         if resource_func.methods is not None and 'GET' not in resource_func.methods:
@@ -172,7 +172,7 @@ class Api(object):
                             self.recurse_add(value[0])
                         elif isinstance(value, basestring):
                             klass = dynamic_import(value)
-                            links[key] = klass # patch the dictionary so it renders
+                            links[key] = klass  # patch the dictionary so it renders
                             self.recurse_add(klass)
                         else:
                             self.recurse_add(value)
@@ -188,7 +188,6 @@ class Api(object):
         self.registered_resources = []
         self.recurse_add(resource_class, **kwargs)
         del self.registered_resources
-
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
@@ -319,7 +318,7 @@ class LinkedResource(Resource):
     _endpoint = 'undefined'
 
 
-def marshal(data, fields, links=None, hal_context = None):
+def marshal(data, fields, links=None, hal_context=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 

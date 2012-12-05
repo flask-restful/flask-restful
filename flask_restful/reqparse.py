@@ -157,8 +157,8 @@ class RequestParser(object):
         if req is None:
             req = request
 
-        possible_locations = {arg.location for arg in self.args}
-        all_expected_argument_names = {arg.name for arg in self.args}
+        possible_locations = set((arg.location for arg in self.args))
+        all_expected_argument_names = set((arg.name for arg in self.args))
         all_request_argument_names = set()
         for location in possible_locations:
             all_request_argument_names.update((name for name, _ in getattr(req, location).iteritems()))
