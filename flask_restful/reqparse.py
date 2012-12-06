@@ -140,6 +140,7 @@ class RequestParser(object):
         """
 
         self.args.append(self.argument_class(*args, **kwargs))
+        return self
 
     def parse_args(self, req=None):
         """Parse all arguments from the provided request and return the results
