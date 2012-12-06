@@ -27,9 +27,8 @@ def url(value):
     """
     if not regex.search(value):
         message = "{} is not a valid URL".format(value)
-        if regex.search("".join(['http://', value])):
-            message = ("{0} is not a valid url."
-                       " Perhaps you meant: http://{0}".format(value))
+        if regex.search('http://' + value):
+            message += ". Did you mean: http://{0}".format(value)
         raise ValueError(message)
     return value
 
