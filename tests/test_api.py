@@ -280,7 +280,7 @@ class APITestCase(unittest.TestCase):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data, dumps({
-                "status": 404, "message": "Not Found. Did you mean /foo ?",
+                "status": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
             }))
 
 
