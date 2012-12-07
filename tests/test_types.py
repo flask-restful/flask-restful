@@ -90,7 +90,7 @@ def test_bad_url_error_message():
 def check_url_error_message(value):
     try:
         types.url(value)
-        assert False, "types.url({}) should raise an exception".format(value)
+        assert False, "types.url({0}) should raise an exception".format(value)
     except ValueError as e:
         assert_equals(str(e), ("{0} is not a valid URL. Did you mean: "
                                "http://{0}".format(value)))
