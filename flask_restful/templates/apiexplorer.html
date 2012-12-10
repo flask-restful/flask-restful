@@ -56,7 +56,7 @@
                                                 <div class="input">
                                                     <label for="{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}">{{ arg.name }}</label>
                                                     <input class="span8" type="text" name="{{ arg.name }}" id="{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}"
-                                                           placeholder="{{ arg.default if arg.default != None }}" required/>
+                                                           placeholder="{{ arg.default if arg.default != None }}" {{ "required" if arg.required }}/>
                                                     <span class="help-block">{{ arg.help if arg.help != None }}</span>
                                                 </div>
                                             {% endfor %}
