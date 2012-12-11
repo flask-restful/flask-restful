@@ -228,12 +228,24 @@
         {% for method, func in methods.iteritems() %}
 
             $("#{{ clazz.__name__ }}_{{ method }}").submit(function () {
-                var $form = $(this), $inputs = $form.find("input, select, button, textarea"), serializedData = $form.serialize();
+                var $form = $(this), $inputs = $form.find("input, select, button, textarea");
+
+                var form_params = {};
+                var url_params = {};
+                {% for arg in func._parser.args %}
+                    {% if arg.location == 'query' %}
+                url_params["{{ arg.name }}"]= $("#{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}").val();
+                    {% elif arg.location == 'args' %}
+                form_params["{{ arg.name }}"]= $("#{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}").val();
+                    {% endif %}
+                {% endfor %}
+
+
                 $inputs.attr("disabled", "disabled");
                 $.ajax({
-                    url:document.URL,
+                    url:document.URL + '?' + $.param(url_params),
                     type:"{{ method }}",
-                    data:serializedData,
+                    data:$.param(form_params),
 
                     success:function (response, textStatus, jqXHR) {
                         var htmls = resource2html(response);
