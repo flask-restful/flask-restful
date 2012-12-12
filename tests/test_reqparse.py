@@ -6,7 +6,7 @@ from werkzeug import exceptions
 from werkzeug.wrappers import Request
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 
-class FieldsTestCase(unittest.TestCase):
+class ReqParseTestCase(unittest.TestCase):
     def test_default_help(self):
         arg = Argument("foo")
         self.assertEquals(arg.help, None)
