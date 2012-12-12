@@ -1,6 +1,14 @@
 from flask import request
 import flask_restful
 
+class Namespace(dict):
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
+    def __setattr__(self, name, value):
+        self[name] = value
 
 class Argument(object):
 
@@ -130,9 +138,10 @@ class RequestParser(object):
     args = parser.parse_args()
     """
 
-    def __init__(self, argument_class=Argument):
+    def __init__(self, argument_class=Argument, namespace_class=Namespace):
         self.args = []
         self.argument_class = argument_class
+        self.namespace_class = namespace_class
 
     def add_argument(self, *args, **kwargs):
         """Adds an argument to be parsed. See Argument's constructor for
@@ -144,17 +153,17 @@ class RequestParser(object):
 
     def parse_args(self, req=None):
         """Parse all arguments from the provided request and return the results
-        as a dictionary
+        as a Namespace
         """
         if req is None:
             req = request
 
         if hasattr(req, 'view_args') and req.view_args is not None:
             self.url_matches = req.view_args
-            namespace = dict(req.view_args.iteritems())
+            namespace = self.namespace_class(req.view_args.iteritems())
         else:
             self.url_matches = {}
-            namespace = {}
+            namespace = self.namespace_class()
 
         for arg in self.args:
             namespace[arg.dest or arg.name] = arg.parse(req)
