@@ -1,6 +1,6 @@
 import unittest
 from flask import Flask
-from flask.ext.restful import LinkedResource, Api, Embed, Link
+from flask.ext.restful import LinkedResource, Api, Embed, Link, ResourceLink
 
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals # you need it for tests in form of continuations
@@ -33,7 +33,7 @@ class HALTestCase(unittest.TestCase):
         class Foo(LinkedResource):
             _self = '/foo/{p}'
 
-        link = Link(Foo, 'my title', {'p': 'foo_p'})
+        link = ResourceLink(Foo, 'my title', {'p': 'foo_p'})
         self.assertFalse(link.templated)
         self.assertEquals(link.title, 'my title')
 
@@ -226,7 +226,7 @@ class HALTestCase(unittest.TestCase):
                   output(),
                   link(My_dear_foo=Foo))
             def get(self):
-                return output(My_dear_foo=Link(Foo, title = 'my title', params={"FOO_ID": 42}))
+                return output(My_dear_foo=ResourceLink(Foo, title = 'my title', params={"FOO_ID": 42}))
 
 
         app = Flask(__name__)
@@ -252,7 +252,7 @@ class HALTestCase(unittest.TestCase):
                   output(),
                   link(My_dear_foos=[Foo]))
             def get(self):
-                return output(My_dear_foos=[Link(Foo, params={"FOO_ID": 42}), Link(Foo, params={"FOO_ID": 43})])
+                return output(My_dear_foos=[ResourceLink(Foo, params={"FOO_ID": 42}), ResourceLink(Foo, params={"FOO_ID": 43})])
 
 
         app = Flask(__name__)

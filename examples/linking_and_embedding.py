@@ -1,5 +1,5 @@
 from flask import Flask
-from flask.ext.restful import Api, LinkedResource, Embed, Link
+from flask.ext.restful import Api, LinkedResource, Embed, Link, ResourceLink
 from flask.ext.restful.declarative import parameters, output, Verb, link
 from flask.ext.restful.fields import String
 
@@ -33,7 +33,7 @@ class Bar(LinkedResource):
           output(My_dear_embedded_foo=Foo),
           link(My_dear_linked_baz=Baz))
     def get(self):
-        return output(My_dear_embedded_foo=Embed(Foo, {"FOO_ID": 42}), My_dear_linked_baz = Link(Baz, params={'BAZ_ID': '43'}))
+        return output(My_dear_embedded_foo=Embed(Foo, {"FOO_ID": 42}), My_dear_linked_baz = ResourceLink(Baz, params={'BAZ_ID': '43'}))
 
 
 api.add_root(Bar)

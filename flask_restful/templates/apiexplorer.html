@@ -237,6 +237,7 @@
 
 
                 $inputs.attr("disabled", "disabled");
+                var target_url = document.URL.split('?')[0] + '?' + $.param(url_params);
                 $.ajax({
                     url:document.URL,
                     type:"{{ method }}",

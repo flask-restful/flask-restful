@@ -8,7 +8,7 @@ from flask import request, Response, render_template, send_from_directory, url_f
 from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
-from flask.ext.restful.links import Link, Embed
+from flask.ext.restful.links import Link, Embed, ResourceLink
 from flask.ext.restful.utils import unauthorized, error_data, unpack, dynamic_import
 from flask.ext.restful.representations.json import output_json
 
@@ -369,8 +369,10 @@ def marshal(data, fields, links=None, hal_context = None):
             if inspect.isclass(link_value) and issubclass(link_value, LinkedResource): # simple straigh linked resource
                 if data.has_key(link_key): # it means we specified a value for this link in the output
                     ls.append((link_key, data[link_key].to_dict(hal_context)))
+                if data['_links'].has_key(link_key): # it means we specified a value for this link in the output as a link
+                    ls.append((link_key, data['_links'][link_key].to_dict(hal_context)))
                 else: # We need to autogenerate one from the signature as it is not specified
-                    ls.append((link_key, Link(link_value).to_dict(hal_context)))
+                    ls.append((link_key, ResourceLink(link_value).to_dict(hal_context)))
             elif isinstance(link_value, list): # an array of resources
                 list_of_links = [link_obj.to_dict(hal_context) for link_obj in data[link_key]]
                 ls.append((link_key, list_of_links))
