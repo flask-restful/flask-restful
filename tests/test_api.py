@@ -1,5 +1,6 @@
 import unittest
 from flask import Flask, views
+from flask.signals import got_request_exception, signals_available
 from mock import Mock
 import flask
 import werkzeug
@@ -7,7 +8,7 @@ from flask.ext.restful.utils import http_status_message, challenge, unauthorized
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps
+from json import dumps, loads
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals # you need it for tests in form of continuations
 
@@ -243,15 +244,52 @@ class APITestCase(unittest.TestCase):
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
 
-    def test_handle_real_error(self):
+    def test_handle_api_error(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        class Test(flask_restful.Resource):
+            def get(self):
+                flask.abort(404)
+        api.add_resource(Test(), '/api', endpoint='api')
+        app = app.test_client()
+
+        resp = app.get("/api")
+        self.assertEquals(resp.status_code, 404)
+        self.assertEquals('application/json', resp.headers['Content-Type'])
+        self.assertEquals(loads(resp.data).get('status'), 404)
+
+
+    def test_handle_non_api_error(self):
         app = Flask(__name__)
         flask_restful.Api(app)
         app = app.test_client()
 
         resp = app.get("/foo")
         self.assertEquals(resp.status_code, 404)
-        self.assertEquals(resp.data, dumps(error_data(404)))
+        self.assertEquals('text/html', resp.headers['Content-Type'])
 
+    def test_handle_error_signal(self):
+        if not signals_available:
+            self.skipTest("Can't test signals without signal support")   
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        exception = Mock()
+        exception.code = 400
+        exception.data = {'foo': 'bar'}
+
+        recorded = []
+        def record(sender, exception):
+            recorded.append(exception)
+
+        got_request_exception.connect(record, api)
+        try:
+            with app.test_request_context("/foo"):
+                api.handle_error(exception)
+                self.assertEquals(len(recorded), 1)
+                self.assertTrue(exception is recorded[0])
+        finally:
+            got_request_exception.disconnect(record, app)
 
     def test_handle_error(self):
         app = Flask(__name__)
