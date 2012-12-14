@@ -1,7 +1,9 @@
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
 import urlparse
+import datetime
 from flask_restful import types, marshal
 from flask import url_for
+from isodate import parse_datetime, parse_duration, parse_date, Duration
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
            "Integer", "Arbitrary", "Nested", "List", "Raw"]
@@ -223,3 +225,73 @@ class Fixed(Raw):
         return unicode(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
 Price = Fixed
+
+
+def parse_iso(string_rep):
+    if string_rep.startswith('P'):
+        return parse_duration(string_rep)
+    else:
+        try:
+            # try first a full datetime
+            return parse_datetime(string_rep)
+        except ValueError:
+            # then a date
+            return datetime.datetime.combine(parse_date(string_rep), datetime.time())
+
+ONE_DAY = datetime.timedelta(days=1)
+
+def is_duration(obj):
+    return isinstance(obj, Duration) or isinstance(obj, datetime.timedelta)
+
+
+def complete_interval(dt):
+    """
+    The default interval from a lonely date is one day
+    """
+    return dt, dt + ONE_DAY
+
+BEGINING_OF_TIME = datetime.datetime(datetime.MINYEAR, 1, 1)
+END_OF_TIME = datetime.datetime(datetime.MAXYEAR, 12, 31)
+
+class ISO8601Duration(Raw):
+    """Return a an ISO8601 date duration"""
+
+    def __init__(self, string_rep, now=None):
+        super(ISO8601Duration, self).__init__()
+        self.now = now or datetime.datetime.now()
+        self.left = None
+        self.right = None
+        if string_rep.find('/') == -1:
+            self.left = parse_iso(string_rep)
+        else:
+            left_str, right_str = string_rep.split('/')
+            if not left_str:  # open ended left
+                self.left, self.right = BEGINING_OF_TIME, parse_iso(right_str)
+            elif not right_str:  # open ended right
+                self.left, self.right = parse_iso(left_str), END_OF_TIME
+            else:
+                self.left, self.right = parse_iso(left_str), parse_iso(right_str)
+
+
+    def value(self):
+        """
+        :return: the date tuple representing this duration
+        """
+        if self.left and not self.right:
+            return (self.now, self.now + self.left) if is_duration(self.left) else complete_interval(self.left)
+        if is_duration(self.left):
+            return self.right - self.left, self.right
+        if is_duration(self.right):
+            return self.left, self.left + self.right
+        return self.left, self.right
+
+
+    def format(self, value):
+        try:
+            return types.rfc822(value)
+        except AttributeError as ae:
+            raise MarshallingException(ae)
+
+    def __unicode__(self):
+        return "%s/%s" % (self.left, self.right)
+    __str__ = __unicode__

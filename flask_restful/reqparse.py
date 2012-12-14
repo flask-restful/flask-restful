@@ -1,10 +1,11 @@
+import logging
 from flask import request
+from werkzeug.datastructures import MultiDict
 import flask_restful
 
 
 class Argument(object):
-
-    def __init__(self, name, default=None, dest=None, required=False,
+    def __init__(self, name='', default=None, dest=None, required=False,
                  ignore=False, type=unicode, location='values',
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
@@ -51,7 +52,7 @@ class Argument(object):
         """Pulls values off the request in the provided location
         :param request: The flask request object to parse arguments from
         """
-        return getattr(request, self.location, request.values)
+        return getattr(request, self.location, MultiDict())  # either find it or don't
 
     def convert(self, value, op):
         try:
@@ -84,11 +85,7 @@ class Argument(object):
         for operator in self.operators:
             name = self.name + operator.replace("=", "", 1)
             if name in source:
-                try:
-                    values = source.getlist(name)
-                except:
-                    # FIXME : what is the case of that ?
-                    values = source.getall(name)
+                values = source.getlist(name)
 
                 for value in values:
                     if not self.case_sensitive:
@@ -99,6 +96,7 @@ class Argument(object):
                     try:
                         value = self.convert(value, operator)
                     except Exception as error:
+                        logging.exception(error)
                         if self.ignore:
                             continue
 
@@ -108,7 +106,7 @@ class Argument(object):
 
         if not results and self.required:
             self.handle_validation_error(ValueError(
-                u"{0} is required".format(self.name)))
+                u"{0} is required in {1}".format(self.name, self.location)))
 
         if not results:
             return self.default

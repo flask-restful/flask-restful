@@ -150,7 +150,7 @@ class FieldsTestCase(unittest.TestCase):
     def test_source_bad_location(self):
         req = Mock(['values'])
         arg = Argument('foo', location='foo')
-        self.assertEquals(arg.source(req), req.values)
+        self.assertTrue(len(arg.source(req)) == 0)  # yes, basically you don't find it
 
 
     def test_source_default_location(self):

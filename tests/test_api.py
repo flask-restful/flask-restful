@@ -231,6 +231,22 @@ class APITestCase(unittest.TestCase):
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
 
+    def test_output_json_error(self):
+        app = Flask(__name__)
+        flask_restful.Api(app, output_errors=True)
+        app = app.test_client()
+        resp = app.get("/foo")
+        self.assertEquals(resp.status_code, 404)
+        self.assertEquals(resp.data, dumps(error_data(404)))
+
+    def test_output_standard_error(self):
+        app = Flask(__name__)
+        flask_restful.Api(app, output_errors=False)
+        app = app.test_client()
+        resp = app.get("/foo")
+        self.assertEquals(resp.status_code, 404)
+        self.assertNotEqual(resp.data.find("404 Not Found"),-1)
+
     def test_handle_real_error(self):
         app = Flask(__name__)
         flask_restful.Api(app)
@@ -295,6 +311,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         api.decorators.append(return_zero)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(view, '/foo', endpoint='bar')
 
         app.add_url_rule.assert_called_with('/foo', view_func=0)
@@ -306,6 +323,7 @@ class APITestCase(unittest.TestCase):
 
         api = flask_restful.Api(app)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(view, '/foo', endpoint='bar')
 
         view.as_view.assert_called_with('bar')
@@ -315,6 +333,7 @@ class APITestCase(unittest.TestCase):
         app = Mock()
         api = flask_restful.Api(app)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(views.MethodView, '/foo')
 
         app.add_url_rule.assert_called_with('/foo',
