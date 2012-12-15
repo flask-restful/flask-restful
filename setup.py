@@ -14,6 +14,6 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'Flask>=0.8',
+        'Flask>=0.8', 'isodate'
     ]
 )
