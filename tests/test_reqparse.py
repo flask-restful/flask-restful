@@ -4,9 +4,9 @@ from mock import Mock, patch
 from flask import Flask
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
-from flask_restful.reqparse import Argument, RequestParser
+from flask_restful.reqparse import Argument, RequestParser, Namespace
 
-class FieldsTestCase(unittest.TestCase):
+class ReqParseTestCase(unittest.TestCase):
     def test_default_help(self):
         arg = Argument("foo")
         self.assertEquals(arg.help, None)
@@ -423,6 +423,22 @@ class FieldsTestCase(unittest.TestCase):
     def test_chaining(self):
         parser = RequestParser()
         self.assertTrue(parser is parser.add_argument("foo"))
+
+    def test_namespace_existence(self):
+        namespace = Namespace()
+        namespace.foo = 'bar'
+        namespace['bar'] = 'baz'
+        self.assertEquals(namespace['foo'], 'bar')
+        self.assertEquals(namespace.bar, 'baz')
+
+    def test_namespace_missing(self):
+        namespace = Namespace()
+        self.assertRaises(AttributeError, lambda: namespace.spam)
+        self.assertRaises(KeyError, lambda: namespace['eggs'])
+
+    def test_namespace_configurability(self):
+        self.assertTrue(isinstance(RequestParser().parse_args(), Namespace))
+        self.assertTrue(type(RequestParser(namespace_class=dict).parse_args()) is dict)
 
 if __name__ == '__main__':
     unittest.main()
