@@ -77,45 +77,63 @@ def test_bad_urls():
     for value in values:
         yield check_raises, ValueError, types.url, value
 
+def test_bad_url_error_message():
+    values = [
+        'google.com',
+        'domain.google.com',
+        'kevin:pass@google.com/path?query'
+    ]
+
+    for value in values:
+        yield check_url_error_message, value
+
+def check_url_error_message(value):
+    try:
+        types.url(value)
+        assert False, "types.url({0}) should raise an exception".format(value)
+    except ValueError as e:
+        assert_equals(str(e), ("{0} is not a valid URL. Did you mean: "
+                               "http://{0}".format(value)))
+
 class TypesTestCase(unittest.TestCase):
 
     def test_boolean_false(self):
         self.assertEquals(types.boolean("False"), False)
-    
-    
+
+
     def test_boolean_true(self):
         self.assertEquals(types.boolean("true"), True)
-    
-    
+
+
     def test_boolean_upper_case(self):
         self.assertEquals(types.boolean("FaLSE"), False)
-    
-    
+
+
     def test_boolean(self):
         self.assertEquals(types.boolean("FaLSE"), False)
-    
-    
+
+
     def test_date_later_than_1900(self):
         self.assertEquals(types.date("1900-01-01"), datetime.datetime(1900, 1, 1))
-    
-    
+
+
     def test_date_too_early(self):
         self.assertRaises(ValueError, lambda: types.date("0001-01-01"))
-    
-    
+
+
     def test_date_input_error(self):
         self.assertRaises(ValueError, lambda: types.date("2008-13-13"))
-    
+
     def test_date_input(self):
         self.assertEquals(types.date("2008-08-01"), datetime.datetime(2008, 8, 1))
-    
+
     def test_natual_negative(self):
         self.assertRaises(ValueError, lambda: types.natural(-1))
-    
+
     def test_natual(self):
         self.assertEquals(3, types.natural(3))
-    
-    
+
+
     def test_natual_string(self):
         self.assertRaises(ValueError, lambda: types.natural('foo'))
 

@@ -19,11 +19,17 @@ regex = re.compile(
 
 
 def url(value):
-    """
-    Parse a valid looking url
+    """Validate a URL.
+
+    :param string value: The URL to validate
+    :returns: The URL if valid.
+    :raises: ValueError
     """
     if not regex.search(value):
-        raise ValueError("{} is not a valid URL".format(value))
+        message = "{0} is not a valid URL".format(value)
+        if regex.search('http://' + value):
+            message += ". Did you mean: http://{0}".format(value)
+        raise ValueError(message)
     return value
 
 
