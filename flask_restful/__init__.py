@@ -99,11 +99,17 @@ class Api(object):
         """
         endpoint = kwargs.get('endpoint') or resource.__name__.lower()
 
+        if endpoint in self.app.view_functions.keys():
+            previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
+            if previous_view_class != resource: # if you override with a different class the endpoint, avoid the collision by raising an exception
+                raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
+
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource_func = self.output(resource.as_view(endpoint))
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
+
 
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func)
