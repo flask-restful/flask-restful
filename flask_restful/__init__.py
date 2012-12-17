@@ -147,7 +147,7 @@ class Api(object):
         resource._endpoint = endpoint # record the endpoint so we can generate parameterized url from it
 
         # patch the resource_func for at least "GET" for the API explorer
-        if 'GET' not in resource_func.methods:
+        if resource_func.methods is not None and 'GET' not in resource_func.methods:
             resource_func.methods.append('GET')
             # End of hacks for the API explorer
 
