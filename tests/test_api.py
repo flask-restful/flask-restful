@@ -290,6 +290,7 @@ class APITestCase(unittest.TestCase):
             return 0
 
         app = Mock()
+        app.view_functions = {}
         view = Mock()
         api = flask_restful.Api(app)
         api.decorators.append(return_zero)
@@ -301,6 +302,7 @@ class APITestCase(unittest.TestCase):
 
     def test_add_resource_endpoint(self):
         app = Mock()
+        app.view_functions = {}
         view = Mock()
 
         api = flask_restful.Api(app)
@@ -309,9 +311,42 @@ class APITestCase(unittest.TestCase):
 
         view.as_view.assert_called_with('bar')
 
+    def test_add_two_conflicting_resources_on_same_endpoint(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class Foo1(flask_restful.Resource):
+            def get(self):
+                return 'foo1'
+
+        class Foo2(flask_restful.Resource):
+            def get(self):
+                return 'foo2'
+
+        api.add_resource(Foo1, '/foo', endpoint='bar')
+        self.assertRaises(ValueError, api.add_resource, Foo2, '/foo/toto', endpoint='bar')
+
+    def test_add_the_same_resource_on_same_endpoint(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class Foo1(flask_restful.Resource):
+            def get(self):
+                return 'foo1'
+
+        api.add_resource(Foo1, '/foo', endpoint='bar')
+        api.add_resource(Foo1, '/foo/toto', endpoint='bar')
+
+        with app.test_client() as client:
+            foo1 = client.get('/foo')
+            self.assertEquals(foo1.data, '"foo1"')
+            foo2 = client.get('/foo/toto')
+            self.assertEquals(foo2.data, '"foo1"')
+
 
     def test_add_resource(self):
         app = Mock()
+        app.view_functions = {}
         api = flask_restful.Api(app)
         api.output = Mock()
         api.add_resource(views.MethodView, '/foo')
@@ -322,14 +357,14 @@ class APITestCase(unittest.TestCase):
 
     def test_output_unpack(self):
 
-        def make_empty_resposne():
+        def make_empty_response():
             return {'foo': 'bar'}
 
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
         with app.test_request_context("/foo"):
-            wrapper = api.output(make_empty_resposne)
+            wrapper = api.output(make_empty_response)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
             self.assertEquals(resp.data, '{"foo": "bar"}')
