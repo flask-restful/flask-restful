@@ -255,6 +255,33 @@ class APITestCase(unittest.TestCase):
                 'foo': 'bar',
             }))
 
+    def test_handle_smart_errors(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        view = flask_restful.Resource
+
+        exception = Mock()
+        exception.code = 404
+        exception.data = {"status": 404, "message": "Not Found"}
+        api.add_resource(view, '/foo', endpoint='bor')
+        api.add_resource(view, '/fee', endpoint='bir')
+        api.add_resource(view, '/fii', endpoint='ber')
+
+
+        with app.test_request_context("/faaaaa"):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 404)
+            self.assertEquals(resp.data, dumps({
+                "status": 404, "message": "Not Found",
+            }))
+
+        with app.test_request_context("/fOo"):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 404)
+            self.assertEquals(resp.data, dumps({
+                "status": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
+            }))
+
 
     def test_media_types(self):
         app = Flask(__name__)
