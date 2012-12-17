@@ -64,10 +64,14 @@ class Api(object):
             self.app.logger.exception("Internal Error")
 
         if code == 404:
-            rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule) for rule in self.app.url_map.iter_rules()])
+            rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
+                          for rule in self.app.url_map.iter_rules()])
             close_matches = difflib.get_close_matches(request.path, rules.keys())
             if close_matches:
-                data['message'] += '. You have requested this URI [' + request.path + '] but did you mean ' + ' or '.join((rules[match] for match in close_matches)) + ' ?'
+                data['message'] += '. You have requested this URI [' + request.path + \
+                                   '] but did you mean ' + \
+                                   ' or '.join((rules[match]
+                                   for match in close_matches)) + ' ?'
 
         resp = self.make_response(data, code)
 
