@@ -1,3 +1,4 @@
 mock>=0.8
 nose>=1.1.2
 flask>=0.8
+pycrypto>=2.6
