@@ -43,6 +43,9 @@ def to_marshallable_type(obj):
     if hasattr(obj, '__getitem__'):
         return obj  # it is indexable it is ok
 
+    if hasattr(obj, '__marshallable__'):
+        return obj.__marshallable__()
+
     return dict(obj.__dict__)
 
 
