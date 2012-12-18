@@ -369,7 +369,7 @@ def marshal(data, fields, links=None, hal_context = None):
             if inspect.isclass(link_value) and issubclass(link_value, LinkedResource): # simple straigh linked resource
                 if data.has_key(link_key): # it means we specified a value for this link in the output
                     ls.append((link_key, data[link_key].to_dict(hal_context)))
-                if data['_links'].has_key(link_key): # it means we specified a value for this link in the output as a link
+                elif data['_links'].has_key(link_key): # it means we specified a value for this link in the output as a link
                     ls.append((link_key, data['_links'][link_key].to_dict(hal_context)))
                 else: # We need to autogenerate one from the signature as it is not specified
                     ls.append((link_key, ResourceLink(link_value).to_dict(hal_context)))
