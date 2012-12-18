@@ -225,52 +225,56 @@
     }
 
     $(document).ready(function () {
+        var f;
         {% for method, func in methods.iteritems() %}
+            f = function () {
+                            var $form = $(this), $inputs = $form.find("input, select, button, textarea");
 
-            $("#{{ clazz.__name__ }}_{{ method }}").submit(function () {
-                var $form = $(this), $inputs = $form.find("input, select, button, textarea");
-
-                var params = {};
-                var val;
-                {% for arg in func._parser.args %}
-                val = $("#{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}").val();
-                if(val){
-                    params["{{ arg.name }}"]= val;
-                }
-                {% endfor %}
+                            var params = {};
+                            var val;
+                            {% for arg in func._parser.args %}
+                            val = $("#{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}").val();
+                            if(val){
+                                params["{{ arg.name }}"]= val;
+                            }
+                            {% endfor %}
 
 
-                $inputs.attr("disabled", "disabled");
-                // var target_url = document.URL.split('?')[0] + '?' + $.param(url_params);
-                $.ajax({
-                    url:document.URL,
-                    type:"{{ method }}",
-                    data:$.param(params),
+                            $inputs.attr("disabled", "disabled");
+                            $.ajax({
+                                url:document.URL,
+                                type:"{{ method }}",
+                                data:$.param(params),
 
-                    success:function (response, textStatus, jqXHR) {
-                        var htmls = resource2html(response);
-                        var result_html = htmls[0];
-                        var links_html = htmls[1];
+                                success:function (response, textStatus, jqXHR) {
+                                    var htmls = resource2html(response);
+                                    var result_html = htmls[0];
+                                    var links_html = htmls[1];
 
-                        if (result_html) {
-                            $("#{{ clazz.__name__ }}_{{ method }}_result").html(result_html);
-                        }
-                        else {
-                            $("#{{ clazz.__name__ }}_{{ method }}_result").html("Empty")
-                        }
-                        $("#{{ clazz.__name__ }}_{{ method }}_links").html(links_html);
-                        $("#{{ clazz.__name__ }}_{{ method }}_bare").html("<pre>" + syntaxHighlight(response) + "</pre>");
-                    },
-                    error:function (jqXHR, textStatus, errorThrown) {
-                        console.log("The following error occured: " + textStatus, errorThrown);
-                    },
-                    complete:function () {
-                        $inputs.removeAttr("disabled");
-                    }
-                });
+                                    if (result_html) {
+                                        $("#{{ clazz.__name__ }}_{{ method }}_result").html(result_html);
+                                    }
+                                    else {
+                                        $("#{{ clazz.__name__ }}_{{ method }}_result").html("Empty")
+                                    }
+                                    $("#{{ clazz.__name__ }}_{{ method }}_links").html(links_html);
+                                    $("#{{ clazz.__name__ }}_{{ method }}_bare").html("<pre>" + syntaxHighlight(response) + "</pre>");
+                                },
+                                error:function (jqXHR, textStatus, errorThrown) {
+                                    console.log("The following error occured: " + textStatus, errorThrown);
+                                },
+                                complete:function () {
+                                    $inputs.removeAttr("disabled");
+                                }
+                            });
 
-                event.preventDefault();
-            });
+                            event.preventDefault();
+                        };
+
+            $("#{{ clazz.__name__ }}_{{ method }}").submit(f);
+            {% if method == 'get' %}
+                f();
+            {% endif %}
 
         {% endfor %}
     });
