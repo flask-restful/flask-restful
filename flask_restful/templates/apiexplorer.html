@@ -231,13 +231,17 @@
                 var $form = $(this), $inputs = $form.find("input, select, button, textarea");
 
                 var params = {};
+                var val;
                 {% for arg in func._parser.args %}
-                params["{{ arg.name }}"]= $("#{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}").val();
+                val = $("#{{ clazz.__name__ }}_{{ method }}_{{ arg.name }}").val();
+                if(val){
+                    params["{{ arg.name }}"]= val;
+                }
                 {% endfor %}
 
 
                 $inputs.attr("disabled", "disabled");
-                var target_url = document.URL.split('?')[0] + '?' + $.param(url_params);
+                // var target_url = document.URL.split('?')[0] + '?' + $.param(url_params);
                 $.ajax({
                     url:document.URL,
                     type:"{{ method }}",
