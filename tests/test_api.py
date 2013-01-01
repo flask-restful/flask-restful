@@ -381,6 +381,16 @@ class APITestCase(unittest.TestCase):
         app.add_url_rule.assert_called_with('/foo',
             view_func=api.output())
 
+    def test_add_resource_kwargs(self):
+        app = Mock()
+        app.view_functions = {}
+        api = flask_restful.Api(app)
+        api.output = Mock()
+        api.add_resource(views.MethodView, '/foo', defaults={"bar": "baz"})
+
+        app.add_url_rule.assert_called_with('/foo',
+            view_func=api.output(), defaults={"bar": "baz"})
+
 
     def test_output_unpack(self):
 
