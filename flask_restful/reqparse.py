@@ -93,7 +93,11 @@ class Argument(object):
         for operator in self.operators:
             name = self.name + operator.replace("=", "", 1)
             if name in source:
-                values = source.getlist(name)
+                # Account for MultiDict and regular dict
+                if hasattr(source, "getlist"):
+                    values = source.getlist(name)
+                else:
+                    values = [source.get(name)]
 
                 for value in values:
                     if not self.case_sensitive:
@@ -155,12 +159,7 @@ class RequestParser(object):
         if req is None:
             req = request
 
-        if hasattr(req, 'view_args') and req.view_args is not None:
-            self.url_matches = req.view_args
-            namespace = self.namespace_class(req.view_args.iteritems())
-        else:
-            self.url_matches = {}
-            namespace = self.namespace_class()
+        namespace = self.namespace_class()
 
         for arg in self.args:
             namespace[arg.dest or arg.name] = arg.parse(req)
