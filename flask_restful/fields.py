@@ -102,15 +102,15 @@ class List(Raw):
         super(List, self).__init__()
         if isinstance(cls_or_instance, type):
             if not issubclass(cls_or_instance, Raw):
-                raise MarshallingException("The type of the list elements \
-                                           must be a subclass of \
-                                           flask_restful.fields.Raw")
+                raise MarshallingException("The type of the list elements "
+                                           "must be a subclass of "
+                                           "flask_restful.fields.Raw")
             self.container = cls_or_instance()
         else:
             if not isinstance(cls_or_instance, Raw):
-                raise MarshallingException("The instances of the list \
-                                            elements must be of type \
-                                            flask_restful.fields.Raw")
+                raise MarshallingException("The instances of the list "
+                                           "elements must be of type "
+                                           "flask_restful.fields.Raw")
             self.container = cls_or_instance
 
     def output(self, key, data):
