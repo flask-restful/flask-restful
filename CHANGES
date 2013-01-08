@@ -3,6 +3,36 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.1.4
+-------------
+
+Released on Jan 8th, 2013
+
+- Crypto support for paging
+- Added paging helper for resources
+- Stricter arg parse
+- Flask view arguments are no longer implicitly parsed by RequestParser
+- Fixed incorrectly formatted err message
+
+
+Version 0.1.3
+-------------
+
+Released on Jan 8th, 2013
+
+- Smart 404 error in case of slight mistakes in the URL
+- Scheme error message
+- Attribute/key accessible namespace for reqparse
+- Add Namespace with dual attribute/item access
+- Added the original requested URI in the error
+- Better message if user passes URL w/ no schem
+- Allow chaning of add_argument calls
+- Fixed bug 21 : Endpoint name clash on different views
+- Fixed string formatting for python 2.6
+- Fixed dictionary comprehensions for python 2.6
+- Fixed r'' for python 2.6
+
+
 Version 0.1.2
 -------------
 
