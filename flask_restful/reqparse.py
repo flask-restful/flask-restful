@@ -1,3 +1,4 @@
+import logging
 from flask import request
 from werkzeug.datastructures import MultiDict
 import flask_restful
@@ -12,8 +13,7 @@ class Namespace(dict):
         self[name] = value
 
 class Argument(object):
-
-    def __init__(self, name, default=None, dest=None, required=False,
+    def __init__(self, name='', default=None, dest=None, required=False,
                  ignore=False, type=unicode, location='values',
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
@@ -104,6 +104,7 @@ class Argument(object):
                     try:
                         value = self.convert(value, operator)
                     except Exception as error:
+                        logging.exception(error)
                         if self.ignore:
                             continue
 
@@ -147,6 +148,21 @@ class RequestParser(object):
 
         self.args.append(self.argument_class(*args, **kwargs))
         return self
+
+    def undeclared_args(self, req=None):
+        """
+        :param req: optionally a request
+        :return: a tuple of args present in the expected locations of the request that don't match any declared arguments followed by all the expected arguments
+        """
+        if req is None:
+            req = request
+
+        possible_locations = set((arg.location for arg in self.args))
+        all_expected_argument_names = set((arg.name for arg in self.args))
+        all_request_argument_names = set()
+        for location in possible_locations:
+            all_request_argument_names.update((name for name, _ in getattr(req, location).iteritems()))
+        return all_request_argument_names - all_expected_argument_names, all_expected_argument_names
 
     def parse_args(self, req=None):
         """Parse all arguments from the provided request and return the results
