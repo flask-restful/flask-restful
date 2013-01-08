@@ -176,8 +176,17 @@ class ReqParseTestCase(unittest.TestCase):
         req = Mock()
         req.view_args = {"foo": "bar"}
         parser = RequestParser()
+        parser.add_argument("foo", location="view_args", type=str)
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], "bar")
+
+        req = Mock()
+        req.values = ()
+        req.view_args = {"foo": "bar"}
+        parser = RequestParser()
+        parser.add_argument("foo", type=str)
+        args = parser.parse_args(req)
+        self.assertEquals(args["foo"], None)
 
 
     def test_parse_unicode(self):
