@@ -6,6 +6,14 @@ Here you can see the full list of changes between each Flask-RESTful release.
 Version 0.1.4
 -------------
 
+Released on Jan 9th, 2013
+
+- Fix error handler for exceptions that do not have a message
+
+
+Version 0.1.4
+-------------
+
 Released on Jan 8th, 2013
 
 - Crypto support for paging
