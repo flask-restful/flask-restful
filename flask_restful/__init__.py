@@ -68,7 +68,12 @@ class Api(object):
                           for rule in self.app.url_map.iter_rules()])
             close_matches = difflib.get_close_matches(request.path, rules.keys())
             if close_matches:
-                data['message'] += '. You have requested this URI [' + request.path + \
+                # If we already have a message, add punctuation and continue it.
+                if "message" in data:
+                    data["message"] += ". "
+                else:
+                    data["message"] = ""
+                data['message'] += 'You have requested this URI [' + request.path + \
                                    '] but did you mean ' + \
                                    ' or '.join((rules[match]
                                    for match in close_matches)) + ' ?'
