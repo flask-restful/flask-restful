@@ -25,8 +25,8 @@ Released on Jan 8th, 2013
 - Attribute/key accessible namespace for reqparse
 - Add Namespace with dual attribute/item access
 - Added the original requested URI in the error
-- Better message if user passes URL w/ no schem
-- Allow chaning of add_argument calls
+- Better message if user passes URL w/ no scheme
+- Allow chaining of add_argument calls
 - Fixed bug 21 : Endpoint name clash on different views
 - Fixed string formatting for python 2.6
 - Fixed dictionary comprehensions for python 2.6
