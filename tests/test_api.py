@@ -282,6 +282,14 @@ class APITestCase(unittest.TestCase):
                 "status": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
             }))
 
+        with app.test_request_context("/fOo"):
+            del exception.data["message"]
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 404)
+            self.assertEquals(resp.data, dumps({
+                "status": 404, "message": "You have requested this URI [/fOo] but did you mean /foo ?",
+            }))
+
 
     def test_media_types(self):
         app = Flask(__name__)
