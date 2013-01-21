@@ -238,6 +238,15 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], ["bar", "bat"])
 
+    def test_parse_append_single(self):
+        req = Request.from_values("/bubble?foo=bar")
+
+        parser = RequestParser()
+        parser.add_argument("foo", action="append"),
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], ["bar"])
+
 
     def test_parse_dest(self):
         req = Request.from_values("/bubble?foo=bar")
@@ -300,7 +309,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument("foo", operators=["<=", "="], action="append")
 
         args = parser.parse_args(Request.from_values("/bubble?foo<=bar"))
-        self.assertEquals(args['foo'], "bar")
+        self.assertEquals(args['foo'], ["bar"])
 
 
     def test_parse_lte_gte_missing(self):
