@@ -122,6 +122,9 @@ class Argument(object):
         if not results:
             return self.default
 
+        if self.action == 'append':
+            return results
+
         if self.action == 'store' or len(results) == 1:
             return results[0]
         return results
