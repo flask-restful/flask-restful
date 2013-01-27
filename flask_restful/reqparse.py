@@ -69,7 +69,13 @@ class Argument(object):
             try:
                 return self.type(value, self.name)
             except TypeError:
-                return self.type(value)
+                if self.type == bool:
+                    if value in ['True', 'T', '1', 'true', 't', 1]:
+                        return True
+                    else:
+                        return False
+                else:
+                    return self.type(value)
 
     def handle_validation_error(self, error):
         """Called when an error is raised while parsing. Aborts the request
