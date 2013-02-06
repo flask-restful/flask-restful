@@ -168,3 +168,45 @@ class RequestParser(object):
             namespace[arg.dest or arg.name] = arg.parse(req)
 
         return namespace
+
+def parse_with(parser):
+    """Decorator that will parse arguments with the provided parser and run
+       the decorated function with the results inserted into the argument
+       list.
+
+       The results will be inserted as the first or second argument depending
+       on whether the decorated function is used as a method or not (so self
+       will still be the first argument in methods).
+
+       In other words, these will work the same:
+
+       @parse_with(RequestParser().add_argument('foo'))
+       def some_function(params, arg):
+           return "got %s, %s" % (params.foo, arg)
+
+       class Spam(Resource):
+           @parse_with(RequestParser().add_argument('foo'))
+           def some_function(self, params, arg):
+               return "got %s, %s" % (params.foo, arg)
+    """
+    def decor(func):
+        wrapper = None
+        if type(func) in (classmethod, staticmethod):
+            wrapper = type(func)
+            func = func.__func__
+        def __get__(self, instance, owner=None):
+            return self.__class__(instance, owner)
+        def __call__(self, *args, **kwargs):
+            params = parser.parse_args()
+            if wrapper is classmethod:
+                return func(self.owner, params, *args, **kwargs)
+            if self.instance is None or wrapper is staticmethod:
+                return func(params, *args, **kwargs)
+            return func(self.instance, params, *args, **kwargs)
+        def __init__(self, instance=None, owner=None):
+            self.instance = instance
+            self.owner = owner
+        __dict__ = {"__get__": __get__, "__call__": __call__, "__init__": __init__, "__doc__":
+                    func.__doc__, "__module__": func.__module__, "__name__": func.__name__}
+        return type(func.__name__, (object,), __dict__)()
+    return decor
