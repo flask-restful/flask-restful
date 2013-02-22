@@ -4,9 +4,9 @@ import inspect
 import logging
 import os
 import re
-from flask import request, Response, render_template, send_from_directory, url_for
+from flask import request, Response, render_template, send_from_directory
 from flask import abort as original_flask_abort
-from flask.views import MethodView, MethodViewType
+from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.links import Link, Embed
 from flask.ext.restful.utils import unauthorized, error_data, unpack, dynamic_import
@@ -39,8 +39,10 @@ class Api(object):
     """
     The main entry point for the application.
     You need to initialize it with a Flask Application :
+    >>> from flask import Flask
+    >>> from flask_restful import Api
     >>> app = Flask(__name__)
-    >>> api = restful.Api(app)
+    >>> api = Api(app)
     """
 
     def __init__(self, app, prefix='', default_mediatype='application/json',
@@ -67,14 +69,13 @@ class Api(object):
         def ae_static(filename):
             return send_from_directory(thisdir + os.sep + 'static', filename)
 
-
     def handle_exception(self, e):
-        self.original_handle_exception(e) # hijack the handler but at least play nice by calling it
-        return self.handle_error(e) # but return the JSON
+        self.original_handle_exception(e)  # hijack the handler but at least play nice by calling it
+        return self.handle_error(e)  # but return the JSON
 
     def handle_user_exception(self, e):
-        self.original_handle_user_exception(e) # hijack the handler but at least play nice by calling it
-        return self.handle_error(e) # but return the JSON
+        self.original_handle_user_exception(e)  # hijack the handler but at least play nice by calling it
+        return self.handle_error(e)  # but return the JSON
 
     def handle_error(self, e):
         """Error handler for the API transforms a raised exception into a Flask
@@ -139,12 +140,12 @@ class Api(object):
 
         if endpoint in self.app.view_functions.keys():
             previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
-            if previous_view_class != resource: # if you override with a different class the endpoint, avoid the collision by raising an exception
+            if previous_view_class != resource:  # if you override with a different class the endpoint, avoid the collision by raising an exception
                 raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource_func = self.output(resource.as_view(endpoint))
-        resource._endpoint = endpoint # record the endpoint so we can generate parameterized url from it
+        resource._endpoint = endpoint  # record the endpoint so we can generate parameterized url from it
 
         # patch the resource_func for at least "GET" for the API explorer
         if resource_func.methods is not None and 'GET' not in resource_func.methods:
@@ -172,7 +173,7 @@ class Api(object):
                             self.recurse_add(value[0])
                         elif isinstance(value, basestring):
                             klass = dynamic_import(value)
-                            links[key] = klass # patch the dictionary so it renders
+                            links[key] = klass  # patch the dictionary so it renders
                             self.recurse_add(klass)
                         else:
                             self.recurse_add(value)
@@ -188,7 +189,6 @@ class Api(object):
         self.registered_resources = []
         self.recurse_add(resource_class, **kwargs)
         del self.registered_resources
-
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
@@ -319,7 +319,7 @@ class LinkedResource(Resource):
     _endpoint = 'undefined'
 
 
-def marshal(data, fields, links=None, hal_context = None):
+def marshal(data, fields, links=None, hal_context=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
@@ -349,24 +349,24 @@ def marshal(data, fields, links=None, hal_context = None):
     items = []
     embedded = []
     for k, v in fields.items():
-        if inspect.isclass(v) and issubclass(v, LinkedResource): # this is the special case of embedded resources
+        if inspect.isclass(v) and issubclass(v, LinkedResource):  # this is the special case of embedded resources
             embedded.append((k, data[k].to_dict()))
-        elif isinstance(v, list) and inspect.isclass(v[0]) and issubclass(v[0], LinkedResource): # an array of resources
+        elif isinstance(v, list) and inspect.isclass(v[0]) and issubclass(v[0], LinkedResource):  # an array of resources
             embedded.append((k, [resource.to_dict() for resource in data[k]]))
         elif isinstance(v, dict):
-            items.append((k, marshal(data, v))) # recursively go down the dictionaries
+            items.append((k, marshal(data, v)))  # recursively go down the dictionaries
         else:
-            items.append((k, make(v).output(k, data))) # normal field output
+            items.append((k, make(v).output(k, data)))  # normal field output
 
-    if data.has_key('_links') and links is not None:
-        ls = data['_links'].items() # preset links like self
+    if '_links' in data and links is not None:
+        ls = data['_links'].items()  # preset links like self
         for link_key, link_value in links.items():
-            if inspect.isclass(link_value) and issubclass(link_value, LinkedResource): # simple straigh linked resource
-                if data.has_key(link_key): # it means we specified a value for this link in the output
+            if inspect.isclass(link_value) and issubclass(link_value, LinkedResource):  # simple straigh linked resource
+                if link_key in data:  # it means we specified a value for this link in the output
                     ls.append((link_key, data[link_key].to_dict(hal_context)))
-                else: # We need to autogenerate one from the signature as it is not specified
+                else:  # We need to autogenerate one from the signature as it is not specified
                     ls.append((link_key, Link(link_value).to_dict(hal_context)))
-            elif isinstance(link_value, list): # an array of resources
+            elif isinstance(link_value, list):  # an array of resources
                 list_of_links = [link_obj.to_dict(hal_context) for link_obj in data[link_key]]
                 ls.append((link_key, list_of_links))
 
