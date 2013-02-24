@@ -14,7 +14,7 @@ class Namespace(dict):
 class Argument(object):
 
     def __init__(self, name, default=None, dest=None, required=False,
-                 ignore=False, type=unicode, location='values',
+                 ignore=False, type=unicode, location=['values'],
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
         """
@@ -34,7 +34,7 @@ class Argument(object):
             converted. If a type raises a ValidationError, the message in the
             error will be returned in the response.
         :param location: Where to source the arguments from the Flask request
-            (ex: headers, args, etc.)
+            (ex: headers, args, etc.), can be an iterator
         :param choices: A container of the allowable values for the argument.
         :param help: A brief description of the argument, returned in the
             response when the argument is invalid. This takes precedence over
@@ -60,7 +60,14 @@ class Argument(object):
         """Pulls values off the request in the provided location
         :param request: The flask request object to parse arguments from
         """
-        return getattr(request, self.location, MultiDict())  # either find it or don't
+        if isinstance(self.location, basestring):
+            return getattr(request, self.location, MultiDict())
+        else:
+            for l in self.location:
+                value = getattr(request, l, None)
+                if value:
+                    return value
+            return MultiDict()
 
     def convert(self, value, op):
         try:
@@ -117,7 +124,7 @@ class Argument(object):
 
         if not results and self.required:
             self.handle_validation_error(ValueError(
-                u"{0} is required in {1}".format(self.name, self.location)))
+                u"{0} is required in {1}".format(self.name, 'or '.join(self.location))))
 
         if not results:
             return self.default
