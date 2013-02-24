@@ -14,7 +14,7 @@ class Namespace(dict):
 class Argument(object):
 
     def __init__(self, name, default=None, dest=None, required=False,
-                 ignore=False, type=unicode, location=['values'],
+                 ignore=False, type=unicode, location=('values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
         """
