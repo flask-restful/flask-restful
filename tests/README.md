@@ -1,5 +1,5 @@
 # Running the tests
 
-Go up a directory and run:
+Go to main directory and type:
 
-    $ make test
+    python2 setup.py test
