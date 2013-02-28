@@ -25,7 +25,8 @@ def abort(http_status_code, **kwargs):
     try:
         original_flask_abort(http_status_code)
     except HTTPException as e:
-        e.data = kwargs
+        if len(kwargs):
+            e.data = kwargs
         raise e
 
 DEFAULT_REPRESENTATIONS = {'application/json': output_json}
