@@ -13,6 +13,11 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
+    test_suite = 'nose.collector',
+    setup_requires=[
+        'nose>=1.1.2',
+        'mock>=0.8',
+    ],
     install_requires=[
         'Flask>=0.8',
         'pycrypto>=2.6',
