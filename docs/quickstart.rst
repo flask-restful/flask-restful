@@ -209,8 +209,7 @@ Full Example
 Save this example in api.py ::
 
     from flask import Flask
-    from flask.ext import restful
-    from flask.ext.restful import reqparse, abort
+    from flask.ext.restful import reqparse, abort, Api, Resource
 
     app = Flask(__name__)
     api = restful.Api(app)
@@ -230,7 +229,7 @@ Save this example in api.py ::
 
     # Todo
     #   show a single todo item and lets you delete them
-    class Todo(restful.Resource):
+    class Todo(Resource):
         def get(self, todo_id):
             abort_if_todo_doesnt_exist(todo_id)
             return TODOS[todo_id]
@@ -249,9 +248,16 @@ Save this example in api.py ::
 
     # TodoList
     #   shows a list of all todos, and lets you POST to add new tasks
-    class TodoList(restful.Resource):
+    class TodoList(Resource):
         def get(self):
             return TODOS
+
+        def post(self):
+            args = parser.parse_args()
+            todo_id = 'todo%d' % (len(TODOS) + 1)
+            TODOS[todo_id] = {'task': args['task']}
+            return TODOS[todo_id], 201
+
     ##
     ## Actually setup the Api resource routing here
     ##
@@ -295,12 +301,11 @@ DELETE a task ::
     < Server: Werkzeug/0.8.3 Python/2.7.2
     < Date: Mon, 01 Oct 2012 22:10:32 GMT
 
-
 Add a new task ::
 
-    $ curl http://localhost:5000/todos/todo4 -d "task=something new" -v
+    $ curl http://localhost:5000/todos -d "task=something new" -X POST -v
 
-    > PUT /todos/todo4 HTTP/1.1
+    > POST /todos HTTP/1.1
     > User-Agent: curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3
     > Host: localhost:5000
     > Accept: */*
@@ -316,3 +321,23 @@ Add a new task ::
     <
     * Closing connection #0
     {"task": "something new"}
+
+Update a task ::
+
+    $ curl http://localhost:5000/todos/todo3 -d "task=something different" -X PUT -v
+
+    > PUT /todos/todo3 HTTP/1.1
+    > Host: localhost:5000
+    > Accept: */*
+    > Content-Length: 20
+    > Content-Type: application/x-www-form-urlencoded
+    >
+    * HTTP 1.0, assume close after body
+    < HTTP/1.0 201 CREATED
+    < Content-Type: application/json
+    < Content-Length: 27
+    < Server: Werkzeug/0.8.3 Python/2.7.3
+    < Date: Mon, 01 Oct 2012 22:13:00 GMT
+    <
+    * Closing connection #0
+    {"task": "someting different"}
