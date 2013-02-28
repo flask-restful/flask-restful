@@ -3,7 +3,17 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
-Version 0.1.4
+Version 0.1.6
+-------------
+
+Released on February 27th, 2013
+
+- Update the documentation with a fuller example (https://github.com/twilio/flask-restful/pull/37)
+- Update the test runner to use setuptools (https://github.com/twilio/flask-restful/pull/46)
+- Don't set exception data if we have no data to set (https://github.com/twilio/flask-restful/pull/49)
+- action='append' in the RequestParser always returns a list. (https://github.com/twilio/flask-restful/pull/41)
+
+Version 0.1.5
 -------------
 
 Released on Jan 9th, 2013
