@@ -480,6 +480,14 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(e.data, {'foo': 'bar'})
 
 
+    def test_abort_no_data(self):
+        try:
+            flask_restful.abort(404)
+            assert False  # We should never get here
+        except Exception as e:
+            self.assertEquals(False, hasattr(e, "data"))
+
+
     def test_abort_type(self):
         self.assertRaises(werkzeug.exceptions.HTTPException, lambda: flask_restful.abort(404))
 
