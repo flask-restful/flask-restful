@@ -1,11 +1,15 @@
 import difflib
 from functools import wraps
+import inspect
+import logging
+import os
 import re
-from flask import request, Response
+from flask import request, Response, render_template, send_from_directory
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from werkzeug.exceptions import HTTPException
-from flask.ext.restful.utils import unauthorized, error_data, unpack
+from flask.ext.restful.links import Link, Embed
+from flask.ext.restful.utils import unauthorized, error_data, unpack, dynamic_import
 from flask.ext.restful.representations.json import output_json
 
 try:
@@ -14,7 +18,7 @@ try:
 except ImportError:
     from utils.ordereddict import OrderedDict
 
-__all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'abort')
+__all__ = ('Api', 'Resource', 'LinkedResource', 'marshal', 'marshal_with', 'abort')
 
 
 def abort(http_status_code, **kwargs):
@@ -36,20 +40,43 @@ class Api(object):
     """
     The main entry point for the application.
     You need to initialize it with a Flask Application :
+    >>> from flask import Flask
+    >>> from flask_restful import Api
     >>> app = Flask(__name__)
-    >>> api = restful.Api(app)
+    >>> api = Api(app)
     """
 
     def __init__(self, app, prefix='', default_mediatype='application/json',
-                 decorators=None):
+                 decorators=None, output_errors=True):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.app = app
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
-        app.handle_exception = self.handle_error
-        app.handle_user_exception = self.handle_error
+        if output_errors and hasattr(app, 'handle_exception'):
+            self.original_handle_exception, app.handle_exception = app.handle_exception, self.handle_exception
+            self.original_handle_user_exception, app.handle_user_exception = app.handle_user_exception, self.handle_user_exception
+
+        # FIXME, just hacked my way around Flask
+        thisdir = os.path.dirname(__file__)
+
+        from jinja2 import FileSystemLoader
+
+        if isinstance(app.jinja_loader, FileSystemLoader):
+            app.jinja_loader.searchpath += [thisdir + os.sep + 'templates']
+
+        @app.route('/apiexplorer/<path:filename>')
+        def ae_static(filename):
+            return send_from_directory(thisdir + os.sep + 'static', filename)
+
+    def handle_exception(self, e):
+        self.original_handle_exception(e)  # hijack the handler but at least play nice by calling it
+        return self.handle_error(e)  # but return the JSON
+
+    def handle_user_exception(self, e):
+        self.original_handle_user_exception(e)  # hijack the handler but at least play nice by calling it
+        return self.handle_error(e)  # but return the JSON
 
     def handle_error(self, e):
         """Error handler for the API transforms a raised exception into a Flask
@@ -83,7 +110,7 @@ class Api(object):
 
         if code == 401:
             resp = unauthorized(resp,
-                self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful"))
+                                self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful"))
 
         return resp
 
@@ -95,7 +122,7 @@ class Api(object):
     def add_resource(self, resource, *urls, **kwargs):
         """Adds a resource to the api.
 
-        :param resource: the class name of your resource
+        :param resource: the class of your resource
         :type resource: Resource
         :param urls: one or more url routes to match for the resource, standard
                      flask routing rules apply.  Any url variables will be
@@ -121,18 +148,55 @@ class Api(object):
 
         if endpoint in self.app.view_functions.keys():
             previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
-            if previous_view_class != resource: # if you override with a different class the endpoint, avoid the collision by raising an exception
+            if previous_view_class != resource:  # if you override with a different class the endpoint, avoid the collision by raising an exception
                 raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource_func = self.output(resource.as_view(endpoint))
+        resource._endpoint = endpoint  # record the endpoint so we can generate parameterized url from it
+
+        # patch the resource_func for at least "GET" for the API explorer
+        if resource_func.methods is not None and 'GET' not in resource_func.methods:
+            resource_func.methods.append('GET')
+            # End of hacks for the API explorer
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
 
-
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
+
+    def recurse_add(self, resource_class, **kwargs):
+
+        if resource_class not in self.registered_resources:
+            logging.info("Registering: %s" % resource_class)
+            uri = resource_class._self
+            self.add_resource(resource_class, uri, **kwargs)
+            self.registered_resources.append(resource_class)
+            for name, method in inspect.getmembers(resource_class, predicate=inspect.ismethod):
+                if hasattr(method, '_links') and method._links is not None:
+                    links = method._links
+                    for key, value in links.iteritems():
+                        if isinstance(value, list):
+                            self.recurse_add(value[0])
+                        elif isinstance(value, basestring):
+                            klass = dynamic_import(value)
+                            links[key] = klass  # patch the dictionary so it renders
+                            self.recurse_add(klass)
+                        else:
+                            self.recurse_add(value)
+                if hasattr(method, '_fields'):
+                    fields = method._fields
+                    for value in fields.values():
+                        if isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource):
+                            self.recurse_add(value[0])
+                        elif inspect.isclass(value) and issubclass(value, LinkedResource):
+                            self.recurse_add(value)
+
+    def add_root(self, resource_class, **kwargs):
+        self.registered_resources = []
+        self.recurse_add(resource_class, **kwargs)
+        del self.registered_resources
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
@@ -140,6 +204,7 @@ class Api(object):
 
         :param resource: The resource as a flask view function
         """
+
         @wraps(resource)
         def wrapper(*args, **kwargs):
             resp = resource(*args, **kwargs)
@@ -147,6 +212,7 @@ class Api(object):
                 return resp
             data, code, headers = unpack(resp)
             return self.make_response(data, code, headers=headers)
+
         return wrapper
 
     def make_response(self, data, *args, **kwargs):
@@ -188,9 +254,11 @@ class Api(object):
                 resp.headers.extend(headers)
                 return resp
         """
+
         def wrapper(func):
             self.representations[mediatype] = func
             return func
+
         return wrapper
 
 
@@ -206,7 +274,21 @@ class Resource(MethodView):
     representations = None
     method_decorators = []
 
+    def explore(self, *args, **kwargs):
+        for clazz in LinkedResource.__subclasses__():
+            if clazz == self.__class__:
+                methods = {}
+                class_dict = clazz.__dict__
+                for verb in ('get', 'put', 'post', 'head', 'delete'):
+                    f = class_dict.get(verb, None)
+                    if f:
+                        methods[verb] = f
+                return Response(render_template('apiexplorer.html', clazz=clazz, url=clazz._self, resource_params=kwargs, methods=methods, mimetype='text/html'))
+
     def dispatch_request(self, *args, **kwargs):
+        for mime, _ in request.accept_mimetypes:
+            if mime.find('html') != -1:
+                return self.explore(self, *args, **kwargs)
 
         # Taken from flask
         #noinspection PyUnresolvedReferences
@@ -217,8 +299,11 @@ class Resource(MethodView):
 
         for decorator in self.method_decorators:
             meth = decorator(meth)
-
-        resp = meth(*args, **kwargs)
+        try:
+            resp = meth(*args, **kwargs)
+        except Exception as e:
+            logging.exception(e)
+            raise e
 
         if isinstance(resp, Response):  # There may be a better way to test
             return resp
@@ -236,7 +321,13 @@ class Resource(MethodView):
         return resp
 
 
-def marshal(data, fields):
+class LinkedResource(Resource):
+    # override that for your own linked resource
+    _self = 'undefined'
+    _endpoint = 'undefined'
+
+
+def marshal(data, fields, links=None, hal_context=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
@@ -253,6 +344,7 @@ def marshal(data, fields):
     OrderedDict([('a', 100)])
 
     """
+
     def make(cls):
         if isinstance(cls, type):
             return cls()
@@ -261,9 +353,36 @@ def marshal(data, fields):
     if isinstance(data, (list, tuple)):
         return [marshal(d, fields) for d in data]
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
-                                  else make(v).output(k, data))
-                                  for k, v in fields.items())
+    # handle the magic JSON HAL sections
+    items = []
+    embedded = []
+    for k, v in fields.items():
+        if inspect.isclass(v) and issubclass(v, LinkedResource):  # this is the special case of embedded resources
+            embedded.append((k, data[k].to_dict()))
+        elif isinstance(v, list) and inspect.isclass(v[0]) and issubclass(v[0], LinkedResource):  # an array of resources
+            embedded.append((k, [resource.to_dict() for resource in data[k]]))
+        elif isinstance(v, dict):
+            items.append((k, marshal(data, v)))  # recursively go down the dictionaries
+        else:
+            items.append((k, make(v).output(k, data)))  # normal field output
+
+    if '_links' in data and links is not None:
+        ls = data['_links'].items()  # preset links like self
+        for link_key, link_value in links.items():
+            if inspect.isclass(link_value) and issubclass(link_value, LinkedResource):  # simple straigh linked resource
+                if link_key in data:  # it means we specified a value for this link in the output
+                    ls.append((link_key, data[link_key].to_dict(hal_context)))
+                else:  # We need to autogenerate one from the signature as it is not specified
+                    ls.append((link_key, Link(link_value).to_dict(hal_context)))
+            elif isinstance(link_value, list):  # an array of resources
+                list_of_links = [link_obj.to_dict(hal_context) for link_obj in data[link_key]]
+                ls.append((link_key, list_of_links))
+
+        items = [('_links', dict(ls))] + items
+
+    if embedded:
+        items.append(('_embedded', OrderedDict(embedded)))
+
     return OrderedDict(items)
 
 
@@ -282,6 +401,7 @@ class marshal_with(object):
 
     see :meth:`flask.ext.restful.marshal`
     """
+
     def __init__(self, fields):
         """:param fields: a dict of whose keys will make up the final
                           serialized response output"""
@@ -291,4 +411,5 @@ class marshal_with(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             return marshal(f(*args, **kwargs), self.fields)
+
         return wrapper
