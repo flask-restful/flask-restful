@@ -107,6 +107,8 @@ class Api(object):
                          see: Fields
         :type endpoint: str
 
+        Additional keyword arguments not specified above will be passed as-is
+        to app.add_url_rule().
 
         Examples:
             api.add_resource(HelloWorld, '/', '/hello')
@@ -115,7 +117,7 @@ class Api(object):
             api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
 
         """
-        endpoint = kwargs.get('endpoint') or resource.__name__.lower()
+        endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
 
         if endpoint in self.app.view_functions.keys():
             previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
@@ -130,7 +132,7 @@ class Api(object):
 
 
         for url in urls:
-            self.app.add_url_rule(self.prefix + url, view_func=resource_func)
+            self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
