@@ -9,6 +9,7 @@ from flask import abort as original_flask_abort
 from flask.views import MethodView, MethodViewType
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.links import Link, Embed, ResourceLink
+from flask.ext.restful.representations import hyperlinker, simple
 from flask.ext.restful.utils import unauthorized, error_data, unpack, dynamic_import
 from flask.ext.restful.representations.json import output_json
 
@@ -32,7 +33,7 @@ def abort(http_status_code, **kwargs):
         e.data = kwargs
         raise e
 
-DEFAULT_REPRESENTATIONS = {'application/json': output_json}
+DEFAULT_REPRESENTATIONS = {'application/json': (simple, output_json), 'application/hal+json': (hyperlinker, output_json)}
 
 
 class Api(object):
@@ -43,9 +44,12 @@ class Api(object):
     >>> api = restful.Api(app)
     """
 
-    def __init__(self, app, prefix='', default_mediatype='application/json',
+    def __init__(self, app, prefix='', default_mediatype='application/hal+json',
                  decorators=None, output_errors=True):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
+
+        LinkedResource.representations = self.representations  # forward that to the linked resouce as we will not have any context there
+
         self.urls = {}
         self.prefix = prefix
         self.app = app
@@ -69,12 +73,12 @@ class Api(object):
 
 
     def handle_exception(self, e):
-        self.original_handle_exception(e) # hijack the handler but at least play nice by calling it
-        return self.handle_error(e) # but return the JSON
+        self.original_handle_exception(e)  # hijack the handler but at least play nice by calling it
+        return self.handle_error(e)  # but return the JSON
 
     def handle_user_exception(self, e):
-        self.original_handle_user_exception(e) # hijack the handler but at least play nice by calling it
-        return self.handle_error(e) # but return the JSON
+        self.original_handle_user_exception(e)  # hijack the handler but at least play nice by calling it
+        return self.handle_error(e)  # but return the JSON
 
     def handle_error(self, e):
         """Error handler for the API transforms a raised exception into a Flask
@@ -144,12 +148,12 @@ class Api(object):
 
         if endpoint in self.app.view_functions.keys():
             previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
-            if previous_view_class != resource: # if you override with a different class the endpoint, avoid the collision by raising an exception
+            if previous_view_class != resource:  # if you override with a different class the endpoint, avoid the collision by raising an exception
                 raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource_func = self.output(resource.as_view(endpoint))
-        resource._endpoint = endpoint # record the endpoint so we can generate parameterized url from it
+        resource._endpoint = endpoint  # record the endpoint so we can generate parameterized url from it
 
         # patch the resource_func for at least "GET" for the API explorer
         if resource_func.methods is not None and 'GET' not in resource_func.methods:
@@ -222,7 +226,7 @@ class Api(object):
         """
         for mediatype in self.mediatypes() + [self.default_mediatype]:
             if mediatype in self.representations:
-                resp = self.representations[mediatype](data, *args, **kwargs)
+                resp = self.representations[mediatype][1](data, *args, **kwargs)
                 resp.headers['Content-Type'] = mediatype
                 return resp
 
@@ -311,7 +315,7 @@ class Resource(MethodView):
         for mediatype in self.mediatypes():
             if mediatype in representations:
                 data, code, headers = unpack(resp)
-                resp = representations[mediatype](data, code, headers)
+                resp = representations[mediatype][1](data, code, headers)
                 resp.headers['Content-Type'] = mediatype
                 return resp
 
@@ -322,6 +326,7 @@ class LinkedResource(Resource):
     # override that for your own linked resource
     _self = 'undefined'
     _endpoint = 'undefined'
+    representations = None # will be set at runtime
 
 
 def marshal(data, fields, links=None, hal_context = None):

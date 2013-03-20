@@ -244,6 +244,10 @@
                             $.ajax({
                                 url:document.URL,
                                 type:"{{ method }}",
+                                headers: {
+                                    Accept : "application/hal+json"
+                                },
+
                                 data:$.param(params),
 
                                 success:function (response, textStatus, jqXHR) {
@@ -258,7 +262,7 @@
                                         $("#{{ clazz.__name__ }}_{{ method }}_result").html("Empty")
                                     }
                                     $("#{{ clazz.__name__ }}_{{ method }}_links").html(links_html);
-                                    $("#{{ clazz.__name__ }}_{{ method }}_bare").html("<pre>" + syntaxHighlight(response) + "</pre>");
+                                    $("#{{ clazz.__name__ }}_{{ method }}_bare").html("<pre>\"" + syntaxHighlight(response) + "\"</pre>");
                                 },
                                 error:function (jqXHR, textStatus, errorThrown) {
                                     console.log("The following error occured: " + textStatus, errorThrown);
