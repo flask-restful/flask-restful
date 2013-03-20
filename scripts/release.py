@@ -30,13 +30,13 @@ def main():
         f.write(setup.replace(option.format(args.version),
                               option.format(new_version)))
 
-    #subprocess.call(["git", "add", "setup.py"])
-    #subprocess.call(["git", "commit", "-am",
-    #                 "Bump to version {}".format(new_version)])
-    #subprocess.call(["git", "tag", new_version])
-    #subprocess.call(["git", "push", "origin", "master"])
-    #subprocess.call(["git", "push", "--tags"])
-    #subprocess.call(["python", "setup.py", "sdist", "upload"])
+    subprocess.call(["git", "add", "setup.py"])
+    subprocess.call(["git", "commit", "-am",
+                     "Bump to version {}".format(new_version)])
+    subprocess.call(["git", "tag", new_version])
+    subprocess.call(["git", "push", "origin", "master"])
+    subprocess.call(["git", "push", "--tags"])
+    subprocess.call(["python", "setup.py", "sdist", "upload"])
 
 
 if __name__ == "__main__":
