@@ -123,8 +123,17 @@ class Argument(object):
                     results.append(value)
 
         if not results and self.required:
-            self.handle_validation_error(ValueError(
-                u"{0} is required in {1}".format(self.name, 'or '.join(self.location))))
+            if isinstance(self.location, basestring):
+                error_msg = u"{0} is required in {1}".format(
+                    self.name,
+                    self.location
+                )
+            else:
+                error_msg = u"{0} is required in {1}".format(
+                    self.name,
+                    'or '.join(self.location)
+                )
+            self.handle_validation_error(ValueError(error_msg))
 
         if not results:
             return self.default
