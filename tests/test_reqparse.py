@@ -359,7 +359,23 @@ class ReqParseTestCase(unittest.TestCase):
         parser = RequestParser()
         parser.add_argument("foo", required=True)
 
-        self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
+        message = ''
+        try:
+            parser.parse_args(req)
+        except exceptions.BadRequest as e:
+            message = e.data['message']
+
+        self.assertEquals(message, 'foo is required in values')
+
+        parser = RequestParser()
+        parser.add_argument("bar", required=True, location=['values', 'cookies'])
+
+        try:
+            parser.parse_args(req)
+        except exceptions.BadRequest as e:
+            message = e.data['message']
+
+        self.assertEquals(message, 'bar is required in values or cookies')
 
 
     def test_parse_default_append(self):

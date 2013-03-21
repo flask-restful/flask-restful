@@ -131,7 +131,7 @@ class Argument(object):
             else:
                 error_msg = u"{0} is required in {1}".format(
                     self.name,
-                    'or '.join(self.location)
+                    ' or '.join(self.location)
                 )
             self.handle_validation_error(ValueError(error_msg))
 
