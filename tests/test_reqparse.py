@@ -357,7 +357,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble")
 
         parser = RequestParser()
-        parser.add_argument("foo", required=True)
+        parser.add_argument("foo", required=True, location='values')
 
         message = ''
         try:
