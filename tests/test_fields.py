@@ -12,6 +12,9 @@ from nose.tools import assert_equals # you need it for tests in form of continua
 class Foo(object):
     def __init__(self):
         self.hey = 3
+class Bar(object):
+    def __marshallable__(self):
+        return {"hey": 3}
 
 def check_field(expected, field, value):
     assert_equals(expected, field.output('a', {'a': value}))
@@ -231,6 +234,9 @@ class FieldsTestCase(unittest.TestCase):
         obj = {"hey": 3}
         self.assertEquals(obj, fields.to_marshallable_type(Foo()))
 
+    def test_to_dict_custom_marshal(self):
+        obj = {"hey": 3}
+        self.assertEquals(obj, fields.to_marshallable_type(Bar()))
 
     def test_get_value(self):
         self.assertEquals(3, fields.get_value("hey", {"hey": 3}))
