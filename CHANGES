@@ -3,6 +3,16 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.1.7
+-------------
+
+Released on March 24, 2013
+
+The first released version of 0.1.6 contained a problem with the tar.gz
+uploaded to PyPI. 0.1.7 contains the same changes as 0.1.6 but ensures the
+version you download from PyPI does not contain problems (if for example, you
+cached the old, broken version of 0.1.6).
+
 Version 0.1.6
 -------------
 
