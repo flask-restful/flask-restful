@@ -53,6 +53,8 @@ class Api(object):
 
         if app is not None:
             self.init_app(app)
+        else:
+            self.app = None
 
     def init_app(self, app):
         """Initialize this class with the given :class:`flask.Flask`
