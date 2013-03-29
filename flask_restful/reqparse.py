@@ -60,7 +60,11 @@ class Argument(object):
         """Pulls values off the request in the provided location
         :param request: The flask request object to parse arguments from
         """
-        return getattr(request, self.location, MultiDict())  # either find it or don't
+
+        source = getattr(request, self.location, MultiDict())
+        if source is None:
+            return MultiDict()
+        return source
 
     def convert(self, value, op):
         try:
