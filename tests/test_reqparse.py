@@ -51,9 +51,19 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(arg.location, "url")
 
 
+    def test_location_url_list(self):
+        arg = Argument("foo", location=["url"])
+        self.assertEquals(arg.location, ["url"])
+
+
     def test_location_header(self):
         arg = Argument("foo", location="headers")
         self.assertEquals(arg.location, "headers")
+
+
+    def test_location_header_list(self):
+        arg = Argument("foo", location=["headers"])
+        self.assertEquals(arg.location, ["headers"])
 
 
     def test_type(self):
@@ -140,16 +150,16 @@ class ReqParseTestCase(unittest.TestCase):
         req = Mock(['args', 'headers', 'values'])
         req.args = {'foo': 'bar'}
         req.headers = {'baz': 'bat'}
-        arg = Argument('foo', location='args')
+        arg = Argument('foo', location=['args'])
         self.assertEquals(arg.source(req), req.args)
 
-        arg = Argument('foo', location='headers')
+        arg = Argument('foo', location=['headers'])
         self.assertEquals(arg.source(req), req.headers)
 
 
     def test_source_bad_location(self):
         req = Mock(['values'])
-        arg = Argument('foo', location='foo')
+        arg = Argument('foo', location=['foo'])
         self.assertTrue(len(arg.source(req)) == 0)  # yes, basically you don't find it
 
 
@@ -176,7 +186,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Mock()
         req.view_args = {"foo": "bar"}
         parser = RequestParser()
-        parser.add_argument("foo", location="view_args", type=str)
+        parser.add_argument("foo", location=["view_args"], type=str)
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], "bar")
 
@@ -347,9 +357,25 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble")
 
         parser = RequestParser()
-        parser.add_argument("foo", required=True)
+        parser.add_argument("foo", required=True, location='values')
 
-        self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
+        message = ''
+        try:
+            parser.parse_args(req)
+        except exceptions.BadRequest as e:
+            message = e.data['message']
+
+        self.assertEquals(message, 'foo is required in values')
+
+        parser = RequestParser()
+        parser.add_argument("bar", required=True, location=['values', 'cookies'])
+
+        try:
+            parser.parse_args(req)
+        except exceptions.BadRequest as e:
+            message = e.data['message']
+
+        self.assertEquals(message, 'bar is required in values or cookies')
 
 
     def test_parse_default_append(self):
