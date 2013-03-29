@@ -190,6 +190,19 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(api.default_mediatype, 'application/json')
 
 
+    def test_api_delayed_initialization(self):
+        app = Flask(__name__)
+        api = flask_restful.Api()
+        api.init_app(app)
+
+        # Add a dummy Resource to verify that the app is properly set.
+        class HelloWorld(flask_restful.Resource):
+            def get(self):
+                return {}
+
+        api.add_resource(HelloWorld, '/', endpoint="hello")
+
+
     def test_api_prefix(self):
         app = Mock()
         api = flask_restful.Api(app, prefix='/foo')

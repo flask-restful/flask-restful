@@ -35,19 +35,41 @@ DEFAULT_REPRESENTATIONS = {'application/json': output_json}
 class Api(object):
     """
     The main entry point for the application.
-    You need to initialize it with a Flask Application :
+    You need to initialize it with a Flask Application:
     >>> app = Flask(__name__)
     >>> api = restful.Api(app)
+
+    Alternatively, you can use :meth:`init_app` to set the Flask application
+    after it has been constructed.
     """
 
-    def __init__(self, app, prefix='', default_mediatype='application/json',
-                 decorators=None):
+    def __init__(self, app=None, prefix='',
+                 default_mediatype='application/json', decorators=None):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
-        self.app = app
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
+
+        if app is not None:
+            self.init_app(app)
+        else:
+            self.app = None
+
+    def init_app(self, app):
+        """Initialize this class with the given :class:`flask.Flask`
+        application object.
+
+        :param app: the Flask application object
+        :type app: flask.Flask
+
+        Examples:
+            api = Api()
+            api.init_app(app)
+            api.add_resource(...)
+
+        """
+        self.app = app
         app.handle_exception = self.handle_error
         app.handle_user_exception = self.handle_error
 
