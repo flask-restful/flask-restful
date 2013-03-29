@@ -65,7 +65,7 @@ class Argument(object):
         else:
             for l in self.location:
                 value = getattr(request, l, None)
-                if value:
+                if value is not None:
                     return value
             return MultiDict()
 
