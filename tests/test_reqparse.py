@@ -223,7 +223,7 @@ class ReqParseTestCase(unittest.TestCase):
 
         with app.test_request_context('/bubble', method="post"):
             args = parser.parse_args()
-            print args
+            self.assertEquals(args['foo'], None)
 
 
     def test_parse_append_ignore(self):
