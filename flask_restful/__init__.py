@@ -36,11 +36,25 @@ class Api(object):
     """
     The main entry point for the application.
     You need to initialize it with a Flask Application:
+
     >>> app = Flask(__name__)
     >>> api = restful.Api(app)
 
     Alternatively, you can use :meth:`init_app` to set the Flask application
     after it has been constructed.
+
+    :param app: the Flask application object
+    :type app: flask.Flask
+    :param exception_handler:
+        global exception handler, assigned to
+        :meth:`flask.Flask.handle_exception`.
+        Defaults to :meth:`handle_error`
+    :type exception_handler: function
+    :param user_exception_handler:
+        in-request exception handler, assigned to
+        :meth:`flask.Flask.handle_user_exception`. Defaults
+        to :meth:`handle_error`
+    :type user_exception_handler: function
     """
 
     def __init__(self, app=None, prefix='',
@@ -64,8 +78,19 @@ class Api(object):
 
         :param app: the Flask application object
         :type app: flask.Flask
+        :param exception_handler:
+            global exception handler, assigned to
+            :meth:`flask.Flask.handle_exception`.
+            Defaults to :meth:`flask.ext.restful.handle_error`
+        :type exception_handler: function
+        :param user_exception_handler:
+            in-request exception handler, assigned to
+            :meth:`flask.Flask.handle_user_exception`. Defaults
+            to :meth:`handle_error`
+        :type user_exception_handler: function
 
-        Examples:
+        Examples::
+
             api = Api()
             api.init_app(app)
             api.add_resource(...)
@@ -122,7 +147,7 @@ class Api(object):
         """Adds a resource to the api.
 
         :param resource: the class name of your resource
-        :type resource: Resource
+        :type resource: :class:`Resource`
         :param urls: one or more url routes to match for the resource, standard
                      flask routing rules apply.  Any url variables will be
                      passed to the resource method as args.
@@ -136,9 +161,9 @@ class Api(object):
         Additional keyword arguments not specified above will be passed as-is
         to app.add_url_rule().
 
-        Examples:
-            api.add_resource(HelloWorld, '/', '/hello')
+        Examples::
 
+            api.add_resource(HelloWorld, '/', '/hello')
             api.add_resource(Foo, '/foo', endpoint="foo")
             api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
 
@@ -206,7 +231,7 @@ class Api(object):
         The transformer should convert the data appropriately for the mediatype
         and return a Flask response object.
 
-        Ex:
+        Ex::
 
             @api.representation('application/xml')
             def xml(data, code, headers):
