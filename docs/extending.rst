@@ -164,3 +164,23 @@ you want to build custom authentication into every request ::
 Since Flask-RESTful Resources are actually Flask view objects, you can also
 use standard `flask view decorators <http://flask.pocoo.org/docs/views/#decorating-views>`_.
 
+Custom Error Handlers
+---------------------
+
+By default all errors in your Flask app will be handled by the
+``flask.ext.restful.Api.handle_error`` function. However, sometimes you want to
+do something special when an error occurs - log to a file, send an email, etc.
+You can specify a custom error handler when setting up your app, like this: ::
+
+    api = Api()
+    def custom_error_handler(e):
+        perform_side_effecting_operations()
+
+        # After you've done that, you can call the default 
+        # flask-restful error handler
+        return api.handle_error(e)
+
+    app = Flask(__name__)
+    api.init_app(app, exception_handler=custom_error_handler,
+                 user_exception_handler=custom_error_handler)
+
