@@ -69,9 +69,9 @@ class Raw(object):
 
         Ex::
 
-        class TitleCase(Raw):
-            def format(self, value):
-                return unicode(value).title()
+            class TitleCase(Raw):
+                def format(self, value):
+                    return unicode(value).title()
         """
         return value
 
