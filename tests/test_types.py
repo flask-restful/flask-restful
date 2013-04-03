@@ -69,6 +69,7 @@ def test_bad_urls():
         'http://-invalid.com',
         'http://inv-.alid-.com',
         'http://inv-.-alid.com',
+        'foo bar baz',
         'http://@foo:bar@example.com',
         'http://:bar@example.com',
         'http://bar:bar:bar@example.com',
@@ -81,7 +82,8 @@ def test_bad_url_error_message():
     values = [
         'google.com',
         'domain.google.com',
-        'kevin:pass@google.com/path?query'
+        'kevin:pass@google.com/path?query',
+        u'foo \u2713',
     ]
 
     for value in values:
