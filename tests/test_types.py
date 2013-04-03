@@ -2,7 +2,7 @@ import unittest
 from flask_restful import types
 import datetime
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals, assert_raises # you need it for tests in form of continuations
+from nose.tools import assert_equals, assert_raises, eq_ # you need it for tests in form of continuations
 
 # http://docs.python.org/library/datetime.html?highlight=datetime#datetime.tzinfo.fromutc
 ZERO = datetime.timedelta(0)
@@ -56,7 +56,10 @@ def test_urls():
         yield assert_equals, types.url(value), value
 
 def check_raises(exception, func, value):
-    assert_raises(exception, lambda: func(value))
+    with assert_raises(exception) as cm:
+        func(value)
+
+    eq_(cm.exception.message, u"{0} is not a valid URL".format(value))
 
 def test_bad_urls():
     values = [
@@ -70,6 +73,7 @@ def test_bad_urls():
         'http://inv-.alid-.com',
         'http://inv-.-alid.com',
         'foo bar baz',
+        u'foo \u2713',
         'http://@foo:bar@example.com',
         'http://:bar@example.com',
         'http://bar:bar:bar@example.com',
@@ -78,12 +82,18 @@ def test_bad_urls():
     for value in values:
         yield check_raises, ValueError, types.url, value
 
+def test_unicode():
+    try:
+        types.url(u'foo \u2713')
+    except ValueError:
+        pass
+
+
 def test_bad_url_error_message():
     values = [
         'google.com',
         'domain.google.com',
         'kevin:pass@google.com/path?query',
-        u'foo \u2713',
     ]
 
     for value in values:
@@ -94,8 +104,8 @@ def check_url_error_message(value):
         types.url(value)
         assert False, "types.url({0}) should raise an exception".format(value)
     except ValueError as e:
-        assert_equals(str(e), ("{0} is not a valid URL. Did you mean: "
-                               "http://{0}".format(value)))
+        assert_equals(unicode(e), (u"{0} is not a valid URL. Did you mean: "
+                                   u"http://{0}".format(value)))
 
 class TypesTestCase(unittest.TestCase):
 
