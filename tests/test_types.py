@@ -87,6 +87,7 @@ def test_bad_url_error_message():
         'google.com',
         'domain.google.com',
         'kevin:pass@google.com/path?query',
+        u'google.com/path?\u2713',
     ]
 
     for value in values:
@@ -95,7 +96,7 @@ def test_bad_url_error_message():
 def check_url_error_message(value):
     try:
         types.url(value)
-        assert False, "types.url({0}) should raise an exception".format(value)
+        assert False, u"types.url({0}) should raise an exception".format(value)
     except ValueError as e:
         assert_equals(unicode(e), (u"{0} is not a valid URL. Did you mean: "
                                    u"http://{0}".format(value)))
