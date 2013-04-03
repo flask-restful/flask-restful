@@ -82,13 +82,6 @@ def test_bad_urls():
     for value in values:
         yield check_raises, ValueError, types.url, value
 
-def test_unicode():
-    try:
-        types.url(u'foo \u2713')
-    except ValueError:
-        pass
-
-
 def test_bad_url_error_message():
     values = [
         'google.com',
