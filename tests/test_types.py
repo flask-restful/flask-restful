@@ -2,7 +2,7 @@ import unittest
 from flask_restful import types
 import datetime
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals, assert_raises, eq_ # you need it for tests in form of continuations
+from nose.tools import assert_equals # you need it for tests in form of continuations
 
 # http://docs.python.org/library/datetime.html?highlight=datetime#datetime.tzinfo.fromutc
 ZERO = datetime.timedelta(0)
