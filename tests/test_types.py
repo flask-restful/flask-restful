@@ -55,11 +55,12 @@ def test_urls():
     for value in urls:
         yield assert_equals, types.url(value), value
 
-def check_raises(exception, func, value):
-    with assert_raises(exception) as cm:
-        func(value)
-
-    eq_(cm.exception.message, u"{0} is not a valid URL".format(value))
+def check_bad_url_raises(value):
+    try:
+        types.url(value)
+        assert False, "shouldn't get here"
+    except ValueError as e:
+        assert_equals(unicode(e), u"{0} is not a valid URL".format(value))
 
 def test_bad_urls():
     values = [
@@ -80,7 +81,7 @@ def test_bad_urls():
     ]
 
     for value in values:
-        yield check_raises, ValueError, types.url, value
+        yield check_bad_url_raises, value
 
 def test_bad_url_error_message():
     values = [
@@ -100,6 +101,7 @@ def check_url_error_message(value):
     except ValueError as e:
         assert_equals(unicode(e), (u"{0} is not a valid URL. Did you mean: "
                                    u"http://{0}".format(value)))
+
 
 class TypesTestCase(unittest.TestCase):
 
