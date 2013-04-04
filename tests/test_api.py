@@ -96,6 +96,14 @@ class APITestCase(unittest.TestCase):
             return {'foo': 'bar', 'bat': 'baz'}
         self.assertEquals(try_me(), {'foo': 'bar'})
 
+    def test_marshal_decorator_tuple(self):
+        fields = {'foo': flask_restful.fields.Raw}
+
+        @flask_restful.marshal_with(fields)
+        def try_me():
+            return {'foo': 'bar', 'bat': 'baz'}, 200, {'X-test': 123}
+        self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
+
     def test_marshal_field(self):
         fields = {'foo': flask_restful.fields.Raw()}
         output = flask_restful.marshal({'foo': 'bar', 'bat': 'baz'}, fields)
