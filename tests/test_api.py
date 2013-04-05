@@ -210,9 +210,10 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api()
         api.handle_error = Mock()
+        app.handle_exception = error_handler
+        app.handle_user_exception = error_handler
 
-        api.init_app(app, exception_handler=error_handler,
-                     user_exception_handler=error_handler)
+        api.init_app(app, override_error_handler=False)
 
         with app.test_request_context('/foo'):
             app.handle_exception(err)

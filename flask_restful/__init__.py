@@ -45,7 +45,7 @@ class Api(object):
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 exception_handler=None, user_exception_handler=None):
+                 override_error_handler=True):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
@@ -53,12 +53,11 @@ class Api(object):
         self.decorators = decorators if decorators else []
 
         if app is not None:
-            self.init_app(app, exception_handler, user_exception_handler)
+            self.init_app(app)
         else:
             self.app = None
 
-    def init_app(self, app, exception_handler=None,
-                 user_exception_handler=None):
+    def init_app(self, app, override_error_handler=True):
         """Initialize this class with the given :class:`flask.Flask`
         application object.
 
@@ -72,8 +71,9 @@ class Api(object):
 
         """
 
-        app.handle_exception = exception_handler or self.handle_error
-        app.handle_user_exception = user_exception_handler or self.handle_error
+        if override_error_handler:
+            app.handle_exception = self.handle_error
+            app.handle_user_exception = self.handle_error
 
         self.app = app
 
