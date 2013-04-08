@@ -326,5 +326,10 @@ class marshal_with(object):
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            return marshal(f(*args, **kwargs), self.fields)
+            resp = f(*args, **kwargs)
+            if isinstance(resp, tuple):
+                data, code, headers = unpack(resp)
+                return marshal(data, self.fields), code, headers
+            else:
+                return marshal(resp, self.fields)
         return wrapper
