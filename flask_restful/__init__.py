@@ -314,8 +314,8 @@ class marshal_with(object):
         def wrapper(*args, **kwargs):
             resp = f(*args, **kwargs)
             if isinstance(resp, tuple):
-                (data, code, headers) = unpack(resp)
-                return (marshal(data, self.fields), code, headers)
+                data, code, headers = unpack(resp)
+                return marshal(data, self.fields), code, headers
             else:
                 return marshal(resp, self.fields)
         return wrapper
