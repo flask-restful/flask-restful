@@ -17,6 +17,7 @@ setup(
     setup_requires=[
         'nose>=1.1.2',
         'mock>=0.8',
+        'blinker==1.2',
     ],
     install_requires=[
         'Flask>=0.8',

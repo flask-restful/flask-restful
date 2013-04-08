@@ -1,9 +1,10 @@
 import difflib
-from functools import wraps
+from functools import wraps, partial
 import re
 from flask import request, Response
 from flask import abort as original_flask_abort
 from flask.views import MethodView
+from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
@@ -70,8 +71,18 @@ class Api(object):
 
         """
         self.app = app
-        app.handle_exception = self.handle_error
-        app.handle_user_exception = self.handle_error
+        self.endpoints = set()
+        app.handle_exception = partial(self.error_router, app.handle_exception)
+        app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+
+    def error_router(self, original_handler, e):
+        """This function decides whether the error occured in a flask-restful
+        endpoint or not. If it happened in a flask-restful endpoint, our
+        handler will be dispatched. If it happened in an unrelated view, the
+        app's original error handler will be dispatched."""
+        if not request.url_rule or request.url_rule.endpoint not in self.endpoints:
+            return original_handler(e)
+        return self.handle_error(e)
 
     def handle_error(self, e):
         """Error handler for the API transforms a raised exception into a Flask
@@ -80,6 +91,8 @@ class Api(object):
         :param e: the raised Exception object
         :type e: Exception
         """
+        got_request_exception.send(self, exception=e)
+
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
 
@@ -140,6 +153,7 @@ class Api(object):
 
         """
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
+        self.endpoints.add(endpoint)
 
         if endpoint in self.app.view_functions.keys():
             previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
