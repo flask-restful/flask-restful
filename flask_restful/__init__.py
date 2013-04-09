@@ -149,7 +149,7 @@ class Api(object):
         """Adds a resource to the api.
 
         :param resource: the class name of your resource
-        :type resource: Resource
+        :type resource: :class:`Resource`
         :param urls: one or more url routes to match for the resource, standard
                      flask routing rules apply.  Any url variables will be
                      passed to the resource method as args.
@@ -163,9 +163,9 @@ class Api(object):
         Additional keyword arguments not specified above will be passed as-is
         to app.add_url_rule().
 
-        Examples:
-            api.add_resource(HelloWorld, '/', '/hello')
+        Examples::
 
+            api.add_resource(HelloWorld, '/', '/hello')
             api.add_resource(Foo, '/foo', endpoint="foo")
             api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
 
@@ -234,7 +234,7 @@ class Api(object):
         The transformer should convert the data appropriately for the mediatype
         and return a Flask response object.
 
-        Ex:
+        Ex::
 
             @api.representation('application/xml')
             def xml(data, code, headers):
