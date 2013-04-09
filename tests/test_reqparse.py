@@ -2,9 +2,12 @@
 import unittest
 from mock import Mock, patch
 from flask import Flask
+from flask import request as flask_request
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
 from flask_restful.reqparse import Argument, RequestParser, Namespace
+
+import json
 
 class ReqParseTestCase(unittest.TestCase):
     def test_default_help(self):
@@ -60,6 +63,9 @@ class ReqParseTestCase(unittest.TestCase):
         arg = Argument("foo", location="headers")
         self.assertEquals(arg.location, "headers")
 
+    def test_location_json(self):
+        arg = Argument("foo", location="json")
+        self.assertEquals(arg.location, "json")
 
     def test_location_header_list(self):
         arg = Argument("foo", location=["headers"])
@@ -217,6 +223,17 @@ class ReqParseTestCase(unittest.TestCase):
         with app.test_request_context('/bubble?foo=barß'):
             args = parser.parse_args()
             self.assertEquals(args['foo'], u"barß")
+
+
+    def test_json_location(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", location="json")
+
+        with app.test_request_context('/bubble', method="post"):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], None)
 
 
     def test_parse_append_ignore(self):
