@@ -75,14 +75,25 @@ class Api(object):
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
 
+    def _has_fr_route(self):
+        """Encapsulating the rules for whether the request was to a Flask endpoint"""
+        return request.url_rule and request.url_rule.endpoint in self.endpoints
+
     def error_router(self, original_handler, e):
         """This function decides whether the error occured in a flask-restful
         endpoint or not. If it happened in a flask-restful endpoint, our
         handler will be dispatched. If it happened in an unrelated view, the
-        app's original error handler will be dispatched."""
-        if not request.url_rule or request.url_rule.endpoint not in self.endpoints:
-            return original_handler(e)
-        return self.handle_error(e)
+        app's original error handler will be dispatched.
+
+        :param original_handler: the original Flask error handler for the app
+        :type original_handler: function
+        :param e: the exception raised while handling the request
+        :type e: Exception
+
+        """
+        if self._has_fr_route():
+            return self.handle_error(e)
+        return original_handler(e)
 
     def handle_error(self, e):
         """Error handler for the API transforms a raised exception into a Flask
@@ -90,6 +101,7 @@ class Api(object):
 
         :param e: the raised Exception object
         :type e: Exception
+
         """
         got_request_exception.send(self, exception=e)
 

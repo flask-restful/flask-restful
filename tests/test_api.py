@@ -22,6 +22,11 @@ def test_unpack():
     yield check_unpack, ("hey", 201, "foo"), unpack(("hey", 201, "foo"))
     yield check_unpack, (["hey", 201], 200, {}), unpack(["hey", 201])
 
+# Add a dummy Resource to verify that the app is properly set.
+class HelloWorld(flask_restful.Resource):
+    def get(self):
+        return {}
+
 class APITestCase(unittest.TestCase):
 
     def test_http_code(self):
@@ -204,11 +209,6 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api()
         api.init_app(app)
 
-        # Add a dummy Resource to verify that the app is properly set.
-        class HelloWorld(flask_restful.Resource):
-            def get(self):
-                return {}
-
         api.add_resource(HelloWorld, '/', endpoint="hello")
 
 
@@ -278,7 +278,7 @@ class APITestCase(unittest.TestCase):
 
     def test_handle_error_signal(self):
         if not signals_available:
-            self.skipTest("Can't test signals without signal support")   
+            self.skipTest("Can't test signals without signal support")
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
@@ -559,6 +559,18 @@ class APITestCase(unittest.TestCase):
 
     def test_abort_type(self):
         self.assertRaises(werkzeug.exceptions.HTTPException, lambda: flask_restful.abort(404))
+
+
+    def test_endpoints(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
+        with app.test_request_context('/foo'):
+            self.assertFalse(api._has_fr_route())
+
+        with app.test_request_context('/ids/3'):
+            self.assertTrue(api._has_fr_route())
+
 
 if __name__ == '__main__':
     unittest.main()
