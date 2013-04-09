@@ -79,6 +79,9 @@ class Api(object):
         """Encapsulating the rules for whether the request was to a Flask endpoint"""
         return request.url_rule and request.url_rule.endpoint in self.endpoints
 
+    def _is_404_error(self, e):
+        return hasattr(e, "code") and e.code == 404
+
     def error_router(self, original_handler, e):
         """This function decides whether the error occured in a flask-restful
         endpoint or not. If it happened in a flask-restful endpoint, our
@@ -91,7 +94,7 @@ class Api(object):
         :type e: Exception
 
         """
-        if self._has_fr_route():
+        if self._has_fr_route() or self._is_404_error(e):
             return self.handle_error(e)
         return original_handler(e)
 
