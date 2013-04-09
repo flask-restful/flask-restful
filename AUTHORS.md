@@ -14,4 +14,4 @@ We'd like to thank the following people who have contributed to this project.
 - Ryan Horn &lt;ryanhorn@twilio.com>
 - Victor Neo &lt;icyisamu@gmail.com>
 - Yaniv Aknin &lt;yaniv@aknin.name>
-
+- Bret Barker &lt;bret@abitrandom.net>

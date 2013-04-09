@@ -9,19 +9,21 @@ Version 0.2.0
 Released on April 9, 2013
 
 - Flask-RESTful will no longer clobber your app's error handler; it will only
-  handle errors that occur while handling Flask-RESTful routes. The breaking
-  change is that 404 errors will default to using the Flask text/html error
-  handler. Override this behavior by passing `catch_all_404s=True` to the `Api`
-  constructor. (via @yaniv-aknin)
-- Arguments can now take `location` as a tuple, in case you want to specify
-  that an argument could be passed in multiple places. (via @mindflayer)
+handle errors that occur while handling Flask-RESTful routes. The breaking
+change is that 404 errors will default to using the Flask text/html error
+handler. Override this behavior by passing `catch_all_404s=True` to the `Api`
+constructor. (via [@yaniv-aknin]( /yaniv-aknin ))
+- Arguments can now take `location` as a tuple, in case you want to
+specify that an argument could be passed in multiple places. (via
+[@mindflayer](/mindflayer))
 - Fixes a problem where passing an empty post body to a resource that expected
   a json argument would throw a 500.
 - Creation of the `Api` and initialization of the Flask `app` are no longer
-  bundled together. (via @andrew-d)
-- `marshal_with` now works with responses that are tuples. (via @noise)
+  bundled together. (via [@andrew-d](/andrew-d))
+- `marshal_with` now works with responses that are tuples. (via
+[@noise](/noise))
 - `types.url` will no longer throw a ascii decoding ValueError if you pass it
-  Unicode characters
+Unicode characters
 
 Version 0.1.7
 -------------
