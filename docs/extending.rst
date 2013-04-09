@@ -168,9 +168,29 @@ use standard `flask view decorators <http://flask.pocoo.org/docs/views/#decorati
 Custom Error Handlers
 ---------------------
 
-By default all errors in your Flask app will be handled by the
-:meth:`~flask.ext.restful.Api.handle_error` function. However, sometimes you want to
-do something special when an error occurs - log to a file, send an email, etc.
-You can specify a custom error handler when setting up your app, like this: ::
+Error handling is a tricky problem. Your Flask application may be wearing
+multiple hats, yet you want to handle all Flask-RESTful errors with the correct
+content type and error syntax as your 200-level requests.
 
-    pass
+Flask-RESTful will call the :meth:`~flask.ext.restful.Api.handle_error`
+function on any 400 or 500 error that happens on a Flask-RESTful route, and
+leave other routes alone. You may want your app to return an error message with
+the correct media type on 404 Not Found errors; in which case, use the
+`catch_all_404s` parameter of the :class:`~flask.ext.restful.Api` constructor ::
+
+    app = Flask(__name__)
+    api = flask_restful.Api(app, catch_all_404s=True)
+
+Then Flask-RESTful will handle 404s in addition to errors on its own routes.
+
+Sometimes you want to do something special when an error occurs - log to a
+file, send an email, etc. Use the :class:`~flask.signals` class to dispatch
+custom actions when you get an exception. ::
+
+    def log_exception(sender, exception, **extra):
+        """ Log an exception to our logging framework """
+        sender.logger.debug('Got exception during processing: %s', exception)
+
+    from flask import got_request_exception
+    got_request_exception.connect(log_exception, app)
+
