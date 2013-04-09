@@ -276,6 +276,15 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(resp.status_code, 404)
         self.assertEquals('text/html', resp.headers['Content-Type'])
 
+    def test_non_api_error_404_catchall(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app, catch_all_404s=True)
+        app = app.test_client()
+
+        resp = app.get("/foo")
+        self.assertEquals(api.default_mediatype, resp.headers['Content-Type'])
+
+
     def test_handle_error_signal(self):
         if not signals_available:
             self.skipTest("Can't test signals without signal support")

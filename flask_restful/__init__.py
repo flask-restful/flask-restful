@@ -45,12 +45,14 @@ class Api(object):
     """
 
     def __init__(self, app=None, prefix='',
-                 default_mediatype='application/json', decorators=None):
+                 default_mediatype='application/json', decorators=None,
+                 catch_all_404s=False):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
+        self.catch_all_404s = catch_all_404s
 
         if app is not None:
             self.init_app(app)
@@ -94,7 +96,8 @@ class Api(object):
         :type e: Exception
 
         """
-        if self._has_fr_route() or self._is_404_error(e):
+        if self._has_fr_route() or (self.catch_all_404s
+                                    and self._is_404_error(e)):
             return self.handle_error(e)
         return original_handler(e)
 
