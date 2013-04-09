@@ -91,16 +91,15 @@ class Api(object):
         self.endpoints = set()
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
-        #app.handle_exception = self.handle_error
-        #app.handle_user_exception = self.handle_error
 
     def _has_fr_route(self):
         """Encapsulating the rules for whether the request was to a Flask endpoint"""
         adapter = self.app.create_url_adapter(request)
         try:
             adapter.match()
-        except MethodNotAllowed:
-            return True
+        except MethodNotAllowed as e:
+            (rule, _) = adapter.match(method=e.valid_methods[0], return_rule=True)
+            return rule.endpoint in self.endpoints
         except:
             pass
 
