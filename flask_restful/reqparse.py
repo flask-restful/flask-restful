@@ -151,14 +151,14 @@ class Argument(object):
 
 class RequestParser(object):
     """Enables adding and parsing of multiple arguments in the context of a
-    single request. Ex:
+    single request. Ex::
 
-    from flask import request
+        from flask import request
 
-    parser = RequestParser()
-    parser.add_argument('foo')
-    parser.add_argument('int_bar', type=int)
-    args = parser.parse_args()
+        parser = RequestParser()
+        parser.add_argument('foo')
+        parser.add_argument('int_bar', type=int)
+        args = parser.parse_args()
     """
 
     def __init__(self, argument_class=Argument, namespace_class=Namespace):

@@ -211,6 +211,24 @@ class APITestCase(unittest.TestCase):
         api.add_resource(HelloWorld, '/', endpoint="hello")
 
 
+    def test_api_error_handler(self):
+        err = ValueError("invalid")
+        error_handler = Mock()
+
+        app = Flask(__name__)
+        api = flask_restful.Api()
+        api.handle_error = Mock()
+
+        api.init_app(app, exception_handler=error_handler,
+                     user_exception_handler=error_handler)
+
+        with app.test_request_context('/foo'):
+            app.handle_exception(err)
+
+        assert not api.handle_error.called, 'api.handle_error should be overridden'
+        error_handler.assert_called_once_with(err)
+
+
     def test_api_prefix(self):
         app = Mock()
         api = flask_restful.Api(app, prefix='/foo')
