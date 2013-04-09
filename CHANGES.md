@@ -3,6 +3,14 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.1
+-------------
+
+Released on April 9, 2013
+
+- Use the default Flask-RESTful error handler, instead of the default Flask
+  error handler, to handle 405 Not Allowed errors on requests to Api endpoints.
+
 Version 0.2.0
 -------------
 
