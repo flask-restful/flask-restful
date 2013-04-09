@@ -36,12 +36,26 @@ DEFAULT_REPRESENTATIONS = {'application/json': output_json}
 class Api(object):
     """
     The main entry point for the application.
-    You need to initialize it with a Flask Application:
+    You need to initialize it with a Flask Application: ::
+
     >>> app = Flask(__name__)
     >>> api = restful.Api(app)
 
     Alternatively, you can use :meth:`init_app` to set the Flask application
     after it has been constructed.
+
+    :param app: the Flask application object
+    :type app: flask.Flask
+    :param prefix: Prefix all routes with a value, eg v1 or 2010-04-01
+    :type prefix: str
+    :param default_mediatype: The default media type to return
+    :type default_mediatype: str
+    :param decorators: Decorators to attach to every resource
+    :type decorators: list
+    :param catch_all_404s: Use :meth:`handle_error`
+        to handle 404 errors throughout your app
+    :type catch_all_404s: bool
+
     """
 
     def __init__(self, app=None, prefix='',
@@ -66,7 +80,8 @@ class Api(object):
         :param app: the Flask application object
         :type app: flask.Flask
 
-        Examples:
+        Examples::
+
             api = Api()
             api.init_app(app)
             api.add_resource(...)
@@ -155,13 +170,12 @@ class Api(object):
                      passed to the resource method as args.
         :type urls: str
 
-        :param endpoint: endpoint name (defaults to Resource.__name__.lower()
-                         can be used to reference this route in Url fields
-                         see: Fields
+        :param endpoint: endpoint name (defaults to :meth:`Resource.__name__.lower`
+            Can be used to reference this route in :class:`fields.Url` fields
         :type endpoint: str
 
         Additional keyword arguments not specified above will be passed as-is
-        to app.add_url_rule().
+        to :meth:`flask.Flask.add_url_rule`.
 
         Examples::
 

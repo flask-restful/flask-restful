@@ -167,6 +167,9 @@ class FormattedString(Raw):
 
 
 class Url(Raw):
+    """
+    A string representation of a Url
+    """
     def __init__(self, endpoint):
         super(Url, self).__init__()
         self.endpoint = endpoint
