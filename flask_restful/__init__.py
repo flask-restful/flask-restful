@@ -44,7 +44,8 @@ class Api(object):
     """
 
     def __init__(self, app=None, prefix='',
-                 default_mediatype='application/json', decorators=None):
+                 default_mediatype='application/json', decorators=None,
+                 override_error_handler=True):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
@@ -56,7 +57,7 @@ class Api(object):
         else:
             self.app = None
 
-    def init_app(self, app):
+    def init_app(self, app, override_error_handler=True):
         """Initialize this class with the given :class:`flask.Flask`
         application object.
 
@@ -69,9 +70,12 @@ class Api(object):
             api.add_resource(...)
 
         """
+
+        if override_error_handler:
+            app.handle_exception = self.handle_error
+            app.handle_user_exception = self.handle_error
+
         self.app = app
-        app.handle_exception = self.handle_error
-        app.handle_user_exception = self.handle_error
 
     def handle_error(self, e):
         """Error handler for the API transforms a raised exception into a Flask
