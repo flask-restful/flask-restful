@@ -5,7 +5,7 @@ from flask import request, Response
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from flask.signals import got_request_exception
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, MethodNotAllowed
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 
@@ -91,9 +91,19 @@ class Api(object):
         self.endpoints = set()
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+        #app.handle_exception = self.handle_error
+        #app.handle_user_exception = self.handle_error
 
     def _has_fr_route(self):
         """Encapsulating the rules for whether the request was to a Flask endpoint"""
+        adapter = self.app.create_url_adapter(request)
+        try:
+            adapter.match()
+        except MethodNotAllowed:
+            return True
+        except:
+            pass
+
         return request.url_rule and request.url_rule.endpoint in self.endpoints
 
     def _is_404_error(self, e):
@@ -267,7 +277,7 @@ class Resource(MethodView):
     Represents an abstract RESTful resource. Concrete resources should extend
     from this class and expose methods for each supported HTTP method. If a
     resource is invoked with an unsupported HTTP method, the API will return a
-    response with status 405 Method Not Alowed. Otherwise the appropriate
+    response with status 405 Method Not Allowed. Otherwise the appropriate
     method is called and passed all arguments from the url rule used when
     adding the resource to an Api instance. See Api.add_resource for details.
     """

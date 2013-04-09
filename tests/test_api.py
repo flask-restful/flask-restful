@@ -580,6 +580,15 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/ids/3'):
             self.assertTrue(api._has_fr_route())
 
+    def test_fr_405(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
+        app = app.test_client()
+        resp = app.post('/ids/3')
+        self.assertEquals(resp.status_code, 405)
+        self.assertEquals(resp.content_type, api.default_mediatype)
+
 
 if __name__ == '__main__':
     unittest.main()
