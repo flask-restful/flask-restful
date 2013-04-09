@@ -114,8 +114,7 @@ class Api(object):
         except NotFound:
             return self.catch_all_404s
         except:
-            # Werkzeug throws other kinds of exceptions that we don't care about
-            # like Redirect and 404, ignore them.
+            # Werkzeug throws other kinds of exceptions, such as Redirect
             pass
 
 
