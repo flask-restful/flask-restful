@@ -5,7 +5,7 @@ from flask import request, Response
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from flask.signals import got_request_exception
-from werkzeug.exceptions import HTTPException, MethodNotAllowed
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 
@@ -92,21 +92,40 @@ class Api(object):
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
 
-    def _has_fr_route(self):
-        """Encapsulating the rules for whether the request was to a Flask endpoint"""
+
+    def _should_use_fr_error_handler(self):
+        """ Determine if error should be handled with FR or default Flask
+
+        The goal is to return Flask error handlers for non-FR-related routes,
+        and FR errors (with the correct media type) for FR endpoints. This
+        method currently handles 404 and 405 errors.
+
+        :return: bool
+        """
         adapter = self.app.create_url_adapter(request)
+
         try:
             adapter.match()
         except MethodNotAllowed as e:
-            (rule, _) = adapter.match(method=e.valid_methods[0], return_rule=True)
+            # Check if the other HTTP methods at this url would hit the Api
+            valid_route_method = e.valid_methods[0]
+            rule, _ = adapter.match(method=valid_route_method, return_rule=True)
             return rule.endpoint in self.endpoints
+        except NotFound:
+            return self.catch_all_404s
         except:
+            # Werkzeug throws other kinds of exceptions that we don't care about
+            # like Redirect and 404, ignore them.
             pass
 
-        return request.url_rule and request.url_rule.endpoint in self.endpoints
 
-    def _is_404_error(self, e):
-        return hasattr(e, "code") and e.code == 404
+    def _has_fr_route(self):
+        """Encapsulating the rules for whether the request was to a Flask endpoint"""
+        # 404's, 405's, which might not have a url_rule
+        if self._should_use_fr_error_handler():
+            return True
+        # for all other errors, just check if FR dispatched the route
+        return request.url_rule and request.url_rule.endpoint in self.endpoints
 
     def error_router(self, original_handler, e):
         """This function decides whether the error occured in a flask-restful
@@ -120,8 +139,7 @@ class Api(object):
         :type e: Exception
 
         """
-        if self._has_fr_route() or (self.catch_all_404s
-                                    and self._is_404_error(e)):
+        if self._has_fr_route():
             return self.handle_error(e)
         return original_handler(e)
 
