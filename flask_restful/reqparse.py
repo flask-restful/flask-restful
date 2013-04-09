@@ -61,13 +61,16 @@ class Argument(object):
         :param request: The flask request object to parse arguments from
         """
         if isinstance(self.location, basestring):
-            return getattr(request, self.location, MultiDict())
+            value = getattr(request, self.location, MultiDict())
+            if value is not None:
+                return value
         else:
             for l in self.location:
                 value = getattr(request, l, None)
                 if value is not None:
                     return value
-            return MultiDict()
+
+        return MultiDict()
 
     def convert(self, value, op):
         try:
