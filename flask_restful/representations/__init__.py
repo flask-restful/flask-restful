@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from flask_restful import OrderedDict
 import inspect
 import urllib
 import re
