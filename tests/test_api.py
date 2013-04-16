@@ -187,7 +187,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         self.assertEquals(api.urls, {})
         self.assertEquals(api.prefix, '')
-        self.assertEquals(api.default_mediatype, 'application/json')
+        self.assertEquals(api.default_mediatype, 'application/hal+json')
 
 
     def test_api_prefix(self):
@@ -323,7 +323,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo",
             headers={'Accept': 'application/xml; q=.5'}):
             self.assertEquals(api.mediatypes_method()(Mock()),
-                ['application/xml', 'application/json'])
+                ['application/xml', 'application/hal+json'])
 
 
     def test_media_types_q(self):
@@ -465,7 +465,7 @@ class APITestCase(unittest.TestCase):
         class Foo(flask_restful.Resource):
 
             representations = {
-                'text/plain': text,
+                'text/plain': (None, text),
                 }
 
             def get(self):

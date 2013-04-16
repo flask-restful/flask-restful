@@ -69,7 +69,7 @@ class Verb(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             accept = str(request.accept_mimetypes)
-            transform, _ = LinkedResource.representations[accept]
+            transform, _ = LinkedResource.representations.get(accept, LinkedResource.representations['application/hal+json'])
             hal_context = dict(kwargs.items() + self.parser.parse_args().items())
             return transform(args[0], self, f(*args, **hal_context), hal_context)
 
