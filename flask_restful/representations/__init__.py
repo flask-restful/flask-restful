@@ -1,4 +1,9 @@
-from flask_restful import OrderedDict
+try:
+    #noinspection PyUnresolvedReferences
+    from collections import OrderedDict
+except ImportError:
+    from utils.ordereddict import OrderedDict
+
 import inspect
 import urllib
 import re
