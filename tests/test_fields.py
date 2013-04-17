@@ -2,7 +2,7 @@ from decimal import Decimal
 import unittest
 from mock import Mock
 from flask.ext.restful.fields import MarshallingException
-from flask_restful import fields
+from flask.ext.restful import fields
 from datetime import datetime
 from flask import Flask
 #noinspection PyUnresolvedReferences
