@@ -1,5 +1,7 @@
+import os
 import unittest
 from flask import Flask
+import sys
 from flask.ext.restful import LinkedResource, Api, Embed, Link, ResourceLink
 
 #noinspection PyUnresolvedReferences
@@ -143,16 +145,19 @@ class HALTestCase(unittest.TestCase):
         self.assertEquals(resp.data, '{"_links": {"self": {"href": "/bar"}, "My_dear_foo": {"href": "/bar/foo"}}}')
 
     def test_circulardep_linked_resource(self):
+        sys.path.insert(0, os.path.abspath(os.path.join('..', os.path.dirname(__file__))))
+        try:
+            app = Flask(__name__)
+            api = Api(app)
+            api.add_root(A)
+            app = app.test_client()
+            resp = app.get("/a")
+            self.assertEquals(resp.status_code, 200)
 
-        app = Flask(__name__)
-        api = Api(app)
-        api.add_root(A)
-        app = app.test_client()
-        resp = app.get("/a")
-        self.assertEquals(resp.status_code, 200)
-
-        resp = app.get("/b")
-        self.assertEquals(resp.status_code, 200)
+            resp = app.get("/b")
+            self.assertEquals(resp.status_code, 200)
+        finally:
+            sys.path.pop(0)
 
 
     def test_simple_embedded_linked_resource(self):

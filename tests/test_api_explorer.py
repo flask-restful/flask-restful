@@ -1,13 +1,13 @@
 
 import unittest
 from flask import Flask
-from flask.ext.restful import LinkedResource, Api, Embed, Link
 
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals # you need it for tests in form of continuations
-from flask.ext.restful.declarative import Verb, parameters, output, link
-from flask.ext.restful.fields import Integer, String
-from flask.ext.restful.reqparse import Argument
+from flask_restful.declarative import Verb, parameters, output, link
+from flask_restful.fields import Integer, String
+from flask_restful.reqparse import Argument
+from flask_restful import LinkedResource, Api, Embed
 
 class APIExplorerTestCase(unittest.TestCase):
 

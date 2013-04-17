@@ -2,9 +2,12 @@
 import unittest
 from mock import Mock, patch
 from flask import Flask
+from flask import request as flask_request
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
 from flask_restful.reqparse import Argument, RequestParser, Namespace
+
+import json
 
 class ReqParseTestCase(unittest.TestCase):
     def test_default_help(self):
@@ -51,9 +54,22 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(arg.location, "url")
 
 
+    def test_location_url_list(self):
+        arg = Argument("foo", location=["url"])
+        self.assertEquals(arg.location, ["url"])
+
+
     def test_location_header(self):
         arg = Argument("foo", location="headers")
         self.assertEquals(arg.location, "headers")
+
+    def test_location_json(self):
+        arg = Argument("foo", location="json")
+        self.assertEquals(arg.location, "json")
+
+    def test_location_header_list(self):
+        arg = Argument("foo", location=["headers"])
+        self.assertEquals(arg.location, ["headers"])
 
 
     def test_type(self):
@@ -140,16 +156,16 @@ class ReqParseTestCase(unittest.TestCase):
         req = Mock(['args', 'headers', 'values'])
         req.args = {'foo': 'bar'}
         req.headers = {'baz': 'bat'}
-        arg = Argument('foo', location='args')
+        arg = Argument('foo', location=['args'])
         self.assertEquals(arg.source(req), req.args)
 
-        arg = Argument('foo', location='headers')
+        arg = Argument('foo', location=['headers'])
         self.assertEquals(arg.source(req), req.headers)
 
 
     def test_source_bad_location(self):
         req = Mock(['values'])
-        arg = Argument('foo', location='foo')
+        arg = Argument('foo', location=['foo'])
         self.assertTrue(len(arg.source(req)) == 0)  # yes, basically you don't find it
 
 
@@ -176,7 +192,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Mock()
         req.view_args = {"foo": "bar"}
         parser = RequestParser()
-        parser.add_argument("foo", location="view_args", type=str)
+        parser.add_argument("foo", location=["view_args"], type=str)
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], "bar")
 
@@ -209,6 +225,17 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'], u"barß")
 
 
+    def test_json_location(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", location="json")
+
+        with app.test_request_context('/bubble', method="post"):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], None)
+
+
     def test_parse_append_ignore(self):
         req = Request.from_values("/bubble?foo=bar")
 
@@ -237,6 +264,15 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], ["bar", "bat"])
+
+    def test_parse_append_single(self):
+        req = Request.from_values("/bubble?foo=bar")
+
+        parser = RequestParser()
+        parser.add_argument("foo", action="append"),
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], ["bar"])
 
 
     def test_parse_dest(self):
@@ -300,7 +336,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument("foo", operators=["<=", "="], action="append")
 
         args = parser.parse_args(Request.from_values("/bubble?foo<=bar"))
-        self.assertEquals(args['foo'], "bar")
+        self.assertEquals(args['foo'], ["bar"])
 
 
     def test_parse_lte_gte_missing(self):
@@ -338,9 +374,25 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble")
 
         parser = RequestParser()
-        parser.add_argument("foo", required=True)
+        parser.add_argument("foo", required=True, location='values')
 
-        self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
+        message = ''
+        try:
+            parser.parse_args(req)
+        except exceptions.BadRequest as e:
+            message = e.data['message']
+
+        self.assertEquals(message, 'foo is required in values')
+
+        parser = RequestParser()
+        parser.add_argument("bar", required=True, location=['values', 'cookies'])
+
+        try:
+            parser.parse_args(req)
+        except exceptions.BadRequest as e:
+            message = e.data['message']
+
+        self.assertEquals(message, 'bar is required in values or cookies')
 
 
     def test_parse_default_append(self):

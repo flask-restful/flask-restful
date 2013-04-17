@@ -1,5 +1,6 @@
 import unittest
 from flask import Flask, views
+from flask.signals import got_request_exception, signals_available
 from mock import Mock
 import flask
 import werkzeug
@@ -7,7 +8,7 @@ from flask.ext.restful.utils import http_status_message, challenge, unauthorized
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps
+from json import dumps, loads
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals # you need it for tests in form of continuations
 
@@ -20,6 +21,18 @@ def test_unpack():
     yield check_unpack, ("hey", 201, {}), unpack(("hey", 201))
     yield check_unpack, ("hey", 201, "foo"), unpack(("hey", 201, "foo"))
     yield check_unpack, (["hey", 201], 200, {}), unpack(["hey", 201])
+
+# Add a dummy Resource to verify that the app is properly set.
+class HelloWorld(flask_restful.Resource):
+    def get(self):
+        return {}
+
+
+def make_app_mock():
+    app = Mock()
+    app.view_functions = {}
+    app.jinja_loader.searchpath = []
+    return app
 
 class APITestCase(unittest.TestCase):
 
@@ -95,6 +108,14 @@ class APITestCase(unittest.TestCase):
         def try_me():
             return {'foo': 'bar', 'bat': 'baz'}
         self.assertEquals(try_me(), {'foo': 'bar'})
+
+    def test_marshal_decorator_tuple(self):
+        fields = {'foo': flask_restful.fields.Raw}
+
+        @flask_restful.marshal_with(fields)
+        def try_me():
+            return {'foo': 'bar', 'bat': 'baz'}, 200, {'X-test': 123}
+        self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
 
     def test_marshal_field(self):
         fields = {'foo': flask_restful.fields.Raw()}
@@ -172,7 +193,7 @@ class APITestCase(unittest.TestCase):
 
 
     def test_api_representation(self):
-        app = Mock()
+        app = make_app_mock()
         api = flask_restful.Api(app)
 
         @api.representation('foo')
@@ -183,15 +204,24 @@ class APITestCase(unittest.TestCase):
 
 
     def test_api_base(self):
-        app = Mock()
+        app = make_app_mock()
+
         api = flask_restful.Api(app)
         self.assertEquals(api.urls, {})
         self.assertEquals(api.prefix, '')
         self.assertEquals(api.default_mediatype, 'application/hal+json')
 
 
+    def test_api_delayed_initialization(self):
+        app = Flask(__name__)
+        api = flask_restful.Api()
+        api.init_app(app)
+
+        api.add_resource(HelloWorld, '/', endpoint="hello")
+
+
     def test_api_prefix(self):
-        app = Mock()
+        app = make_app_mock()
         api = flask_restful.Api(app, prefix='/foo')
         self.assertEquals(api.prefix, '/foo')
 
@@ -230,31 +260,61 @@ class APITestCase(unittest.TestCase):
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
 
-    def test_output_json_error(self):
+    def test_handle_api_error(self):
         app = Flask(__name__)
-        flask_restful.Api(app, output_errors=True)
+        api = flask_restful.Api(app)
+        class Test(flask_restful.Resource):
+            def get(self):
+                flask.abort(404)
+        api.add_resource(Test(), '/api', endpoint='api')
         app = app.test_client()
-        resp = app.get("/foo")
-        self.assertEquals(resp.status_code, 404)
-        self.assertEquals(resp.data, dumps(error_data(404)))
 
-    def test_output_standard_error(self):
-        app = Flask(__name__)
-        flask_restful.Api(app, output_errors=False)
-        app = app.test_client()
-        resp = app.get("/foo")
+        resp = app.get("/api")
         self.assertEquals(resp.status_code, 404)
-        self.assertNotEqual(resp.data.find("404 Not Found"),-1)
+        self.assertEquals('application/hal+json', resp.headers['Content-Type'])
+        self.assertEquals(loads(resp.data).get('status'), 404)
 
-    def test_handle_real_error(self):
+
+    def test_handle_non_api_error(self):
         app = Flask(__name__)
         flask_restful.Api(app)
         app = app.test_client()
 
         resp = app.get("/foo")
         self.assertEquals(resp.status_code, 404)
-        self.assertEquals(resp.data, dumps(error_data(404)))
+        self.assertEquals('text/html', resp.headers['Content-Type'])
 
+    def test_non_api_error_404_catchall(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app, catch_all_404s=True)
+        app = app.test_client()
+
+        resp = app.get("/foo")
+        self.assertEquals(api.default_mediatype, resp.headers['Content-Type'])
+
+
+    def test_handle_error_signal(self):
+        if not signals_available:
+            self.skipTest("Can't test signals without signal support")
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        exception = Mock()
+        exception.code = 400
+        exception.data = {'foo': 'bar'}
+
+        recorded = []
+        def record(sender, exception):
+            recorded.append(exception)
+
+        got_request_exception.connect(record, api)
+        try:
+            with app.test_request_context("/foo"):
+                api.handle_error(exception)
+                self.assertEquals(len(recorded), 1)
+                self.assertTrue(exception is recorded[0])
+        finally:
+            got_request_exception.disconnect(record, app)
 
     def test_handle_error(self):
         app = Flask(__name__)
@@ -340,8 +400,7 @@ class APITestCase(unittest.TestCase):
         def return_zero(func):
             return 0
 
-        app = Mock()
-        app.view_functions = {}
+        app = make_app_mock()
         view = Mock()
         api = flask_restful.Api(app)
         api.decorators.append(return_zero)
@@ -353,8 +412,8 @@ class APITestCase(unittest.TestCase):
 
 
     def test_add_resource_endpoint(self):
-        app = Mock()
-        app.view_functions = {}
+        app = make_app_mock()
+
         view = Mock()
 
         api = flask_restful.Api(app)
@@ -398,8 +457,7 @@ class APITestCase(unittest.TestCase):
 
 
     def test_add_resource(self):
-        app = Mock()
-        app.view_functions = {}
+        app = make_app_mock()
         api = flask_restful.Api(app)
         api.output = Mock()
         api.output.return_value.methods = ['GET']
@@ -499,8 +557,37 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(e.data, {'foo': 'bar'})
 
 
+    def test_abort_no_data(self):
+        try:
+            flask_restful.abort(404)
+            assert False  # We should never get here
+        except Exception as e:
+            self.assertEquals(False, hasattr(e, "data"))
+
+
     def test_abort_type(self):
         self.assertRaises(werkzeug.exceptions.HTTPException, lambda: flask_restful.abort(404))
+
+
+    def test_endpoints(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
+        with app.test_request_context('/foo'):
+            self.assertFalse(api._has_fr_route())
+
+        with app.test_request_context('/ids/3'):
+            self.assertTrue(api._has_fr_route())
+
+    def test_fr_405(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
+        app = app.test_client()
+        resp = app.post('/ids/3')
+        self.assertEquals(resp.status_code, 405)
+        self.assertEquals(resp.content_type, api.default_mediatype)
+
 
 if __name__ == '__main__':
     unittest.main()

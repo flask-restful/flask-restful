@@ -13,8 +13,9 @@ class Namespace(dict):
         self[name] = value
 
 class Argument(object):
+    # name = '' is for argument built dynamically with the declarative feature
     def __init__(self, name='', default=None, dest=None, required=False,
-                 ignore=False, type=unicode, location='values',
+                 ignore=False, type=unicode, location=('values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
         """
@@ -34,7 +35,7 @@ class Argument(object):
             converted. If a type raises a ValidationError, the message in the
             error will be returned in the response.
         :param location: Where to source the arguments from the Flask request
-            (ex: headers, args, etc.)
+            (ex: headers, args, etc.), can be an iterator
         :param choices: A container of the allowable values for the argument.
         :param help: A brief description of the argument, returned in the
             response when the argument is invalid. This takes precedence over
@@ -60,7 +61,17 @@ class Argument(object):
         """Pulls values off the request in the provided location
         :param request: The flask request object to parse arguments from
         """
-        return getattr(request, self.location, MultiDict())  # either find it or don't
+        if isinstance(self.location, basestring):
+            value = getattr(request, self.location, MultiDict())
+            if value is not None:
+                return value
+        else:
+            for l in self.location:
+                value = getattr(request, l, None)
+                if value is not None:
+                    return value
+
+        return MultiDict()
 
     def convert(self, value, op):
         try:
@@ -117,11 +128,23 @@ class Argument(object):
                     results.append(value)
 
         if not results and self.required:
-            self.handle_validation_error(ValueError(
-                u"{0} is required in {1}".format(self.name, self.location)))
+            if isinstance(self.location, basestring):
+                error_msg = u"{0} is required in {1}".format(
+                    self.name,
+                    self.location
+                )
+            else:
+                error_msg = u"{0} is required in {1}".format(
+                    self.name,
+                    ' or '.join(self.location)
+                )
+            self.handle_validation_error(ValueError(error_msg))
 
         if not results:
             return self.default
+
+        if self.action == 'append':
+            return results
 
         if self.action == 'store' or len(results) == 1:
             return results[0]
@@ -130,14 +153,14 @@ class Argument(object):
 
 class RequestParser(object):
     """Enables adding and parsing of multiple arguments in the context of a
-    single request. Ex:
+    single request. Ex::
 
-    from flask import request
+        from flask import request
 
-    parser = RequestParser()
-    parser.add_argument('foo')
-    parser.add_argument('int_bar', type=int)
-    args = parser.parse_args()
+        parser = RequestParser()
+        parser.add_argument('foo')
+        parser.add_argument('int_bar', type=int)
+        args = parser.parse_args()
     """
 
     def __init__(self, argument_class=Argument, namespace_class=Namespace):

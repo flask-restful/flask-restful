@@ -2,7 +2,7 @@ import unittest
 from flask_restful import types
 import datetime
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals, assert_raises # you need it for tests in form of continuations
+from nose.tools import assert_equals # you need it for tests in form of continuations
 
 # http://docs.python.org/library/datetime.html?highlight=datetime#datetime.tzinfo.fromutc
 ZERO = datetime.timedelta(0)
@@ -55,8 +55,12 @@ def test_urls():
     for value in urls:
         yield assert_equals, types.url(value), value
 
-def check_raises(exception, func, value):
-    assert_raises(exception, lambda: func(value))
+def check_bad_url_raises(value):
+    try:
+        types.url(value)
+        assert False, "shouldn't get here"
+    except ValueError as e:
+        assert_equals(unicode(e), u"{0} is not a valid URL".format(value))
 
 def test_bad_urls():
     values = [
@@ -69,19 +73,22 @@ def test_bad_urls():
         'http://-invalid.com',
         'http://inv-.alid-.com',
         'http://inv-.-alid.com',
+        'foo bar baz',
+        u'foo \u2713',
         'http://@foo:bar@example.com',
         'http://:bar@example.com',
         'http://bar:bar:bar@example.com',
     ]
 
     for value in values:
-        yield check_raises, ValueError, types.url, value
+        yield check_bad_url_raises, value
 
 def test_bad_url_error_message():
     values = [
         'google.com',
         'domain.google.com',
-        'kevin:pass@google.com/path?query'
+        'kevin:pass@google.com/path?query',
+        u'google.com/path?\u2713',
     ]
 
     for value in values:
@@ -90,10 +97,11 @@ def test_bad_url_error_message():
 def check_url_error_message(value):
     try:
         types.url(value)
-        assert False, "types.url({0}) should raise an exception".format(value)
+        assert False, u"types.url({0}) should raise an exception".format(value)
     except ValueError as e:
-        assert_equals(str(e), ("{0} is not a valid URL. Did you mean: "
-                               "http://{0}".format(value)))
+        assert_equals(unicode(e), (u"{0} is not a valid URL. Did you mean: "
+                                   u"http://{0}".format(value)))
+
 
 class TypesTestCase(unittest.TestCase):
 

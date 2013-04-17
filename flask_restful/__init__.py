@@ -1,17 +1,18 @@
 import difflib
-from functools import wraps
+from functools import wraps, partial
 import inspect
 import logging
 import os
 import re
-from flask import request, Response, render_template, send_from_directory, url_for
+from flask import request, Response, render_template, send_from_directory
 from flask import abort as original_flask_abort
-from flask.views import MethodView, MethodViewType
-from werkzeug.exceptions import HTTPException
-from flask.ext.restful.links import Link, Embed, ResourceLink
-from flask.ext.restful.representations import hyperlinker, simple
+from flask.views import MethodView
+from flask.signals import got_request_exception
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
+from flask.ext.restful.representations import simple, hyperlinker
 from flask.ext.restful.utils import unauthorized, error_data, unpack, dynamic_import
 from flask.ext.restful.representations.json import output_json
+from flask.ext.restful.links import Link, Embed, ResourceLink
 
 try:
     #noinspection PyUnresolvedReferences
@@ -30,7 +31,8 @@ def abort(http_status_code, **kwargs):
     try:
         original_flask_abort(http_status_code)
     except HTTPException as e:
-        e.data = kwargs
+        if len(kwargs):
+            e.data = kwargs
         raise e
 
 DEFAULT_REPRESENTATIONS = {'application/json': (simple, output_json), 'application/hal+json': (hyperlinker, output_json)}
@@ -39,46 +41,125 @@ DEFAULT_REPRESENTATIONS = {'application/json': (simple, output_json), 'applicati
 class Api(object):
     """
     The main entry point for the application.
-    You need to initialize it with a Flask Application :
+    You need to initialize it with a Flask Application: ::
+
     >>> app = Flask(__name__)
     >>> api = restful.Api(app)
+
+    Alternatively, you can use :meth:`init_app` to set the Flask application
+    after it has been constructed.
+
+    :param app: the Flask application object
+    :type app: flask.Flask
+    :param prefix: Prefix all routes with a value, eg v1 or 2010-04-01
+    :type prefix: str
+    :param default_mediatype: The default media type to return
+    :type default_mediatype: str
+    :param decorators: Decorators to attach to every resource
+    :type decorators: list
+    :param catch_all_404s: Use :meth:`handle_error`
+        to handle 404 errors throughout your app
+    :type catch_all_404s: bool
+
     """
 
-    def __init__(self, app, prefix='', default_mediatype='application/hal+json',
-                 decorators=None, output_errors=True):
+    def __init__(self, app=None, prefix='',
+                 default_mediatype='application/hal+json', decorators=None,
+                 catch_all_404s=False):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
 
         LinkedResource.representations = self.representations  # forward that to the linked resouce as we will not have any context there
 
         self.urls = {}
         self.prefix = prefix
-        self.app = app
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
-        if output_errors and hasattr(app, 'handle_exception'):
-            self.original_handle_exception, app.handle_exception = app.handle_exception, self.handle_exception
-            self.original_handle_user_exception, app.handle_user_exception = app.handle_user_exception, self.handle_user_exception
+        self.catch_all_404s = catch_all_404s
 
-        # FIXME, just hacked my way around Flask
-        thisdir = os.path.dirname(__file__)
+
+        if app is not None:
+            self.init_app(app)
+        else:
+            self.app = None
+
+    def init_app(self, app):
+        """Initialize this class with the given :class:`flask.Flask`
+        application object.
+
+        :param app: the Flask application object
+        :type app: flask.Flask
+
+        Examples::
+
+            api = Api()
+            api.init_app(app)
+            api.add_resource(...)
+
+        """
+        self.app = app
+        self.endpoints = set()
+
+        app.handle_exception = partial(self.error_router, app.handle_exception)
+        app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
 
         from jinja2 import FileSystemLoader
-
         if isinstance(app.jinja_loader, FileSystemLoader):
-            app.jinja_loader.searchpath += [thisdir + os.sep + 'templates']
+            thisdir = os.path.dirname(__file__)
+            app.jinja_loader.searchpath.append(thisdir + os.sep + 'templates')
 
         @app.route('/apiexplorer/<path:filename>')
         def ae_static(filename):
             return send_from_directory(thisdir + os.sep + 'static', filename)
 
 
-    def handle_exception(self, e):
-        self.original_handle_exception(e)  # hijack the handler but at least play nice by calling it
-        return self.handle_error(e)  # but return the JSON
+    def _should_use_fr_error_handler(self):
+        """ Determine if error should be handled with FR or default Flask
 
-    def handle_user_exception(self, e):
-        self.original_handle_user_exception(e)  # hijack the handler but at least play nice by calling it
-        return self.handle_error(e)  # but return the JSON
+        The goal is to return Flask error handlers for non-FR-related routes,
+        and FR errors (with the correct media type) for FR endpoints. This
+        method currently handles 404 and 405 errors.
+
+        :return: bool
+        """
+        adapter = self.app.create_url_adapter(request)
+
+        try:
+            adapter.match()
+        except MethodNotAllowed as e:
+            # Check if the other HTTP methods at this url would hit the Api
+            valid_route_method = e.valid_methods[0]
+            rule, _ = adapter.match(method=valid_route_method, return_rule=True)
+            return rule.endpoint in self.endpoints
+        except NotFound:
+            return self.catch_all_404s
+        except:
+            # Werkzeug throws other kinds of exceptions, such as Redirect
+            pass
+
+
+    def _has_fr_route(self):
+        """Encapsulating the rules for whether the request was to a Flask endpoint"""
+        # 404's, 405's, which might not have a url_rule
+        if self._should_use_fr_error_handler():
+            return True
+        # for all other errors, just check if FR dispatched the route
+        return request.url_rule and request.url_rule.endpoint in self.endpoints
+
+    def error_router(self, original_handler, e):
+        """This function decides whether the error occured in a flask-restful
+        endpoint or not. If it happened in a flask-restful endpoint, our
+        handler will be dispatched. If it happened in an unrelated view, the
+        app's original error handler will be dispatched.
+
+        :param original_handler: the original Flask error handler for the app
+        :type original_handler: function
+        :param e: the exception raised while handling the request
+        :type e: Exception
+
+        """
+        if self._has_fr_route():
+            return self.handle_error(e)
+        return original_handler(e)
 
     def handle_error(self, e):
         """Error handler for the API transforms a raised exception into a Flask
@@ -86,7 +167,10 @@ class Api(object):
 
         :param e: the raised Exception object
         :type e: Exception
+
         """
+        got_request_exception.send(self, exception=e)
+
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
 
@@ -123,28 +207,29 @@ class Api(object):
 
     def add_resource(self, resource, *urls, **kwargs):
         """Adds a resource to the api.
-
-        :param resource: the class of your resource
-        :type resource: Resource
+        :param resource: the class name of your resource
+        :type resource: :class:`Resource`
         :param urls: one or more url routes to match for the resource, standard
                      flask routing rules apply.  Any url variables will be
                      passed to the resource method as args.
         :type urls: str
 
-        :param endpoint: endpoint name (defaults to Resource.__name__.lower()
-                         can be used to reference this route in Url fields
-                         see: Fields
+        :param endpoint: endpoint name (defaults to :meth:`Resource.__name__.lower`
+            Can be used to reference this route in :class:`fields.Url` fields
         :type endpoint: str
 
+        Additional keyword arguments not specified above will be passed as-is
+        to :meth:`flask.Flask.add_url_rule`.
 
-        Examples:
+        Examples::
+
             api.add_resource(HelloWorld, '/', '/hello')
-
             api.add_resource(Foo, '/foo', endpoint="foo")
             api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
 
         """
-        endpoint = kwargs.get('endpoint') or resource.__name__.lower()
+        endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
+        self.endpoints.add(endpoint)
 
         if endpoint in self.app.view_functions.keys():
             previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
@@ -164,7 +249,7 @@ class Api(object):
             resource_func = decorator(resource_func)
 
         for url in urls:
-            self.app.add_url_rule(self.prefix + url, view_func=resource_func)
+            self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
     def recurse_add(self, resource_class, **kwargs):
 
@@ -181,7 +266,7 @@ class Api(object):
                             self.recurse_add(value[0])
                         elif isinstance(value, basestring):
                             klass = dynamic_import(value)
-                            links[key] = klass # patch the dictionary so it renders
+                            links[key] = klass  # patch the dictionary so it renders
                             self.recurse_add(klass)
                         else:
                             self.recurse_add(value)
@@ -247,7 +332,7 @@ class Api(object):
         The transformer should convert the data appropriately for the mediatype
         and return a Flask response object.
 
-        Ex:
+        Ex::
 
             @api.representation('application/xml')
             def xml(data, code, headers):
@@ -268,7 +353,7 @@ class Resource(MethodView):
     Represents an abstract RESTful resource. Concrete resources should extend
     from this class and expose methods for each supported HTTP method. If a
     resource is invoked with an unsupported HTTP method, the API will return a
-    response with status 405 Method Not Alowed. Otherwise the appropriate
+    response with status 405 Method Not Allowed. Otherwise the appropriate
     method is called and passed all arguments from the url rule used when
     adding the resource to an Api instance. See Api.add_resource for details.
     """
@@ -414,6 +499,10 @@ class marshal_with(object):
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            return marshal(f(*args, **kwargs), self.fields)
-
+            resp = f(*args, **kwargs)
+            if isinstance(resp, tuple):
+                data, code, headers = unpack(resp)
+                return marshal(data, self.fields), code, headers
+            else:
+                return marshal(resp, self.fields)
         return wrapper

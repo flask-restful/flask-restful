@@ -43,6 +43,9 @@ def to_marshallable_type(obj):
     if hasattr(obj, '__getitem__'):
         return obj  # it is indexable it is ok
 
+    if hasattr(obj, '__marshallable__'):
+        return obj.__marshallable__()
+
     return dict(obj.__dict__)
 
 
@@ -64,11 +67,11 @@ class Raw(object):
         :param value: The value to format
         :exception MarshallingException: In case of formatting problem
 
-        Ex:
+        Ex::
 
-        class TitleCase(Raw):
-            def format(self, value):
-                return unicode(value).title()
+            class TitleCase(Raw):
+                def format(self, value):
+                    return unicode(value).title()
         """
         return value
 
@@ -164,6 +167,9 @@ class FormattedString(Raw):
 
 
 class Url(Raw):
+    """
+    A string representation of a Url
+    """
     def __init__(self, endpoint):
         super(Url, self).__init__()
         self.endpoint = endpoint
