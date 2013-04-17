@@ -2,7 +2,7 @@ try:
     #noinspection PyUnresolvedReferences
     from collections import OrderedDict
 except ImportError:
-    from utils.ordereddict import OrderedDict
+    from flask.ext.restful.utils import OrderedDict
 
 import inspect
 import urllib
