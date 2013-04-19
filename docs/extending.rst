@@ -184,8 +184,8 @@ the correct media type on 404 Not Found errors; in which case, use the
 Then Flask-RESTful will handle 404s in addition to errors on its own routes.
 
 Sometimes you want to do something special when an error occurs - log to a
-file, send an email, etc. Use the :class:`~flask.signals` class to dispatch
-custom actions when you get an exception. ::
+file, send an email, etc. Use the :meth:`~flask.got_request_exception` method
+to attach custom error handlers to an exception. ::
 
     def log_exception(sender, exception, **extra):
         """ Log an exception to our logging framework """
