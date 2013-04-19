@@ -5,7 +5,7 @@ Quickstart
 
 .. currentmodule:: flask.ext.restful
 
-It’s time to write your first REST API. This guide assumes you have `Flask
+It1s time to write your first REST API. This guide assumes you have `Flask
 <http://flask.pocoo.org>`_ and Flask-RESTful installed and a working
 understanding of Flask. If not, follow the steps in the Installation section,
 or read through the Flask Quickstart.
@@ -33,7 +33,10 @@ A minimal Flask-RESTful API looks like this: ::
         app.run(debug=True)
 
 
-Save this as api.py and run it using your Python interpreter. Note that we’ve enabled `Flask debugging <http://flask.pocoo.org/docs/quickstart/#debug-mode>`_ mode to provide code reloading and better error messages. Debug mode should never be used in a production environment. ::
+Save this as api.py and run it using your Python interpreter. Note that we've
+enabled `Flask debugging <http://flask.pocoo.org/docs/quickstart/#debug-mode>`_
+mode to provide code reloading and better error messages. Debug mode should
+never be used in a production environment. ::
 
     $ python api.py
      * Running on http://127.0.0.1:5000/
@@ -124,8 +127,8 @@ Endpoints
 ---------
 
 Many times in an API, your resource will have multiple URLs. You can pass
-multiple URLs to the add_resource method on the Api object. Each one will be
-routed to your Resource ::
+multiple URLs to the :py:meth:`Api.add_resource` method on the Api object. Each one
+will be routed to your :py:class:`Resource` ::
 
     api.add_resource(HelloWorld,
         '/',
@@ -139,9 +142,9 @@ You can also match parts of the path as variables to your resource methods. ::
 Argument Parsing
 ----------------
 
-While Flask provides easy access to request data (i.e. querysting or POST form
-encoded data), it’s still a pain to validate form data. Flask-RESTful has
-built-in support for request data validation using a library similar to
+While Flask provides easy access to request data (i.e. querystring or POST
+form encoded data), it's still a pain to validate form data. Flask-RESTful
+has built-in support for request data validation using a library similar to
 `argparse <http://docs.python.org/dev/library/argparse.html>`_. ::
 
     from flask.ext.restful import reqparse
@@ -151,30 +154,31 @@ built-in support for request data validation using a library similar to
     args = parser.parse_args()
 
 
-Note that unlike the argparse module, ``parse_args`` returns a Python
-dictionary instead of a custom data structure.
+Note that unlike the argparse module,
+:py:meth:`reqparse.RequestParser.parse_args` returns a Python dictionary
+instead of a custom data structure.
 
-Using the reqparse module also gives you sane error messages for free. If an
-argument fails to pass validation, Flask-RESTful will respond with a 400 Bad
-Request and a response highlighting the error. ::
+Using the :py:class:`reqparse` module also gives you sane error messages for
+free. If an argument fails to pass validation, Flask-RESTful will respond with
+a 400 Bad Request and a response highlighting the error. ::
 
     $ curl -d 'rate=foo' http://127.0.0.1:5000/
     {'status': 400, 'message': 'foo cannot be converted to int'}
 
 
-The ``types`` module provides a number of included common conversion functions
-such as ``date`` and ``url``.
+The :py:class:`types` module provides a number of included common conversion
+functions such as :py:meth:`types.date` and :py:meth:`types.url`.
 
 
 Data Formatting
 ---------------
 
-By default, all fields in your return iterable will be rendered as is.
-While this works great when you’re just dealing with Python data structures,
+By default, all fields in your return iterable will be rendered as is. While
+this works great when you're just dealing with Python data structures,
 it can become very frustrating when working with objects. To solve with
-problem, Flask-RESTful provides the ``fields`` module and the ``marshal_with`` decorator.
-Similar to the Django ORM and WTForm, you use the fields module to describe
-the structure of your response. ::
+problem, Flask-RESTful provides the :py:class:`fields` module and the
+:py:meth:`marshal_with` decorator. Similar to the Django ORM and WTForm, you
+use the fields module to describe the structure of your response. ::
 
     from collections import OrderedDict
     from flask.ext.restful import fields, marshal_with
@@ -197,11 +201,13 @@ the structure of your response. ::
         def get(self, **kwargs):
             return TodoDao(todo_id='my_todo', task='Remember the milk')
 
-The above example takes a python object and prepares it to be serialized. The marshal_with decorator will apply the transformation described by resource_fields. The only fields extracted
-from the object is ``task``. The ``Url`` field is a special field that
-takes an endpoint name and generates a Url for that endpoint in the response.
-Many of the field types you need are already included. See the `Fields` guide
-for a complete list.
+The above example takes a python object and prepares it to be serialized. The
+:py:meth:`marshal_with` decorator will apply the transformation described by
+``resource_fields``. The only field extracted from the object is ``task``. The
+:py:class:`fields.Url` field is a special field that takes an endpoint name
+and generates a Url for that endpoint in the response. Many of the field types
+you need are already included. See the :py:class:`fields` guide for a complete
+list.
 
 Full Example
 ------------
@@ -324,9 +330,9 @@ Add a new task ::
 
 Update a task ::
 
-    $ curl http://localhost:5000/todos/todo3 -d "task=something different" -X PUT -v
+    $ curl http://localhost:5000/todos/todo3 -d "task=something different" -X POST -v
 
-    > PUT /todos/todo3 HTTP/1.1
+    > POST /todos/todo3 HTTP/1.1
     > Host: localhost:5000
     > Accept: */*
     > Content-Length: 20
@@ -340,4 +346,5 @@ Update a task ::
     < Date: Mon, 01 Oct 2012 22:13:00 GMT
     <
     * Closing connection #0
-    {"task": "someting different"}
+    {"task": "something different"}
+
