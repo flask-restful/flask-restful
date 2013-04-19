@@ -10,7 +10,7 @@ import flask_restful.fields
 from flask_restful import OrderedDict
 from json import dumps, loads
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals # you need it for tests in form of continuations
+from nose.tools import assert_equals, assert_true # you need it for tests in form of continuations
 
 def check_unpack(expected, value):
     assert_equals(expected, value)
@@ -262,9 +262,11 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
 
         resp = app.get("/api")
-        self.assertEquals(resp.status_code, 404)
-        self.assertEquals('application/json', resp.headers['Content-Type'])
-        self.assertEquals(loads(resp.data).get('status'), 404)
+        assert_equals(resp.status_code, 404)
+        assert_equals('application/json', resp.headers['Content-Type'])
+        data = loads(resp.data)
+        assert_equals(data.get('status'), 404)
+        assert_true('message' in data)
 
 
     def test_handle_non_api_error(self):
