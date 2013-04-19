@@ -5,17 +5,17 @@ Request Parsing
 
 .. currentmodule:: flask.ext.restful
 
-
 Flask-RESTful's request parsing interface is modeled after the ``argparse``
 interface.  It's designed to provide simple and uniform access to any
-variable on the ``request`` object in Flask.
+variable on the :py:class:`flask.request` object in Flask.
 
 
 Basic Arguments
 ---------------
 
 Here's a simple example of the request parser. It looks for two arguments in
-the ``flask.Request.values`` dict.  One of type ``int``, and the other of type ``str`` ::
+the :py:attr:`flask.Request.values` dict. One of type ``int``, and the other of
+type ``str`` ::
 
     from flask.ext.restful import reqparse
     
@@ -40,7 +40,7 @@ Required Arguments
 ------------------
 
 To require a value be passed for an argument, just add ``required=True`` to
-the call to ``add_argument``. ::
+the call to :py:meth:`~reqparse.RequestParser.add_argument`. ::
 
     parser.add_argument('name', type=str, required=True, 
     help="Name cannot be blank!")
@@ -77,13 +77,13 @@ it's parsed, you can use the ``dest`` kwarg. ::
 Other Locations
 ---------------
 
-By default, the ``RequestParser`` tries to parse values from
-`flask.Request.values
-<http://flask.pocoo.org/docs/api/#incoming-request-data>`_.  This dict will
-contain both querystring arguments and POST/PUT body arguments.
+By default, the :py:class:`~reqparse.RequestParser` tries to parse values
+from :py:attr:`flask.Request.values`. This dict will contain both querystring
+arguments and POST/PUT body arguments.
 
-``add_argument`` lets you specify alternate locations to pull the values from.
-Any variable on the `flask.Request <http://flask.pocoo.org/docs/api/#incoming-request-data>`_ can be used. For example: ::
+:py:meth:`~reqparse.RequestParser.add_argument` lets you specify
+alternate locations to pull the values from. Any variable on the
+:py:class:`flask.Request` can be used. For example: ::
 
     # Look only in the POST body
     parser.add_argument('name', type=int, location='form')
