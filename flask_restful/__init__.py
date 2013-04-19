@@ -170,10 +170,11 @@ class Api(object):
                     data["message"] += ". "
                 else:
                     data["message"] = ""
-                    data['message'] += 'You have requested this URI [' + request.path + \
-                            '] but did you mean ' + \
-                            ' or '.join((rules[match]
-                                         for match in close_matches)) + ' ?'
+
+                data['message'] += 'You have requested this URI [' + request.path + \
+                        '] but did you mean ' + \
+                        ' or '.join((rules[match]
+                                     for match in close_matches)) + ' ?'
 
         resp = self.make_response(data, code)
 

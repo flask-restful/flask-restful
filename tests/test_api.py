@@ -566,6 +566,14 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(False, hasattr(e, "data"))
 
 
+    def test_abort_custom_message(self):
+        try:
+            flask_restful.abort(404, message="no user")
+            assert False  # We should never get here
+        except Exception as e:
+            assert_equals(e.data['message'], "no user")
+
+
     def test_abort_type(self):
         self.assertRaises(werkzeug.exceptions.HTTPException, lambda: flask_restful.abort(404))
 
