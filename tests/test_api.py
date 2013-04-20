@@ -1,7 +1,7 @@
 import unittest
 from flask import Flask, views
 from flask.signals import got_request_exception, signals_available
-from mock import Mock
+from mock import Mock, patch
 import flask
 import werkzeug
 from flask.ext.restful.utils import http_status_message, challenge, unauthorized, error_data, unpack
@@ -588,6 +588,59 @@ class APITestCase(unittest.TestCase):
         resp = app.post('/ids/3')
         self.assertEquals(resp.status_code, 405)
         self.assertEquals(resp.content_type, api.default_mediatype)
+
+    def test_will_prettyprint_json_in_debug_mode(self):
+        app = Flask(__name__)
+        app.config['DEBUG'] = True
+        api = flask_restful.Api(app)
+
+        class Foo1(flask_restful.Resource):
+            def get(self):
+                return {'foo': 'bar', 'baz': 'asdf'}
+
+        api.add_resource(Foo1, '/foo', endpoint='bar')
+
+        with app.test_client() as client:
+            foo = client.get('/foo')
+
+            # Python's dictionaries have random order (as of "new" Pythons,
+            # anyway), so we can't verify the actual output here.  We just
+            # assert that they're properly prettyprinted.
+            lines = foo.data.splitlines()
+            self.assertEquals("{", lines[0])
+            self.assertTrue(lines[1].startswith('    '))
+            self.assertTrue(lines[2].startswith('    '))
+            self.assertEquals("}", lines[3])
+
+            # Assert our trailing newline.
+            self.assertTrue(foo.data.endswith('\n'))
+
+    def test_will_pass_options_to_json(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class Foo1(flask_restful.Resource):
+            def get(self):
+                return {'foo': 'bar'}
+
+        api.add_resource(Foo1, '/foo', endpoint='bar')
+
+        # We patch the representations module here, with two things:
+        #   1. Set the settings dict() with some value
+        #   2. Patch the json.dumps function in the module with a Mock object.
+        from flask_restful.representations import json as json_rep
+        json_dumps_mock = Mock(return_value='bar')
+        new_settings = {'indent': 123}
+
+        with patch.multiple(json_rep, dumps=json_dumps_mock,
+                            settings=new_settings):
+            with app.test_client() as client:
+                foo = client.get('/foo')
+
+        # Assert that the function was called with the above settings.
+        data, kwargs = json_dumps_mock.call_args
+        self.assertTrue(json_dumps_mock.called)
+        self.assertEqual(123, kwargs['indent'])
 
 
 if __name__ == '__main__':
