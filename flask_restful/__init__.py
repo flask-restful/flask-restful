@@ -60,13 +60,14 @@ class Api(object):
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False):
+                 catch_all_404s=False, error_headers=None):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
+        self.error_headers = error_headers if error_headers else {}
 
         if app is not None:
             self.init_app(app)
@@ -173,7 +174,7 @@ class Api(object):
                                    ' or '.join((rules[match]
                                    for match in close_matches)) + ' ?'
 
-        resp = self.make_response(data, code)
+        resp = self.make_response(data, code, error=True)
 
         if code == 401:
             resp = unauthorized(resp,
@@ -243,7 +244,7 @@ class Api(object):
             return self.make_response(data, code, headers=headers)
         return wrapper
 
-    def make_response(self, data, *args, **kwargs):
+    def make_response(self, data, error=False, *args, **kwargs):
         """Looks up the representation transformer for the requested media
         type, invoking the transformer to create a response object. This
         defaults to (application/json) if no transformer is found for the
@@ -255,6 +256,10 @@ class Api(object):
             if mediatype in self.representations:
                 resp = self.representations[mediatype](data, *args, **kwargs)
                 resp.headers['Content-Type'] = mediatype
+
+                if error == True:
+                    resp.headers.update(self.error_headers)
+
                 return resp
 
     def mediatypes(self):
