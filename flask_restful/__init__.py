@@ -60,12 +60,15 @@ class Api(object):
     :param catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
     :type catch_all_404s: bool
+    :param api_explorer:
+        Exposes an API explorer besides your REST API for the HTML content type.
+    :type api_explorer: bool
 
     """
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/hal+json', decorators=None,
-                 catch_all_404s=False):
+                 catch_all_404s=False, api_explorer=False):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
 
         LinkedResource.representations = self.representations  # forward that to the linked resouce as we will not have any context there
@@ -79,8 +82,19 @@ class Api(object):
 
         if app is not None:
             self.init_app(app)
+            self.setup_api_explorer()
         else:
             self.app = None
+
+    def setup_api_explorer(self):
+        from jinja2 import FileSystemLoader  # hack only needed when we want to find back the API explorer templates
+        if isinstance(self.app.jinja_loader, FileSystemLoader):
+            thisdir = os.path.dirname(__file__)
+            self.app.jinja_loader.searchpath.append(thisdir + os.sep + 'templates')
+
+        @self.app.route('/apiexplorer/<path:filename>')
+        def ae_static(filename):
+            return send_from_directory(thisdir + os.sep + 'static', filename)
 
     def init_app(self, app):
         """Initialize this class with the given :class:`flask.Flask`
@@ -101,15 +115,6 @@ class Api(object):
 
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
-
-        from jinja2 import FileSystemLoader
-        if isinstance(app.jinja_loader, FileSystemLoader):
-            thisdir = os.path.dirname(__file__)
-            app.jinja_loader.searchpath.append(thisdir + os.sep + 'templates')
-
-        @app.route('/apiexplorer/<path:filename>')
-        def ae_static(filename):
-            return send_from_directory(thisdir + os.sep + 'static', filename)
 
 
     def _should_use_fr_error_handler(self):
