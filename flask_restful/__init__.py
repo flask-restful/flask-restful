@@ -293,6 +293,18 @@ class Api(object):
                     self.recurse_add_fields(method)
 
     def add_root(self, resource_class, **kwargs):
+        """Add recursively a resource to the api.
+        All dependent resources will also be added to your API.
+        
+        :param resource_class: the class of your resource
+        :type resource: :class:`Class`
+        :param kwargs: The same arguments as add_resource,
+        additional arguments will be passed as-is to :meth:`flask.Flask.add_url_rule`.
+
+        Example::
+
+            api.add_root(HelloWorld)
+        """
         self.registered_resources = []
         self.recurse_add(resource_class, **kwargs)
         del self.registered_resources
