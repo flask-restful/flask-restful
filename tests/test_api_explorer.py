@@ -27,7 +27,7 @@ class APIExplorerTestCase(unittest.TestCase):
                 return output()
 
         app = Flask(__name__)
-        api = Api(app)
+        api = Api(app, api_explorer=True)
         api.add_root(Foo)
 
         app = app.test_client()
@@ -50,7 +50,7 @@ class APIExplorerTestCase(unittest.TestCase):
                 return output(test_out=my_int)
 
         app = Flask(__name__)
-        api = Api(app)
+        api = Api(app, api_explorer=True)
         api.add_root(Foo)
 
         app = app.test_client()
@@ -69,7 +69,7 @@ class APIExplorerTestCase(unittest.TestCase):
                 return output(test_out=my_int)
 
         app = Flask(__name__)
-        api = Api(app)
+        api = Api(app, api_explorer=True)
         api.add_root(Foo)
 
         app = app.test_client()
@@ -89,7 +89,7 @@ class APIExplorerTestCase(unittest.TestCase):
                 return output(Some_output="This is my ID : [%s]" % FOO_ID)
 
         app = Flask(__name__)
-        api = Api(app)
+        api = Api(app, api_explorer=True)
         api.add_root(Foo)
 
         app = app.test_client()
@@ -116,7 +116,7 @@ class APIExplorerTestCase(unittest.TestCase):
                 return output(test_out=42)
 
         app = Flask(__name__)
-        api = Api(app)
+        api = Api(app, api_explorer=True)
         api.add_root(Bar)
 
         app = app.test_client()
@@ -145,7 +145,7 @@ class APIExplorerTestCase(unittest.TestCase):
 
 
         app = Flask(__name__)
-        api = Api(app)
+        api = Api(app, api_explorer=True)
         api.add_root(Bar)
 
         app = app.test_client()

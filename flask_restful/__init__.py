@@ -78,11 +78,12 @@ class Api(object):
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
-
+        self.api_explorer = api_explorer
 
         if app is not None:
             self.init_app(app)
-            self.setup_api_explorer()
+            if api_explorer:
+                self.setup_api_explorer()
         else:
             self.app = None
 
@@ -245,10 +246,10 @@ class Api(object):
         resource_func = self.output(resource.as_view(endpoint))
         resource._endpoint = endpoint  # record the endpoint so we can generate parameterized url from it
 
-        # patch the resource_func for at least "GET" for the API explorer
-        if resource_func.methods is not None and 'GET' not in resource_func.methods:
-            resource_func.methods.append('GET')
-            # End of hacks for the API explorer
+        if self.api_explorer:
+            # patch the resource_func for at least "GET" for the API explorer
+            if 'GET' not in resource_func.methods:
+                resource_func.methods.append('GET')
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
