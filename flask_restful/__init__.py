@@ -257,6 +257,28 @@ class Api(object):
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
+
+    def recurse_add_links(self, method):
+        links = method._links
+        for key, value in links.iteritems():
+            if isinstance(value, list):
+                self.recurse_add(value[0])
+            elif isinstance(value, basestring):
+                klass = dynamic_import(value)
+                links[key] = klass  # patch the dictionary so it renders
+                self.recurse_add(klass)
+            else:
+                self.recurse_add(value)
+
+    def recurse_add_fields(self, method):
+        fields = method._fields
+        for value in fields.values():
+            if isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource):
+                self.recurse_add(value[0])
+            elif inspect.isclass(value) and issubclass(value, LinkedResource):
+                self.recurse_add(value)
+
+
     def recurse_add(self, resource_class, **kwargs):
 
         if resource_class not in self.registered_resources:
@@ -266,23 +288,9 @@ class Api(object):
             self.registered_resources.append(resource_class)
             for name, method in inspect.getmembers(resource_class, predicate=inspect.ismethod):
                 if hasattr(method, '_links') and method._links is not None:
-                    links = method._links
-                    for key, value in links.iteritems():
-                        if isinstance(value, list):
-                            self.recurse_add(value[0])
-                        elif isinstance(value, basestring):
-                            klass = dynamic_import(value)
-                            links[key] = klass  # patch the dictionary so it renders
-                            self.recurse_add(klass)
-                        else:
-                            self.recurse_add(value)
+                    self.recurse_add_links(method)
                 if hasattr(method, '_fields'):
-                    fields = method._fields
-                    for value in fields.values():
-                        if isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource):
-                            self.recurse_add(value[0])
-                        elif inspect.isclass(value) and issubclass(value, LinkedResource):
-                            self.recurse_add(value)
+                    self.recurse_add_fields(method)
 
     def add_root(self, resource_class, **kwargs):
         self.registered_resources = []
