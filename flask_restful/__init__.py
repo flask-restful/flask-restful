@@ -387,15 +387,14 @@ class Resource(MethodView):
     method_decorators = []
 
     def explore(self, *args, **kwargs):
-        for clazz in LinkedResource.__subclasses__():
-            if clazz == self.__class__:
-                methods = {}
-                class_dict = clazz.__dict__
-                for verb in ('get', 'put', 'post', 'head', 'delete'):
-                    f = class_dict.get(verb, None)
-                    if f:
-                        methods[verb] = f
-                return Response(render_template('apiexplorer.html', clazz=clazz, url=clazz._self, resource_params=kwargs, methods=methods, mimetype='text/html'))
+        if isinstance(self, LinkedResource):
+            methods = {}
+            class_dict = self.__class__.__dict__
+            for verb in ('get', 'put', 'post', 'head', 'delete'):
+                f = class_dict.get(verb, None)
+                if f:
+                    methods[verb] = f
+            return Response(render_template('apiexplorer.html', clazz=self.__class__, url=self.__class__._self, resource_params=kwargs, methods=methods, mimetype='text/html'))
 
     def dispatch_request(self, *args, **kwargs):
         for mime, _ in request.accept_mimetypes:
