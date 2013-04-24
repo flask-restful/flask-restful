@@ -439,6 +439,15 @@ class LinkedResource(Resource):
     _endpoint = 'undefined'
     representations = None  # will be set at runtime
 
+def is_embedded_resource(value):
+    return inspect.isclass(value) and issubclass(value, LinkedResource)
+
+def is_embedded_resource_array(value):
+    return isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource)
+
+def is_dictionary(value):
+    return isinstance(value, dict)
+
 
 def marshal(data, fields, links=None, hal_context=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
@@ -466,30 +475,29 @@ def marshal(data, fields, links=None, hal_context=None):
     if isinstance(data, (list, tuple)):
         return [marshal(d, fields) for d in data]
 
-    # handle the magic JSON HAL sections
     items = []
     embedded = []
-    for k, v in fields.items():
-        if inspect.isclass(v) and issubclass(v, LinkedResource): # this is the special case of embedded resources
-            embedded.append((k, data[k].to_dict()))
-        elif isinstance(v, list) and inspect.isclass(v[0]) and issubclass(v[0], LinkedResource): # an array of resources
-            embedded.append((k, [resource.to_dict() for resource in data[k]]))
-        elif isinstance(v, dict):
-            items.append((k, marshal(data, v))) # recursively go down the dictionaries
+    for key, value in fields.items():
+        if is_embedded_resource(value):
+            embedded.append((key, data[key].to_dict()))
+        elif is_embedded_resource_array(value):
+            embedded.append((key, [resource.to_dict() for resource in data[key]]))
+        elif is_dictionary(value):
+            items.append((key, marshal(data, value)))  # recursively go down the dictionaries
         else:
-            items.append((k, make(v).output(k, data))) # normal field output
+            items.append((key, make(value).output(key, data)))  # normal field output
 
-    if data.has_key('_links') and links is not None:
-        ls = data['_links'].items() # preset links like self
+    if '_links' in data and links is not None:
+        ls = data['_links'].items()  # preset links like self
         for link_key, link_value in links.items():
-            if inspect.isclass(link_value) and issubclass(link_value, LinkedResource): # simple straigh linked resource
-                if data.has_key(link_key): # it means we specified a value for this link in the output
+            if inspect.isclass(link_value) and issubclass(link_value, LinkedResource):  # simple straigh linked resource
+                if link_key in data:  # it means we specified a value for this link in the output
                     ls.append((link_key, data[link_key].to_dict(hal_context)))
-                elif data['_links'].has_key(link_key): # it means we specified a value for this link in the output as a link
+                elif link_key in data['_links']:  # it means we specified a value for this link in the output as a link
                     ls.append((link_key, data['_links'][link_key].to_dict(hal_context)))
-                else: # We need to autogenerate one from the signature as it is not specified
+                else:  # We need to autogenerate one from the signature as it is not specified
                     ls.append((link_key, ResourceLink(link_value).to_dict(hal_context)))
-            elif isinstance(link_value, list): # an array of resources
+            elif isinstance(link_value, list):  # an array of resources
                 list_of_links = [link_obj.to_dict(hal_context) for link_obj in data[link_key]]
                 ls.append((link_key, list_of_links))
 
