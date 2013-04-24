@@ -264,13 +264,13 @@ class Api(object):
             if isinstance(value, list):
                 self.recurse_add(registered_resources, value[0])
             elif isinstance(value, basestring):
-                klass = dynamic_import(value)
-                links[key] = klass  # patch the dictionary so it renders
-                self.recurse_add(registered_resources, klass)
+                clazz = dynamic_import(value)
+                links[key] = clazz  # patch the dictionary so it renders
+                self.recurse_add(registered_resources, clazz)
             else:
                 self.recurse_add(registered_resources, value)
 
-    def recurse_add_fields(self,registered_resources, method):
+    def recurse_add_fields(self, registered_resources, method):
         fields = method._fields
         for value in fields.values():
             if isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource):

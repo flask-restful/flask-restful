@@ -50,7 +50,7 @@ def unpack(value):
 
 def dynamic_import(name):
     """
-    :param name: a fully qualified class name like 'a.b.c.klass'
+    :param name: a fully qualified class name like 'a.b.c.clazz'
     :return: the class
     """
     components = name.split('.')
