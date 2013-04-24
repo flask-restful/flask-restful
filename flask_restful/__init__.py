@@ -258,44 +258,44 @@ class Api(object):
             self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
 
-    def recurse_add_links(self, method):
+    def recurse_add_links(self, registered_resources, method):
         links = method._links
         for key, value in links.iteritems():
             if isinstance(value, list):
-                self.recurse_add(value[0])
+                self.recurse_add(registered_resources, value[0])
             elif isinstance(value, basestring):
                 klass = dynamic_import(value)
                 links[key] = klass  # patch the dictionary so it renders
-                self.recurse_add(klass)
+                self.recurse_add(registered_resources, klass)
             else:
-                self.recurse_add(value)
+                self.recurse_add(registered_resources, value)
 
-    def recurse_add_fields(self, method):
+    def recurse_add_fields(self,registered_resources, method):
         fields = method._fields
         for value in fields.values():
             if isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource):
-                self.recurse_add(value[0])
+                self.recurse_add(registered_resources, value[0])
             elif inspect.isclass(value) and issubclass(value, LinkedResource):
-                self.recurse_add(value)
+                self.recurse_add(registered_resources, value)
 
 
-    def recurse_add(self, resource_class, **kwargs):
+    def recurse_add(self, registered_resources, resource_class, **kwargs):
 
-        if resource_class not in self.registered_resources:
+        if resource_class not in registered_resources:
             logging.info("Registering: %s" % resource_class)
             uri = resource_class._self
             self.add_resource(resource_class, uri, **kwargs)
-            self.registered_resources.append(resource_class)
+            registered_resources.append(resource_class)
             for name, method in inspect.getmembers(resource_class, predicate=inspect.ismethod):
                 if hasattr(method, '_links') and method._links is not None:
-                    self.recurse_add_links(method)
+                    self.recurse_add_links(registered_resources, method)
                 if hasattr(method, '_fields'):
-                    self.recurse_add_fields(method)
+                    self.recurse_add_fields(registered_resources, method)
 
     def add_root(self, resource_class, **kwargs):
         """Add recursively a resource to the api.
         All dependent resources will also be added to your API.
-        
+
         :param resource_class: the class of your resource
         :type resource: :class:`Class`
         :param kwargs: The same arguments as add_resource,
@@ -305,9 +305,8 @@ class Api(object):
 
             api.add_root(HelloWorld)
         """
-        self.registered_resources = []
-        self.recurse_add(resource_class, **kwargs)
-        del self.registered_resources
+        self.recurse_add([], resource_class, **kwargs)
+
 
 
     def output(self, resource):
