@@ -336,7 +336,8 @@ class Api(object):
         """
         for mediatype in self.mediatypes() + [self.default_mediatype]:
             if mediatype in self.representations:
-                resp = self.representations[mediatype][1](data, *args, **kwargs)
+                _, output_function = self.representations[mediatype]
+                resp = output_function(data, *args, **kwargs)
                 resp.headers['Content-Type'] = mediatype
                 return resp
 
@@ -425,7 +426,8 @@ class Resource(MethodView):
         for mediatype in self.mediatypes():
             if mediatype in representations:
                 data, code, headers = unpack(resp)
-                resp = representations[mediatype][1](data, code, headers)
+                _, output_function = representations[mediatype]
+                resp = output_function(data, code, headers)
                 resp.headers['Content-Type'] = mediatype
                 return resp
 
@@ -436,10 +438,10 @@ class LinkedResource(Resource):
     # override that for your own linked resource
     _self = 'undefined'
     _endpoint = 'undefined'
-    representations = None # will be set at runtime
+    representations = None  # will be set at runtime
 
 
-def marshal(data, fields, links=None, hal_context = None):
+def marshal(data, fields, links=None, hal_context=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
