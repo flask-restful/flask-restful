@@ -184,6 +184,10 @@ class RequestParser(object):
         namespace = self.namespace_class()
 
         for arg in self.args:
-            namespace[arg.dest or arg.name] = arg.parse(req)
+            arg_value = arg.parse(req)
+            if not arg.required and arg_value is None:
+                continue
+            else:
+                namespace[arg.dest or arg.name] = arg_value
 
         return namespace
