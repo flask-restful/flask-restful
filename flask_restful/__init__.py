@@ -23,7 +23,7 @@ def abort(http_status_code, **kwargs):
     """
     #noinspection PyUnresolvedReferences
     try:
-        original_flask_abort(http_status_code, **kwargs)
+        original_flask_abort(http_status_code)
     except HTTPException as e:
         e.data = kwargs
         raise e
