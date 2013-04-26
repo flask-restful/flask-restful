@@ -439,11 +439,14 @@ class LinkedResource(Resource):
     _endpoint = 'undefined'
     representations = None  # will be set at runtime
 
+
 def is_embedded_resource(value):
     return inspect.isclass(value) and issubclass(value, LinkedResource)
 
+
 def is_embedded_resource_array(value):
     return isinstance(value, list) and inspect.isclass(value[0]) and issubclass(value[0], LinkedResource)
+
 
 def is_dictionary(value):
     return isinstance(value, dict)

@@ -53,17 +53,17 @@ class Verb(object):
     see :meth:`flask.ext.restful.marshal`
     """
 
-    def __init__(self, parser, fields, links=None, paging=False):
-        """:param fields: a dict of whose keys will make up the final
+    def __init__(self, input_parser=None, output_fields=None, output_links=None, output_paging=False):
+        """:param output_fields: a dict of whose keys will make up the final
                           serialized response output"""
-        self.parser = parser
-        if paging:
+        self.parser = input_parser if input_parser else parameters()
+        if output_paging:
             self.parser.add_argument(PAGER_ARG_NAME, location='args')
             self.parser.add_argument(PAGE_SIZE_ARG_NAME, location='args', type=int)
 
-        self.fields = fields
-        self.links = links
-        self.paging = paging
+        self.fields = output_fields if output_fields else output()
+        self.links = output_links
+        self.paging = output_paging
 
     def __call__(self, f):
         @wraps(f)

@@ -7,15 +7,10 @@ app = Flask(__name__)
 api = Api(app, api_explorer=True)
 
 
-class Office(LinkedResource):
-    _self = '/town/office/<OFFICE_ID>'
-
-    @Verb(output_fields=output(message=String))
-    def get(self, OFFICE_ID=None):
-        return output(message="This is the office called [%s]" % OFFICE_ID)
-
-
 class House(LinkedResource):
+    """
+        A dependent resource declaration
+    """
     _self = '/town/house/<HOUSE_ID>'
 
     @Verb(output_fields=output(message=String))
@@ -24,12 +19,14 @@ class House(LinkedResource):
 
 
 class Town(LinkedResource):
+    """
+        This is a sample of a town linking composed of one house
+    """
     _self = '/town'
 
-    @Verb(output_fields=output(Houses=House),
-          output_links=link(Offices=Office))
+    @Verb(output_fields=output(Houses=House))  # directly reference the embedded type here
     def get(self):
-        return output(Houses=Embed(House, {"HOUSE_ID": "Simpsons"}), Offices=ResourceLink(Office, params={'OFFICE_ID': 'Twilio HQ'}))
+        return output(Houses=Embed(House, {"HOUSE_ID": "Simpsons"}))  # This manually inserts the embedded instance in the response
 
 
 api.add_root(Town)

@@ -1,5 +1,6 @@
 from flask.ext.restful.utils import rest_url_for
 
+
 class Link(object):
     def __init__(self, title=None):
         self._title = title
@@ -19,7 +20,6 @@ class ResourceLink(Link):
         self.linked_resource = linked_resource_class
         self.params = params
 
-
     def to_dict(self, additional_context=None):
         if not additional_context:
             additional_context = {}
@@ -28,6 +28,7 @@ class ResourceLink(Link):
         if self.title:
             response['title'] = self.title
         return response
+
 
 class PlainLink(Link):
     def __init__(self, url, title=None):
@@ -57,4 +58,3 @@ class Embed(object):
         :return: the dictionary to embed in the response
         """
         return self.linked_resource().get(**self.params)
-
