@@ -10,7 +10,7 @@ api = Api(app, api_explorer=True)
 
 class House(LinkedResource):
     """
-        A dependent resource declaration
+        This is one house
     """
     _self = '/town/house/<HOUSE_ID>'
 
@@ -21,7 +21,7 @@ class House(LinkedResource):
 
 class Town(LinkedResource):
     """
-        This is a sample of a town linking composed of one house
+        This is a sample of a town linking composed of a list of houses
     """
     _self = '/town'
 
