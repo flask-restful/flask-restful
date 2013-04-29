@@ -39,6 +39,7 @@ docs/_build
 
 #Pycharm
 .idea
+atlassian-ide-plugin.xml
 
 #Eclipse/Aptana
 .project

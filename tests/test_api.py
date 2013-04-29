@@ -27,6 +27,13 @@ class HelloWorld(flask_restful.Resource):
     def get(self):
         return {}
 
+
+def make_app_mock():
+    app = Mock()
+    app.view_functions = {}
+    app.jinja_loader.searchpath = []
+    return app
+
 class APITestCase(unittest.TestCase):
 
     def test_http_code(self):
@@ -186,7 +193,7 @@ class APITestCase(unittest.TestCase):
 
 
     def test_api_representation(self):
-        app = Mock()
+        app = make_app_mock()
         api = flask_restful.Api(app)
 
         @api.representation('foo')
@@ -197,11 +204,12 @@ class APITestCase(unittest.TestCase):
 
 
     def test_api_base(self):
-        app = Mock()
+        app = make_app_mock()
+
         api = flask_restful.Api(app)
         self.assertEquals(api.urls, {})
         self.assertEquals(api.prefix, '')
-        self.assertEquals(api.default_mediatype, 'application/json')
+        self.assertEquals(api.default_mediatype, 'application/hal+json')
 
 
     def test_api_delayed_initialization(self):
@@ -213,7 +221,7 @@ class APITestCase(unittest.TestCase):
 
 
     def test_api_prefix(self):
-        app = Mock()
+        app = make_app_mock()
         api = flask_restful.Api(app, prefix='/foo')
         self.assertEquals(api.prefix, '/foo')
 
@@ -263,7 +271,7 @@ class APITestCase(unittest.TestCase):
 
         resp = app.get("/api")
         self.assertEquals(resp.status_code, 404)
-        self.assertEquals('application/json', resp.headers['Content-Type'])
+        self.assertEquals('application/hal+json', resp.headers['Content-Type'])
         self.assertEquals(loads(resp.data).get('status'), 404)
 
 
@@ -375,7 +383,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo",
             headers={'Accept': 'application/xml; q=.5'}):
             self.assertEquals(api.mediatypes_method()(Mock()),
-                ['application/xml', 'application/json'])
+                ['application/xml', 'application/hal+json'])
 
 
     def test_media_types_q(self):
@@ -392,24 +400,25 @@ class APITestCase(unittest.TestCase):
         def return_zero(func):
             return 0
 
-        app = Mock()
-        app.view_functions = {}
+        app = make_app_mock()
         view = Mock()
         api = flask_restful.Api(app)
         api.decorators.append(return_zero)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(view, '/foo', endpoint='bar')
 
         app.add_url_rule.assert_called_with('/foo', view_func=0)
 
 
     def test_add_resource_endpoint(self):
-        app = Mock()
-        app.view_functions = {}
+        app = make_app_mock()
+
         view = Mock()
 
         api = flask_restful.Api(app)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(view, '/foo', endpoint='bar')
 
         view.as_view.assert_called_with('bar')
@@ -448,24 +457,14 @@ class APITestCase(unittest.TestCase):
 
 
     def test_add_resource(self):
-        app = Mock()
-        app.view_functions = {}
+        app = make_app_mock()
         api = flask_restful.Api(app)
         api.output = Mock()
+        api.output.return_value.methods = ['GET']
         api.add_resource(views.MethodView, '/foo')
 
         app.add_url_rule.assert_called_with('/foo',
             view_func=api.output())
-
-    def test_add_resource_kwargs(self):
-        app = Mock()
-        app.view_functions = {}
-        api = flask_restful.Api(app)
-        api.output = Mock()
-        api.add_resource(views.MethodView, '/foo', defaults={"bar": "baz"})
-
-        app.add_url_rule.assert_called_with('/foo',
-            view_func=api.output(), defaults={"bar": "baz"})
 
 
     def test_output_unpack(self):
@@ -524,7 +523,7 @@ class APITestCase(unittest.TestCase):
         class Foo(flask_restful.Resource):
 
             representations = {
-                'text/plain': text,
+                'text/plain': (None, text),
                 }
 
             def get(self):

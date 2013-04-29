@@ -1,3 +1,4 @@
+import logging
 from flask import request
 from werkzeug.datastructures import MultiDict
 import flask_restful
@@ -12,8 +13,8 @@ class Namespace(dict):
         self[name] = value
 
 class Argument(object):
-
-    def __init__(self, name, default=None, dest=None, required=False,
+    # name = '' is for argument built dynamically with the declarative feature
+    def __init__(self, name='', default=None, dest=None, required=False,
                  ignore=False, type=unicode, location=('values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
@@ -118,6 +119,7 @@ class Argument(object):
                     try:
                         value = self.convert(value, operator)
                     except Exception as error:
+                        logging.exception(error)
                         if self.ignore:
                             continue
 
