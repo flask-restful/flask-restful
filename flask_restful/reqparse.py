@@ -15,8 +15,8 @@ class Argument(object):
 
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=unicode, location=('values',),
-                 choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True):
+                 choices=(), action='store',help=None, operators=('=',),
+                 case_sensitive=True, skip_values=[]):
         """
         :param name: Either a name or a list of option strings, e.g. foo or
                         -f, --foo.
@@ -41,12 +41,15 @@ class Argument(object):
             the message passed to a ValidationError raised by a type converter.
         :param case_sensitive: Whether the arguments in the request are case
             sensitive or not
+        :param skip_values: A list of values that must be skipped in case
+            of match.
         """
 
         self.name = name
         self.default = default
         self.dest = dest
         self.required = required
+        self.skip_values = skip_values
         self.ignore = ignore
         self.location = location
         self.type = type
@@ -184,6 +187,8 @@ class RequestParser(object):
         namespace = self.namespace_class()
 
         for arg in self.args:
-            namespace[arg.dest or arg.name] = arg.parse(req)
+            arg_value = arg.parse(req)
+            if not arg_value in arg.skip_values:
+                namespace[arg.dest or arg.name] = arg_value
 
         return namespace

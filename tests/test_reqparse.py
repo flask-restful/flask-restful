@@ -481,6 +481,24 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], None)
 
+    def test_skip_values(self):
+        req = Request.from_values("/bubble")
+
+        parser = RequestParser()
+        parser.add_argument("foo", skip_values=[None], type=int),
+
+        args = parser.parse_args(req)
+        self.assertTrue("foo" not in args)
+
+    def test_skip_values_existent(self):
+        req = Request.from_values("/bubble?foo=bar")
+
+        parser = RequestParser()
+        parser.add_argument("foo", skip_values=['bar'], type=str)
+
+        args = parser.parse_args(req)
+        self.assertTrue("foo" not in args)
+
     def test_chaining(self):
         parser = RequestParser()
         self.assertTrue(parser is parser.add_argument("foo"))
