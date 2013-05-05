@@ -1,10 +1,20 @@
-.PHONY: test install
+.PHONY: test install docs analysis
 
 install: venv
 	. venv/bin/activate; python setup.py develop
 
 venv:
 	virtualenv venv
+
+docs-dependencies: install
+	. venv/bin/activate; pip install -e '.[docs]' --use-mirrors
+
+docs:
+	. venv/bin/activate; cd docs && make html
+
+# Pycrypto is required to run the unit tests
+test-dependencies: install
+	. venv/bin/activate; pip install -e '.[paging]' --use-mirrors
 
 test:
 	. venv/bin/activate; python setup.py nosetests
