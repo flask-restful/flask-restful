@@ -32,5 +32,7 @@ See Flask's license_ for legal information governing this project.
 .. toctree::
    :maxdepth: 2
 
+   testing
+
 .. _license: http://flask.pocoo.org/docs/license/
 
