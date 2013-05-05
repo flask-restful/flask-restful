@@ -3,6 +3,7 @@ python:
   - "2.7"
   - "2.6"
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install:
+install: 
+    - "pip install '.[paging]' --use-mirrors"
 # command to run tests, e.g. python setup.py test
 script: python setup.py nosetests
