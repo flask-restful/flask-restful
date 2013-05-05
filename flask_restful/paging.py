@@ -2,9 +2,9 @@ from flask_restful.utils.crypto import decrypt, encrypt
 DEFAULT_PAGE_SIZE = 50
 
 
-def retreive_next_page(key, seed, args, callback, initial_bookmark=None):
+def retrieve_next_page(key, seed, args, callback, initial_bookmark=None):
     """
-    An helper for the bookmark pager.
+    A helper for the bookmark pager.
 
     :param key: the private key of you API
     :param seed: the crypo seed for this session
