@@ -4,6 +4,6 @@ python:
   - "2.6"
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: 
-    - "pip install '.[paging]' --use-mirrors"
+    - "pip install -e '.[paging]' --use-mirrors"
 # command to run tests, e.g. python setup.py test
 script: python setup.py nosetests
