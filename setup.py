@@ -22,6 +22,7 @@ setup(
     install_requires=[
         'Flask>=0.8',
     ],
+    # Install these with "pip install -e '.[paging]'" or '.[docs]'
     extras_require={
         'paging': 'pycrypto>=2.6',
         'docs': 'sphinx',
