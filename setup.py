@@ -21,6 +21,8 @@ setup(
     ],
     install_requires=[
         'Flask>=0.8',
-        'pycrypto>=2.6',
-    ]
+    ],
+    extras_require={
+        'paging': 'pycrypto>=2.6',
+    }
 )
