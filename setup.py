@@ -24,5 +24,6 @@ setup(
     ],
     extras_require={
         'paging': 'pycrypto>=2.6',
+        'docs': 'sphinx',
     }
 )
