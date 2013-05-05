@@ -3,6 +3,14 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.2
+-------------
+
+Released on May 5, 2013
+
+- JSON will be pretty-printed if you're running your app in debug mode.
+- pycrypto is now an optional dependency.
+
 Version 0.2.1
 -------------
 
