@@ -134,6 +134,28 @@ class APITestCase(unittest.TestCase):
             {'fye': 'fum'}}], fields)
         self.assertEquals(output, [{'fee': OrderedDict({'fye': 'fum'}), 'foo': 'bar'}])
 
+    def test_marshal_nested_with_non_null(self):
+        fields = {
+            'foo': flask_restful.fields.Raw,
+            'fee': flask_restful.fields.Nested({
+                'fye': flask_restful.fields.String
+            }, allow_null=False)
+        }
+        output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
+            None}], fields)
+        self.assertEquals(output, [{'fee': { 'fye': None}, 'foo': 'bar'}])
+
+    def test_marshal_nested_with_null(self):
+        fields = {
+            'foo': flask_restful.fields.Raw,
+            'fee': flask_restful.fields.Nested({
+                'fye': flask_restful.fields.String
+            }, allow_null=True)
+        }
+        output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
+            None}], fields)
+        self.assertEquals(output, [{'fee': None, 'foo': 'bar'}])
+
 
     def test_marshal_list(self):
         fields = {
