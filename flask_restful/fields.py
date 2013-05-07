@@ -90,15 +90,19 @@ class Raw(object):
 
 
 class Nested(Raw):
-    def __init__(self, nested, **kwargs):
+    def __init__(self, nested, allow_null=False, **kwargs):
         self.nested = nested
+        self.allow_null = allow_null
         super(Nested, self).__init__(**kwargs)
 
     def output(self, key, obj):
         data = to_marshallable_type(obj)
-        return marshal(data[key if self.attribute is None else self.attribute],
-                       self.nested)
 
+        attr = key if self.attribute is None else self.attribute
+        if self.allow_null and data.get(attr) is None:
+            return None
+
+        return marshal(data[attr], self.nested)
 
 class List(Raw):
     def __init__(self, cls_or_instance):
