@@ -249,5 +249,18 @@ class FieldsTestCase(unittest.TestCase):
     def test_get_value_obj(self):
         self.assertEquals(3, fields.get_value("hey", Foo()))
 
+    def test_list(self):
+        obj = {'list': ['a', 'b', 'c']}
+        field = fields.List(fields.String)
+        self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
+
+    def test_list_from_object(self):
+        class TestObject(object):
+            def __init__(self, list):
+                self.list = list
+        obj = TestObject(['a', 'b', 'c'])
+        field = fields.List(fields.String)
+        self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
+
 if __name__ == '__main__':
     unittest.main()
