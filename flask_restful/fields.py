@@ -90,6 +90,14 @@ class Raw(object):
 
 
 class Nested(Raw):
+    """Allows you to nest one set of fields inside another.
+    See :ref:`nested-field` for more information
+
+    :param dict nested: The dictionary to nest
+    :param bool allow_null: Whether to return None instead of a dictionary
+        with null keys, if a nested dictionary has all-null keys
+    """
+
     def __init__(self, nested, allow_null=False, **kwargs):
         self.nested = nested
         self.allow_null = allow_null

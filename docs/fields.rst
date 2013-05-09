@@ -159,6 +159,7 @@ You can also unmarshal fields as lists ::
     >>> json.dumps(marshal(data, resource_fields))
     >>> '{"first_names": ["Emile", "Raoul"], "name": "Bougnazal"}'
 
+.. _nested-field:
 
 Advanced : Nested Field
 -----------------------
