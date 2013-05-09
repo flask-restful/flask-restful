@@ -127,7 +127,7 @@ class APITestCase(unittest.TestCase):
         fields = {
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
-                'fye': flask_restful.fields.String
+                'fye': flask_restful.fields.String,
             })
         }
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
@@ -138,23 +138,38 @@ class APITestCase(unittest.TestCase):
         fields = {
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
-                'fye': flask_restful.fields.String
+                'fye': flask_restful.fields.String,
+                'blah': flask_restful.fields.String,
             }, allow_null=False)
         }
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
             None}], fields)
-        self.assertEquals(output, [{'fee': { 'fye': None}, 'foo': 'bar'}])
+        self.assertEquals(output, [{'fee': { 'fye': None, 'blah': None}, 'foo': 'bar'}])
 
     def test_marshal_nested_with_null(self):
         fields = {
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
-                'fye': flask_restful.fields.String
+                'fye': flask_restful.fields.String,
+                'blah': flask_restful.fields.String,
             }, allow_null=True)
         }
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
             None}], fields)
         self.assertEquals(output, [{'fee': None, 'foo': 'bar'}])
+
+
+    def test_allow_null_presents_data(self):
+        fields = {
+            'foo': flask_restful.fields.Raw,
+            'fee': flask_restful.fields.Nested({
+                'fye': flask_restful.fields.String,
+                'blah': flask_restful.fields.String,
+            }, allow_null=True)
+        }
+        output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
+                                         {'blah': 'cool'}}], fields)
+        self.assertEquals(output, [{'fee': {'blah': 'cool', 'fye': None}, 'foo': 'bar'}])
 
 
     def test_marshal_list(self):
