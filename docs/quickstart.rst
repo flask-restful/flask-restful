@@ -17,18 +17,17 @@ A Minimal API
 
 A minimal Flask-RESTful API looks like this: ::
 
-    from flask import Flask
     from flask.ext import restful
-    
-    app = Flask(__name__)
-    api = restful.Api(app)
-    
-    class HelloWorld(restful.Resource):
+
+    class HelloWorld(restful.LinkedResource):
+        _self = '/'
+
+        @Verb(output_fields=output(Some_output=String)) # outputs a string
         def get(self):
-            return {'hello': 'world'}
-    
-    api.add_resource(HelloWorld, '/')
-    
+            return output(Some_output="Hello User")
+
+    api.add_root(HelloWorld)
+
     if __name__ == '__main__':
         app.run(debug=True)
 
@@ -42,35 +41,40 @@ Save this as api.py and run it using your Python interpreter. Note that we’ve 
 Now open up a new prompt to test out your API using curl ::
 
     $ curl http://127.0.0.1:5000/
-    {"hello": "world"}
+    {"Hello User"}
+
+Or you can use the embedded API explorer ::
+
+Simply point your browser to http://127.0.0.1:5000/
 
 
+Routing and Argument Parsing
+----------------------------
 
-Resourceful Routing
--------------------
-The main building block provided by Flask-RESTful are resources. Resources are
-built on top of `Flask pluggable views <http://flask.pocoo.org/docs/views/>`_,
-giving you easy access to multiple HTTP methods just be defining methods on
-your resource. A basic CRUD resource for a todo application (of course) looks
-like this: ::
+Setting up the url pattern on which your resouce will be listen on is set by the _self class attribute. You need to use a flask standard pattern.
+The parameters will be passed to the kwargs of your verb.
 
     from flask import Flask, request
-    from flask.ext.restful import Resource, Api
+    from flask.ext.restful import LinkedResource, Api
 
     app = Flask(__name__)
     api = Api(app)
 
     todos = {}
 
-    class TodoSimple(Resource):
+    class TodoSimple(LinkedResource):
+        _self = '/<string:todo_id>'
+
+        @Verb(output_fields=output(todo_id=String))
         def get(self, todo_id):
             return {todo_id: todos[todo_id]}
 
+        @Verb(output_fields=output(todo_id=String))
         def put(self, todo_id):
             todos[todo_id] = request.form['data']
             return {todo_id: todos[todo_id]}
 
-    api.add_resource(TodoSimple, '/<string:todo_id>')
+    api.add_root(TodoSimple)
 
     if __name__ == '__main__':
         app.run(debug=True)
@@ -104,37 +108,57 @@ response, including raw Flask response objects. Flask-RESTful also support
 setting the response code and response headers using multiple return values,
 as shown below: ::
 
-    class Todo1(Resource):
+    class Todo1(LinkedResource):
+        [...]
         def get(self):
             # Default to 200 OK
             return {'task': 'Hello world'}
     
-    class Todo2(Resource):
+    class Todo2(LinkedResource):
+        [...]
         def get(self):
             # Set the response code to 201
             return {'task': 'Hello world'}, 201
     
-    class Todo3(Resource):
+    class Todo3(LinkedResource):
+        [...]
         def get(self):
             # Set the response code to 201 and return custom headers
             return {'task': 'Hello world'}, 201, {'Etag': 'some-opaque-string'}
 
 
-Endpoints
----------
+Linking and embedding Resources
+-------------------------------
 
-Many times in an API, your resource will have multiple URLs. You can pass
-multiple URLs to the add_resource method on the Api object. Each one will be
-routed to your Resource ::
+Flask Restful supports HAL representation, you can learn more about it here : http://stateless.co/hal_specification.html
 
-    api.add_resource(HelloWorld,
-        '/',
-        '/hello')
+This is a sample showing how to generate links or embed resources within resources.
 
-You can also match parts of the path as variables to your resource methods. ::
+    class Office(LinkedResource):
+        _self = '/town/office/<OFFICE_ID>'
 
-    api.add_resource(Todo,
-        '/todo/<int:todo_id>', endpoint='todo_ep')
+        @Verb(output_fields=output(message=String))
+        def get(self, OFFICE_ID=None):
+            return output(message="This is the office called [%s]" % OFFICE_ID)
+
+
+    class House(LinkedResource):
+        _self = '/town/house/<HOUSE_ID>'
+
+        @Verb(output_fields=output(message=String))
+        def get(self, HOUSE_ID=None):
+            return output(message="This is the house called : [%s]" % HOUSE_ID)
+
+
+    class Town(LinkedResource):
+        _self = '/town'
+
+        @Verb(output_fields=output(Houses=House),
+              output_links=link(Offices=Office))
+        def get(self):
+            return output(Houses=Embed(House, {"HOUSE_ID": "Simpsons"}), Offices=ResourceLink(Office, params={'OFFICE_ID': 'Twilio HQ'}))
+
+This will generate a Town resource with a link to a single office and embed an House in the response.
 
 Argument Parsing
 ----------------
@@ -144,15 +168,15 @@ encoded data), it’s still a pain to validate form data. Flask-RESTful has
 built-in support for request data validation using a library similar to
 `argparse <http://docs.python.org/dev/library/argparse.html>`_. ::
 
-    from flask.ext.restful import reqparse
-    
-    parser = reqparse.RequestParser()
-    parser.add_argument('rate', type=int, help='Rate to charge for this resource')
-    args = parser.parse_args()
+Here is an example of how do declare arguments for
 
+    class Call(LinkedResource):
+        @Verb(parameters(To=Argument(location='args', type=str),
+                     From=Argument(location='args', type=str),
+                     Status=Argument(location='args', choices=('', 'queued', 'ringing', 'in-progress', 'completed', 'failed', 'busy', 'no-answer'),
+                                     help='queued, ringing, in-progress, completed, failed, busy, or no-answer'),
+                     StartTime=Argument(location='args', type=Date, help='An ISO 8601 date/time/duration')),
 
-Note that unlike the argparse module, ``parse_args`` returns a Python
-dictionary instead of a custom data structure.
 
 Using the reqparse module also gives you sane error messages for free. If an
 argument fails to pass validation, Flask-RESTful will respond with a 400 Bad
@@ -165,179 +189,3 @@ Request and a response highlighting the error. ::
 The ``types`` module provides a number of included common conversion functions
 such as ``date`` and ``url``.
 
-
-Data Formatting
----------------
-
-By default, all fields in your return iterable will be rendered as is.
-While this works great when you’re just dealing with Python data structures,
-it can become very frustrating when working with objects. To solve with
-problem, Flask-RESTful provides the ``fields`` module and the ``marshal_with`` decorator.
-Similar to the Django ORM and WTForm, you use the fields module to describe
-the structure of your response. ::
-
-    from collections import OrderedDict
-    from flask.ext.restful import fields, marshal_with
-
-    resource_fields = {
-        'task':   fields.String,
-        'uri':    fields.Url('todo_ep')
-    }
-
-    class TodoDao(object):
-        def __init__(self, todo_id, task):
-            self.todo_id = todo_id
-            self.task = task
-
-            # This field will not be sent in the response
-            self.status = 'active'
-
-    class Todo(Resource):
-        @marshal_with(resource_fields)
-        def get(self, **kwargs):
-            return TodoDao(todo_id='my_todo', task='Remember the milk')
-
-The above example takes a python object and prepares it to be serialized. The marshal_with decorator will apply the transformation described by resource_fields. The only fields extracted
-from the object is ``task``. The ``Url`` field is a special field that
-takes an endpoint name and generates a Url for that endpoint in the response.
-Many of the field types you need are already included. See the `Fields` guide
-for a complete list.
-
-Full Example
-------------
-
-Save this example in api.py ::
-
-    from flask import Flask
-    from flask.ext.restful import reqparse, abort, Api, Resource
-
-    app = Flask(__name__)
-    api = restful.Api(app)
-
-    TODOS = {
-        'todo1': {'task': 'build an API'},
-        'todo2': {'task': '?????'},
-        'todo3': {'task': 'profit!'},
-    }
-
-    def abort_if_todo_doesnt_exist(todo_id):
-        if todo_id not in TODOS:
-            abort(404, message="Todo {} doesn't exist".format(todo_id))
-
-    parser = reqparse.RequestParser()
-    parser.add_argument('task', type=str)
-
-    # Todo
-    #   show a single todo item and lets you delete them
-    class Todo(Resource):
-        def get(self, todo_id):
-            abort_if_todo_doesnt_exist(todo_id)
-            return TODOS[todo_id]
-
-        def delete(self, todo_id):
-            abort_if_todo_doesnt_exist(todo_id)
-            del TODOS[todo_id]
-            return '', 204
-
-        def put(self, todo_id):
-            args = parser.parse_args()
-            task = {'task': args['task']}
-            TODOS[todo_id] = task
-            return task, 201
-
-
-    # TodoList
-    #   shows a list of all todos, and lets you POST to add new tasks
-    class TodoList(Resource):
-        def get(self):
-            return TODOS
-
-        def post(self):
-            args = parser.parse_args()
-            todo_id = 'todo%d' % (len(TODOS) + 1)
-            TODOS[todo_id] = {'task': args['task']}
-            return TODOS[todo_id], 201
-
-    ##
-    ## Actually setup the Api resource routing here
-    ##
-    api.add_resource(TodoList, '/todos')
-    api.add_resource(Todo, '/todos/<string:todo_id>')
-
-
-    if __name__ == '__main__':
-        app.run(debug=True)
-
-
-Example usage ::
-
-    $ python api.py
-     * Running on http://127.0.0.1:5000/
-     * Restarting with reloader
-
-GET the list ::
-
-    $ curl http://localhost:5000/todos
-    {"todo1": {"task": "build an API"}, "todo3": {"task": "profit!"}, "todo2": {"task": "?????"}}
-
-GET a single task ::
-
-    $ curl http://localhost:5000/todos/todo3
-    {"task": "profit!"}
-
-DELETE a task ::
-
-    $ curl http://localhost:5000/todos/todo2 -X DELETE -v
-
-    > DELETE /todos/todo2 HTTP/1.1
-    > User-Agent: curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3
-    > Host: localhost:5000
-    > Accept: */*
-    >
-    * HTTP 1.0, assume close after body
-    < HTTP/1.0 204 NO CONTENT
-    < Content-Type: application/json
-    < Content-Length: 0
-    < Server: Werkzeug/0.8.3 Python/2.7.2
-    < Date: Mon, 01 Oct 2012 22:10:32 GMT
-
-Add a new task ::
-
-    $ curl http://localhost:5000/todos -d "task=something new" -X POST -v
-
-    > POST /todos HTTP/1.1
-    > User-Agent: curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3
-    > Host: localhost:5000
-    > Accept: */*
-    > Content-Length: 18
-    > Content-Type: application/x-www-form-urlencoded
-    >
-    * HTTP 1.0, assume close after body
-    < HTTP/1.0 201 CREATED
-    < Content-Type: application/json
-    < Content-Length: 25
-    < Server: Werkzeug/0.8.3 Python/2.7.2
-    < Date: Mon, 01 Oct 2012 22:12:58 GMT
-    <
-    * Closing connection #0
-    {"task": "something new"}
-
-Update a task ::
-
-    $ curl http://localhost:5000/todos/todo3 -d "task=something different" -X PUT -v
-
-    > PUT /todos/todo3 HTTP/1.1
-    > Host: localhost:5000
-    > Accept: */*
-    > Content-Length: 20
-    > Content-Type: application/x-www-form-urlencoded
-    >
-    * HTTP 1.0, assume close after body
-    < HTTP/1.0 201 CREATED
-    < Content-Type: application/json
-    < Content-Length: 27
-    < Server: Werkzeug/0.8.3 Python/2.7.3
-    < Date: Mon, 01 Oct 2012 22:13:00 GMT
-    <
-    * Closing connection #0
-    {"task": "someting different"}

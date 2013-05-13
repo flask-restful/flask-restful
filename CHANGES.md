@@ -3,6 +3,15 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3
+-----------
+
+- Flask-RESTful can now be driven declaratively so the framework is type aware
+- Flask-RESTful now supports Linking and Embedding (see http://stateless.co/hal_specification.html for details)
+- Creation of an API explorer that allows you to browse and test you API without having to create a client
+
+Those changes are backward compatible, you can still the old programmatic way of handling your resources as in (0.2.1 and previous versions)
+
 Version 0.2.1
 -------------
 
