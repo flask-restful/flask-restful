@@ -129,12 +129,12 @@ class List(Raw):
             self.container = cls_or_instance
 
     def output(self, key, data):
-        value = data[key]
+        value = get_value(key if self.attribute is None else self.attribute, data)
         # we cannot really test for external dict behavior
         if is_indexable_but_not_string(value) and not isinstance(value, dict):
             # Convert all instances in typed list to container type
-            return [self.container.output(idx, data[key]) for idx, val
-                    in enumerate(data[key])]
+            return [self.container.output(idx, value) for idx, val
+                    in enumerate(value)]
 
         return [marshal(value, self.container.nested)]
 
