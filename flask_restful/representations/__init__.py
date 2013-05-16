@@ -18,8 +18,10 @@ def hyperlinker(resource_self, verb_self, result, hal_context):
     links_desc = verb_self.links
     if verb_self.paging:
         result, paging_info, result_size = result
-        for url_param in re.search(r"<([A-Za-z0-9_]+)>", resource_self._self).groups():  # FIXME this won't work with more complex flask descriptions
-            del (paging_info[url_param])
+        search_params = re.search(r"<([A-Za-z0-9_]+)>", resource_self._self)
+        if search_params:
+            for url_param in search_params.groups():  # FIXME this won't work with more complex flask descriptions
+                del (paging_info[url_param])
         for name, value in dict(paging_info).iteritems():
             if value is None:
                 del (paging_info[name])

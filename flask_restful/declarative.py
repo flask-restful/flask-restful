@@ -1,7 +1,6 @@
 from functools import wraps
 from flask.ext.restful.paging import PAGER_ARG_NAME, PAGE_SIZE_ARG_NAME
-from flask.ext.restful.representations import hyperlinker
-from flask_restful import marshal, LinkedResource
+from flask_restful import LinkedResource
 from flask import request
 from reqparse import RequestParser
 
