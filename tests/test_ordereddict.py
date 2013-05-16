@@ -20,8 +20,7 @@ from flask.ext.restful.utils.ordereddict import OrderedDict
 class TestOrderedDict(unittest.TestCase):
 
     def test_init(self):
-        with self.assertRaises(TypeError):
-            OrderedDict([('a', 1), ('b', 2)], None)                                 # too many args
+        self.assertRaises(TypeError, lambda: OrderedDict([('a', 1), ('b', 2)], None))  # too many args
         pairs = [('a', 1), ('b', 2), ('c', 3), ('d', 4), ('e', 5)]
         self.assertEqual(sorted(OrderedDict(dict(pairs)).items()), pairs)           # dict input
         self.assertEqual(sorted(OrderedDict(**dict(pairs)).items()), pairs)         # kwds input
@@ -40,8 +39,7 @@ class TestOrderedDict(unittest.TestCase):
             [('a', 1), ('b', 2), ('c', 3), ('d', 4), ('e', 5), ('f', 6), ('g', 7)])
 
     def test_update(self):
-        with self.assertRaises(TypeError):
-            OrderedDict().update([('a', 1), ('b', 2)], None)                        # too many args
+        self.assertRaises(TypeError, lambda: OrderedDict().update([('a', 1), ('b', 2)], None))                        # too many args
         pairs = [('a', 1), ('b', 2), ('c', 3), ('d', 4), ('e', 5)]
         od = OrderedDict()
         od.update(dict(pairs))
@@ -64,7 +62,7 @@ class TestOrderedDict(unittest.TestCase):
             [('a', 1), ('b', 2), ('c', 3), ('d', 4), ('e', 5), ('f', 6), ('g', 7)])
 
     def test_abc(self):
-        self.assertIsInstance(OrderedDict(), MutableMapping)
+        self.assertTrue(isinstance(OrderedDict(), MutableMapping))
         self.assertTrue(issubclass(OrderedDict, MutableMapping))
 
     def test_clear(self):
@@ -79,9 +77,7 @@ class TestOrderedDict(unittest.TestCase):
         pairs = [('c', 1), ('b', 2), ('a', 3), ('d', 4), ('e', 5), ('f', 6)]
         od = OrderedDict(pairs)
         del od['a']
-        self.assertNotIn('a', od)
-        with self.assertRaises(KeyError):
-            del od['a']
+        self.assertFalse('a' in od)
         self.assertEqual(list(od.items()), pairs[:2] + pairs[3:])
 
     def test_setitem(self):
@@ -108,8 +104,8 @@ class TestOrderedDict(unittest.TestCase):
         od = OrderedDict(pairs)
         while pairs:
             self.assertEqual(od.popitem(), pairs.pop())
-        with self.assertRaises(KeyError):
-            od.popitem()
+
+        self.assertRaises(KeyError, lambda: od.popitem())
         self.assertEqual(len(od), 0)
 
     def test_pop(self):
@@ -120,8 +116,8 @@ class TestOrderedDict(unittest.TestCase):
         while pairs:
             k, v = pairs.pop()
             self.assertEqual(od.pop(k), v)
-        with self.assertRaises(KeyError):
-            od.pop('xyz')
+
+        self.assertRaises(KeyError, lambda: od.pop('xyz'))
         self.assertEqual(len(od), 0)
         self.assertEqual(od.pop(k, 12345), 12345)
 
