@@ -262,5 +262,13 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.List(fields.String)
         self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
 
+    def test_null_list(self):
+        class TestObject(object):
+            def __init__(self, list):
+                self.list = list
+        obj = TestObject(None)
+        field = fields.List(fields.String)
+        self.assertEquals(None, field.output('list', obj))
+
 if __name__ == '__main__':
     unittest.main()
