@@ -230,8 +230,16 @@ class ReqParseTestCase(unittest.TestCase):
 
         parser = RequestParser()
         parser.add_argument("foo", location="json")
+        parser.add_argument('bar', required=True, location='json',
+                            help='Required string argument')
+        parser.add_argument('baz', type=int, required=True, location='json',
+                            help='Optional int argument')
 
-        with app.test_request_context('/bubble', method="post"):
+        with app.test_request_context(
+            '/bubble', method="post",
+            data=json.dumps({'bar': 'bar', 'baz': '10'}),
+            content_type='application/json'
+        ):
             args = parser.parse_args()
             self.assertEquals(args['foo'], None)
 
