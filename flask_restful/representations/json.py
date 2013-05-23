@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 from flask import make_response, current_app
-from json import dumps
+try:
+    from ujson import dumps
+except ImportError:
+    from json import dumps
 
 
 # This dictionary contains any kwargs that are to be passed to the json.dumps
