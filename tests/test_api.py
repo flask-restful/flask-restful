@@ -266,9 +266,9 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(loads(resp.data), {
                 'foo': 'bar',
-            }))
+            })
 
 
     def test_handle_auth(self):
@@ -282,9 +282,9 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 401)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(loads(resp.data), {
                 'foo': 'bar',
-            }))
+            })
 
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
@@ -358,9 +358,9 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 400)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(loads(resp.data), {
                 'foo': 'bar',
-            }))
+            })
 
     def test_handle_smart_errors(self):
         app = Flask(__name__)
@@ -378,24 +378,24 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/faaaaa"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(loads(resp.data), {
                 "status": 404, "message": "Not Found",
-            }))
+            })
 
         with app.test_request_context("/fOo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(loads(resp.data), {
                 "status": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
-            }))
+            })
 
         with app.test_request_context("/fOo"):
             del exception.data["message"]
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(loads(resp.data), {
                 "status": 404, "message": "You have requested this URI [/fOo] but did you mean /foo ?",
-            }))
+            })
 
 
     def test_media_types(self):
@@ -519,7 +519,7 @@ class APITestCase(unittest.TestCase):
             wrapper = api.output(make_empty_response)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
-            self.assertEquals(resp.data, '{"foo": "bar"}')
+            self.assertEquals(loads(resp.data), loads('{"foo": "bar"}'))
 
 
     def test_output_func(self):
@@ -635,32 +635,6 @@ class APITestCase(unittest.TestCase):
         resp = app.post('/ids/3')
         self.assertEquals(resp.status_code, 405)
         self.assertEquals(resp.content_type, api.default_mediatype)
-
-    def test_will_prettyprint_json_in_debug_mode(self):
-        app = Flask(__name__)
-        app.config['DEBUG'] = True
-        api = flask_restful.Api(app)
-
-        class Foo1(flask_restful.Resource):
-            def get(self):
-                return {'foo': 'bar', 'baz': 'asdf'}
-
-        api.add_resource(Foo1, '/foo', endpoint='bar')
-
-        with app.test_client() as client:
-            foo = client.get('/foo')
-
-            # Python's dictionaries have random order (as of "new" Pythons,
-            # anyway), so we can't verify the actual output here.  We just
-            # assert that they're properly prettyprinted.
-            lines = foo.data.splitlines()
-            self.assertEquals("{", lines[0])
-            self.assertTrue(lines[1].startswith('    '))
-            self.assertTrue(lines[2].startswith('    '))
-            self.assertEquals("}", lines[3])
-
-            # Assert our trailing newline.
-            self.assertTrue(foo.data.endswith('\n'))
 
     def test_will_pass_options_to_json(self):
         app = Flask(__name__)
