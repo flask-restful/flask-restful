@@ -43,6 +43,9 @@ def to_marshallable_type(obj):
     if hasattr(obj, '__getitem__'):
         return obj  # it is indexable it is ok
 
+    if hasattr(obj, '__marshallable__'):
+        return obj.__marshallable__()
+
     return dict(obj.__dict__)
 
 
@@ -64,11 +67,11 @@ class Raw(object):
         :param value: The value to format
         :exception MarshallingException: In case of formatting problem
 
-        Ex:
+        Ex::
 
-        class TitleCase(Raw):
-            def format(self, value):
-                return unicode(value).title()
+            class TitleCase(Raw):
+                def format(self, value):
+                    return unicode(value).title()
         """
         return value
 
@@ -87,15 +90,27 @@ class Raw(object):
 
 
 class Nested(Raw):
-    def __init__(self, nested, **kwargs):
+    """Allows you to nest one set of fields inside another.
+    See :ref:`nested-field` for more information
+
+    :param dict nested: The dictionary to nest
+    :param bool allow_null: Whether to return None instead of a dictionary
+        with null keys, if a nested dictionary has all-null keys
+    """
+
+    def __init__(self, nested, allow_null=False, **kwargs):
         self.nested = nested
+        self.allow_null = allow_null
         super(Nested, self).__init__(**kwargs)
 
     def output(self, key, obj):
         data = to_marshallable_type(obj)
-        return marshal(data[key if self.attribute is None else self.attribute],
-                       self.nested)
 
+        attr = key if self.attribute is None else self.attribute
+        if self.allow_null and data.get(attr) is None:
+            return None
+
+        return marshal(data[attr], self.nested)
 
 class List(Raw):
     def __init__(self, cls_or_instance):
@@ -114,12 +129,12 @@ class List(Raw):
             self.container = cls_or_instance
 
     def output(self, key, data):
-        value = data[key]
+        value = get_value(key if self.attribute is None else self.attribute, data)
         # we cannot really test for external dict behavior
         if is_indexable_but_not_string(value) and not isinstance(value, dict):
             # Convert all instances in typed list to container type
-            return [self.container.output(idx, data[key]) for idx, val
-                    in enumerate(data[key])]
+            return [self.container.output(idx, value) for idx, val
+                    in enumerate(value)]
 
         return [marshal(value, self.container.nested)]
 
@@ -164,6 +179,9 @@ class FormattedString(Raw):
 
 
 class Url(Raw):
+    """
+    A string representation of a Url
+    """
     def __init__(self, endpoint):
         super(Url, self).__init__()
         self.endpoint = endpoint

@@ -1,5 +1,5 @@
 import unittest
-from flask_restful.paging import retreive_next_page
+from flask_restful.paging import retrieve_next_page
 
 
 class PagingTestCase(unittest.TestCase):
@@ -16,12 +16,12 @@ class PagingTestCase(unittest.TestCase):
 
         filter = {'my_filter': 'yes', 'page_size': 3}
 
-        result, filter, approx_result_size = retreive_next_page(key, seed, filter, fetch_data)
+        result, filter, approx_result_size = retrieve_next_page(key, seed, filter, fetch_data)
 
         self.assertEquals(result, [0, 1, 2])
         self.assertEquals(approx_result_size, 100000)
 
-        result, filter, approx_result_size = retreive_next_page(key, seed, filter, fetch_data)
+        result, filter, approx_result_size = retrieve_next_page(key, seed, filter, fetch_data)
 
         self.assertEquals(approx_result_size, 100000)
         self.assertEquals(result, [3, 4, 5])

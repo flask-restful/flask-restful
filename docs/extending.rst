@@ -19,7 +19,7 @@ decision to give API maintainers full control of over API format support, so a
 year down the road you don’t have to support people using the CSV
 representation of your API you didn’t even know existed. To add additional
 mediatypes to your api, you’ll need to declare your supported representations
-on the Api object. ::
+on the :class:`~Api` object. ::
 
     app = Flask(__name__)
     api = restful.Api(app)
@@ -30,7 +30,8 @@ on the Api object. ::
         resp.headers.extend(headers)
         return resp
 
-These representation functions must return a Flask response object.
+These representation functions must return a Flask :class:`~flask.Response`
+object.
 
 
 Custom Fields & Inputs
@@ -43,8 +44,8 @@ Fields
 ~~~~~~
 
 Custom output fields let you perform your own output formatting without having
-to modify your internal objects directly. All you have to do is subclasss
-``fields.Raw`` and implement the format method::
+to modify your internal objects directly. All you have to do is subclass
+:class:`~fields.Raw` and implement the :meth:`~fields.Raw.format` method::
 
     class AllCapsString(fields.Raw):
         def format(self, value):
@@ -101,7 +102,7 @@ Response Formats
 ----------------
 
 To support other representations (like xml, csv, html) you can use the
-api.representation decorator.  You need to have a reference to your api ::
+:meth:`~Api.representation` decorator.  You need to have a reference to your api ::
 
     api = restful.Api(app)
 
@@ -124,8 +125,8 @@ response.  Your output function should return a Flask response object. ::
 
         return resp
 
-Another way to accomplish this is to subclass the Api class and provide your
-own output functions. ::
+Another way to accomplish this is to subclass the :class:`~Api` class and
+provide your own output functions. ::
 
     class Api(restful.Api):
         representations = {
@@ -138,7 +139,7 @@ own output functions. ::
 Resource Method Decorators
 --------------------------
 
-There is a property on the ``flask.ext.restful.Resource`` called
+There is a property on the :meth:`~flask.ext.restful.Resource` called
 method_decorators.  You can subclass the Resource and add your own decorators
 that will be added to all ``method`` functions in resource.  For instance, if
 you want to build custom authentication into every request ::
@@ -163,4 +164,33 @@ you want to build custom authentication into every request ::
 
 Since Flask-RESTful Resources are actually Flask view objects, you can also
 use standard `flask view decorators <http://flask.pocoo.org/docs/views/#decorating-views>`_.
+
+Custom Error Handlers
+---------------------
+
+Error handling is a tricky problem. Your Flask application may be wearing
+multiple hats, yet you want to handle all Flask-RESTful errors with the correct
+content type and error syntax as your 200-level requests.
+
+Flask-RESTful will call the :meth:`~flask.ext.restful.Api.handle_error`
+function on any 400 or 500 error that happens on a Flask-RESTful route, and
+leave other routes alone. You may want your app to return an error message with
+the correct media type on 404 Not Found errors; in which case, use the
+`catch_all_404s` parameter of the :class:`~flask.ext.restful.Api` constructor ::
+
+    app = Flask(__name__)
+    api = flask_restful.Api(app, catch_all_404s=True)
+
+Then Flask-RESTful will handle 404s in addition to errors on its own routes.
+
+Sometimes you want to do something special when an error occurs - log to a
+file, send an email, etc. Use the :meth:`~flask.got_request_exception` method
+to attach custom error handlers to an exception. ::
+
+    def log_exception(sender, exception, **extra):
+        """ Log an exception to our logging framework """
+        sender.logger.debug('Got exception during processing: %s', exception)
+
+    from flask import got_request_exception
+    got_request_exception.connect(log_exception, app)
 

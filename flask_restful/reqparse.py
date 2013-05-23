@@ -61,13 +61,16 @@ class Argument(object):
         :param request: The flask request object to parse arguments from
         """
         if isinstance(self.location, basestring):
-            return getattr(request, self.location, MultiDict())
+            value = getattr(request, self.location, MultiDict())
+            if value is not None:
+                return value
         else:
             for l in self.location:
                 value = getattr(request, l, None)
                 if value is not None:
                     return value
-            return MultiDict()
+
+        return MultiDict()
 
     def convert(self, value, op):
         try:
@@ -148,14 +151,14 @@ class Argument(object):
 
 class RequestParser(object):
     """Enables adding and parsing of multiple arguments in the context of a
-    single request. Ex:
+    single request. Ex::
 
-    from flask import request
+        from flask import request
 
-    parser = RequestParser()
-    parser.add_argument('foo')
-    parser.add_argument('int_bar', type=int)
-    args = parser.parse_args()
+        parser = RequestParser()
+        parser.add_argument('foo')
+        parser.add_argument('int_bar', type=int)
+        args = parser.parse_args()
     """
 
     def __init__(self, argument_class=Argument, namespace_class=Namespace):
@@ -164,8 +167,8 @@ class RequestParser(object):
         self.namespace_class = namespace_class
 
     def add_argument(self, *args, **kwargs):
-        """Adds an argument to be parsed. See Argument's constructor for
-        documentation on the available options.
+        """Adds an argument to be parsed. See :class:`Argument`'s constructor
+        for documentation on the available options.
         """
 
         self.args.append(self.argument_class(*args, **kwargs))

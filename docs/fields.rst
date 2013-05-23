@@ -154,11 +154,12 @@ You can also unmarshal fields as lists ::
     >>> from flask.ext.restful import fields, marshal
     >>> import json
     >>> 
-    >>> fields = {'name': fields.String, 'first_names': fields.List(fields.String)}
+    >>> resource_fields = {'name': fields.String, 'first_names': fields.List(fields.String)}
     >>> data = {'name': 'Bougnazal', 'first_names' : ['Emile', 'Raoul']}
     >>> json.dumps(marshal(data, resource_fields))
     >>> '{"first_names": ["Emile", "Raoul"], "name": "Bougnazal"}'
 
+.. _nested-field:
 
 Advanced : Nested Field
 -----------------------

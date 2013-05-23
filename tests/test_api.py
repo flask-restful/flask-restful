@@ -1,15 +1,16 @@
 import unittest
 from flask import Flask, views
-from mock import Mock
+from flask.signals import got_request_exception, signals_available
+from mock import Mock, patch
 import flask
 import werkzeug
 from flask.ext.restful.utils import http_status_message, challenge, unauthorized, error_data, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps
+from json import dumps, loads
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals # you need it for tests in form of continuations
+from nose.tools import assert_equals, assert_true # you need it for tests in form of continuations
 
 def check_unpack(expected, value):
     assert_equals(expected, value)
@@ -20,6 +21,11 @@ def test_unpack():
     yield check_unpack, ("hey", 201, {}), unpack(("hey", 201))
     yield check_unpack, ("hey", 201, "foo"), unpack(("hey", 201, "foo"))
     yield check_unpack, (["hey", 201], 200, {}), unpack(["hey", 201])
+
+# Add a dummy Resource to verify that the app is properly set.
+class HelloWorld(flask_restful.Resource):
+    def get(self):
+        return {}
 
 class APITestCase(unittest.TestCase):
 
@@ -96,6 +102,14 @@ class APITestCase(unittest.TestCase):
             return {'foo': 'bar', 'bat': 'baz'}
         self.assertEquals(try_me(), {'foo': 'bar'})
 
+    def test_marshal_decorator_tuple(self):
+        fields = {'foo': flask_restful.fields.Raw}
+
+        @flask_restful.marshal_with(fields)
+        def try_me():
+            return {'foo': 'bar', 'bat': 'baz'}, 200, {'X-test': 123}
+        self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
+
     def test_marshal_field(self):
         fields = {'foo': flask_restful.fields.Raw()}
         output = flask_restful.marshal({'foo': 'bar', 'bat': 'baz'}, fields)
@@ -113,12 +127,49 @@ class APITestCase(unittest.TestCase):
         fields = {
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
-                'fye': flask_restful.fields.String
+                'fye': flask_restful.fields.String,
             })
         }
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
             {'fye': 'fum'}}], fields)
         self.assertEquals(output, [{'fee': OrderedDict({'fye': 'fum'}), 'foo': 'bar'}])
+
+    def test_marshal_nested_with_non_null(self):
+        fields = {
+            'foo': flask_restful.fields.Raw,
+            'fee': flask_restful.fields.Nested({
+                'fye': flask_restful.fields.String,
+                'blah': flask_restful.fields.String,
+            }, allow_null=False)
+        }
+        output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
+            None}], fields)
+        self.assertEquals(output, [{'fee': { 'fye': None, 'blah': None}, 'foo': 'bar'}])
+
+    def test_marshal_nested_with_null(self):
+        fields = {
+            'foo': flask_restful.fields.Raw,
+            'fee': flask_restful.fields.Nested({
+                'fye': flask_restful.fields.String,
+                'blah': flask_restful.fields.String,
+            }, allow_null=True)
+        }
+        output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
+            None}], fields)
+        self.assertEquals(output, [{'fee': None, 'foo': 'bar'}])
+
+
+    def test_allow_null_presents_data(self):
+        fields = {
+            'foo': flask_restful.fields.Raw,
+            'fee': flask_restful.fields.Nested({
+                'fye': flask_restful.fields.String,
+                'blah': flask_restful.fields.String,
+            }, allow_null=True)
+        }
+        output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
+                                         {'blah': 'cool'}}], fields)
+        self.assertEquals(output, [{'fee': {'blah': 'cool', 'fye': None}, 'foo': 'bar'}])
 
 
     def test_marshal_list(self):
@@ -190,6 +241,14 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(api.default_mediatype, 'application/json')
 
 
+    def test_api_delayed_initialization(self):
+        app = Flask(__name__)
+        api = flask_restful.Api()
+        api.init_app(app)
+
+        api.add_resource(HelloWorld, '/', endpoint="hello")
+
+
     def test_api_prefix(self):
         app = Mock()
         api = flask_restful.Api(app, prefix='/foo')
@@ -230,15 +289,63 @@ class APITestCase(unittest.TestCase):
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
 
-    def test_handle_real_error(self):
+    def test_handle_api_error(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        class Test(flask_restful.Resource):
+            def get(self):
+                flask.abort(404)
+        api.add_resource(Test(), '/api', endpoint='api')
+        app = app.test_client()
+
+        resp = app.get("/api")
+        assert_equals(resp.status_code, 404)
+        assert_equals('application/json', resp.headers['Content-Type'])
+        data = loads(resp.data)
+        assert_equals(data.get('status'), 404)
+        assert_true('message' in data)
+
+
+    def test_handle_non_api_error(self):
         app = Flask(__name__)
         flask_restful.Api(app)
         app = app.test_client()
 
         resp = app.get("/foo")
         self.assertEquals(resp.status_code, 404)
-        self.assertEquals(resp.data, dumps(error_data(404)))
+        self.assertEquals('text/html', resp.headers['Content-Type'])
 
+    def test_non_api_error_404_catchall(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app, catch_all_404s=True)
+        app = app.test_client()
+
+        resp = app.get("/foo")
+        self.assertEquals(api.default_mediatype, resp.headers['Content-Type'])
+
+
+    def test_handle_error_signal(self):
+        if not signals_available:
+            self.skipTest("Can't test signals without signal support")
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        exception = Mock()
+        exception.code = 400
+        exception.data = {'foo': 'bar'}
+
+        recorded = []
+        def record(sender, exception):
+            recorded.append(exception)
+
+        got_request_exception.connect(record, api)
+        try:
+            with app.test_request_context("/foo"):
+                api.handle_error(exception)
+                self.assertEquals(len(recorded), 1)
+                self.assertTrue(exception is recorded[0])
+        finally:
+            got_request_exception.disconnect(record, app)
 
     def test_handle_error(self):
         app = Flask(__name__)
@@ -389,6 +496,16 @@ class APITestCase(unittest.TestCase):
         app.add_url_rule.assert_called_with('/foo',
             view_func=api.output())
 
+    def test_add_resource_kwargs(self):
+        app = Mock()
+        app.view_functions = {}
+        api = flask_restful.Api(app)
+        api.output = Mock()
+        api.add_resource(views.MethodView, '/foo', defaults={"bar": "baz"})
+
+        app.add_url_rule.assert_called_with('/foo',
+            view_func=api.output(), defaults={"bar": "baz"})
+
 
     def test_output_unpack(self):
 
@@ -480,8 +597,98 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(e.data, {'foo': 'bar'})
 
 
+    def test_abort_no_data(self):
+        try:
+            flask_restful.abort(404)
+            assert False  # We should never get here
+        except Exception as e:
+            self.assertEquals(False, hasattr(e, "data"))
+
+
+    def test_abort_custom_message(self):
+        try:
+            flask_restful.abort(404, message="no user")
+            assert False  # We should never get here
+        except Exception as e:
+            assert_equals(e.data['message'], "no user")
+
+
     def test_abort_type(self):
         self.assertRaises(werkzeug.exceptions.HTTPException, lambda: flask_restful.abort(404))
+
+
+    def test_endpoints(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
+        with app.test_request_context('/foo'):
+            self.assertFalse(api._has_fr_route())
+
+        with app.test_request_context('/ids/3'):
+            self.assertTrue(api._has_fr_route())
+
+    def test_fr_405(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
+        app = app.test_client()
+        resp = app.post('/ids/3')
+        self.assertEquals(resp.status_code, 405)
+        self.assertEquals(resp.content_type, api.default_mediatype)
+
+    def test_will_prettyprint_json_in_debug_mode(self):
+        app = Flask(__name__)
+        app.config['DEBUG'] = True
+        api = flask_restful.Api(app)
+
+        class Foo1(flask_restful.Resource):
+            def get(self):
+                return {'foo': 'bar', 'baz': 'asdf'}
+
+        api.add_resource(Foo1, '/foo', endpoint='bar')
+
+        with app.test_client() as client:
+            foo = client.get('/foo')
+
+            # Python's dictionaries have random order (as of "new" Pythons,
+            # anyway), so we can't verify the actual output here.  We just
+            # assert that they're properly prettyprinted.
+            lines = foo.data.splitlines()
+            self.assertEquals("{", lines[0])
+            self.assertTrue(lines[1].startswith('    '))
+            self.assertTrue(lines[2].startswith('    '))
+            self.assertEquals("}", lines[3])
+
+            # Assert our trailing newline.
+            self.assertTrue(foo.data.endswith('\n'))
+
+    def test_will_pass_options_to_json(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class Foo1(flask_restful.Resource):
+            def get(self):
+                return {'foo': 'bar'}
+
+        api.add_resource(Foo1, '/foo', endpoint='bar')
+
+        # We patch the representations module here, with two things:
+        #   1. Set the settings dict() with some value
+        #   2. Patch the json.dumps function in the module with a Mock object.
+        from flask_restful.representations import json as json_rep
+        json_dumps_mock = Mock(return_value='bar')
+        new_settings = {'indent': 123}
+
+        with patch.multiple(json_rep, dumps=json_dumps_mock,
+                            settings=new_settings):
+            with app.test_client() as client:
+                foo = client.get('/foo')
+
+        # Assert that the function was called with the above settings.
+        data, kwargs = json_dumps_mock.call_args
+        self.assertTrue(json_dumps_mock.called)
+        self.assertEqual(123, kwargs['indent'])
+
 
 if __name__ == '__main__':
     unittest.main()
