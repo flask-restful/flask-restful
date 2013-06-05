@@ -151,7 +151,7 @@ class Api(object):
         :type e: Exception
 
         """
-        got_request_exception.send(self, exception=e)
+        got_request_exception.send(self.app, exception=e)
 
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
