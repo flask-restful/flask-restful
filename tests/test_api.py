@@ -338,7 +338,7 @@ class APITestCase(unittest.TestCase):
         def record(sender, exception):
             recorded.append(exception)
 
-        got_request_exception.connect(record, api)
+        got_request_exception.connect(record, app)
         try:
             with app.test_request_context("/foo"):
                 api.handle_error(exception)
