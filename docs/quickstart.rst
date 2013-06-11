@@ -92,13 +92,13 @@ You can try it like this: ::
 
     Or from python if you have the requests library installed:
      >>> from requests import put, get
-     >>> put('http://localhost:5000/todo1', data={'data': 'Remember the milk'}).json
+     >>> put('http://localhost:5000/todo1', data={'data': 'Remember the milk'}).json()
      {u'todo1': u'Remember the milk'}
-     >>> get('http://localhost:5000/todo1').json
+     >>> get('http://localhost:5000/todo1').json()
      {u'todo1': u'Remember the milk'}
-     >>> put('http://localhost:5000/todo2', data={'data': 'Change my breakpads'}).json
+     >>> put('http://localhost:5000/todo2', data={'data': 'Change my breakpads'}).json()
      {u'todo2': u'Change my breakpads'}
-     >>> get('http://localhost:5000/todo2').json
+     >>> get('http://localhost:5000/todo2').json()
      {u'todo2': u'Change my breakpads'}
 
 Flask-RESTful understands multiple kinds of return values from view methods.
