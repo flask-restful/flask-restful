@@ -257,7 +257,13 @@ class Api(object):
         for mediatype in self.mediatypes() + [self.default_mediatype]:
             if mediatype in self.representations:
                 resp = self.representations[mediatype](data, *args, **kwargs)
-                resp.headers['Content-Type'] = mediatype
+
+                cts = resp.headers.getlist('Content-Type')
+                if len(cts) > 1:
+                    # The dev has set content type somewhere; use the last one
+                    resp.headers['Content-Type'] = cts[-1]
+                else:
+                    resp.headers['Content-Type'] = mediatype
                 return resp
 
     def mediatypes(self):

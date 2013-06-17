@@ -636,6 +636,22 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(resp.status_code, 405)
         self.assertEquals(resp.content_type, api.default_mediatype)
 
+    def test_changed_content_type(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class foo(flask_restful.Resource):
+            def get(self):
+                return "OK", 200, {'Content-Type': 'text/html'}
+
+        app = app.test_client()
+
+        api.add_resource(foo, '/foo', endpoint="foo")
+
+        resp = app.get('/foo')
+        self.assertEquals(resp.content_type, 'text/html')
+
+
     def test_will_prettyprint_json_in_debug_mode(self):
         app = Flask(__name__)
         app.config['DEBUG'] = True
