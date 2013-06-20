@@ -171,6 +171,23 @@ class APITestCase(unittest.TestCase):
                                          {'blah': 'cool'}}], fields)
         self.assertEquals(output, [{'fee': {'blah': 'cool', 'fye': None}, 'foo': 'bar'}])
 
+    def test_marshal_nested_property(self):
+        class TestObject(object):
+            @property
+            def fee(self):
+                return {'blah': 'cool'}
+        fields = {
+            'foo': flask_restful.fields.Raw,
+            'fee': flask_restful.fields.Nested({
+                'fye': flask_restful.fields.String,
+                'blah': flask_restful.fields.String,
+            }, allow_null=True)
+        }
+        obj = TestObject()
+        obj.foo = 'bar'
+        obj.bat = 'baz'
+        output = flask_restful.marshal([obj], fields)
+        self.assertEquals(output, [{'fee': {'blah': 'cool', 'fye': None}, 'foo': 'bar'}])
 
     def test_marshal_list(self):
         fields = {
@@ -477,7 +494,7 @@ class APITestCase(unittest.TestCase):
                 return 'foo1'
 
         api.add_resource(Foo1, '/foo', endpoint='bar')
-        api.add_resource(Foo1, '/foo/toto', endpoint='bar')
+        api.add_resource(Foo1, '/foo/toto', endpoint='blah')
 
         with app.test_client() as client:
             foo1 = client.get('/foo')
