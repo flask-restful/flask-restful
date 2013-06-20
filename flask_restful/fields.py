@@ -1,5 +1,10 @@
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    # python3
+    from urllib.parse import urlparse
+
 from flask_restful import types, marshal
 from flask import url_for
 
