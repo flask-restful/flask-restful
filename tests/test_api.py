@@ -477,7 +477,7 @@ class APITestCase(unittest.TestCase):
                 return 'foo1'
 
         api.add_resource(Foo1, '/foo', endpoint='bar')
-        api.add_resource(Foo1, '/foo/toto', endpoint='bar')
+        api.add_resource(Foo1, '/foo/toto', endpoint='blah')
 
         with app.test_client() as client:
             foo1 = client.get('/foo')
