@@ -104,13 +104,11 @@ class Nested(Raw):
         super(Nested, self).__init__(**kwargs)
 
     def output(self, key, obj):
-        data = to_marshallable_type(obj)
-
-        attr = key if self.attribute is None else self.attribute
-        if self.allow_null and data.get(attr) is None:
+        value = get_value(key if self.attribute is None else self.attribute, obj)
+        if self.allow_null and value is None:
             return None
 
-        return marshal(data[attr], self.nested)
+        return marshal(value, self.nested)
 
 class List(Raw):
     def __init__(self, cls_or_instance):
