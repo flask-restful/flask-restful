@@ -217,8 +217,14 @@ class Api(object):
         self.endpoints.add(endpoint)
 
         if endpoint in self.app.view_functions.keys():
-            previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
-            if previous_view_class != resource: # if you override with a different class the endpoint, avoid the collision by raising an exception
+            try:
+                previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
+            except AttributeError:
+                # python3
+                previous_view_class = self.app.view_functions[endpoint]['view_class']
+
+            # if you override the endpoint with a different class, avoid the collision by raising an exception
+            if previous_view_class != resource:
                 raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
