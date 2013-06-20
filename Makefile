@@ -14,7 +14,7 @@ docs:
 
 # Pycrypto is required to run the unit tests
 test-dependencies: install
-	. venv/bin/activate; pip install -e '.[paging]' --use-mirrors
+	. venv/bin/activate; pip install -e '.[paging]' -e '.[tests]' --use-mirrors
 
 test:
 	. venv/bin/activate; nosetests
