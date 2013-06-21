@@ -259,9 +259,11 @@ class Api(object):
                 resp = self.representations[mediatype](data, *args, **kwargs)
 
                 cts = resp.headers.getlist('Content-Type')
+                print cts
                 if len(cts) > 1:
-                    # The dev has set content type somewhere; use the last one
-                    resp.headers['Content-Type'] = cts[-1]
+                        resp.headers['Content-Type'] = cts[-1]
+                elif len(cts) == 1 and cts[0] != 'text/html; charset=utf-8':
+                        resp.headers['Content-Type'] = cts[0]
                 else:
                     resp.headers['Content-Type'] = mediatype
                 return resp
