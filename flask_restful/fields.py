@@ -139,6 +139,9 @@ class List(Raw):
             return [self.container.output(idx, value) for idx, val
                     in enumerate(value)]
 
+        if value is None:
+            return self.default
+
         return [marshal(value, self.container.nested)]
 
 
