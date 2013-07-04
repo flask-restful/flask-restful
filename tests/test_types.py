@@ -61,7 +61,7 @@ def check_bad_url_raises(value):
         types.url(value)
         assert False, "shouldn't get here"
     except ValueError as e:
-        assert_equals(six.text_type(e), six.u("{0} is not a valid URL").format(value))
+        assert_equals(six.text_type(e), u"{0} is not a valid URL".format(value))
 
 def test_bad_urls():
     values = [
@@ -75,7 +75,7 @@ def test_bad_urls():
         'http://inv-.alid-.com',
         'http://inv-.-alid.com',
         'foo bar baz',
-        six.u('foo \u2713'),
+        u'foo \u2713',
         'http://@foo:bar@example.com',
         'http://:bar@example.com',
         'http://bar:bar:bar@example.com',
@@ -89,7 +89,7 @@ def test_bad_url_error_message():
         'google.com',
         'domain.google.com',
         'kevin:pass@google.com/path?query',
-        six.u('google.com/path?\u2713'),
+        u'google.com/path?\u2713',
     ]
 
     for value in values:
@@ -98,10 +98,10 @@ def test_bad_url_error_message():
 def check_url_error_message(value):
     try:
         types.url(value)
-        assert False, six.u("types.url({0}) should raise an exception").format(value)
+        assert False, u"types.url({0}) should raise an exception".format(value)
     except ValueError as e:
         assert_equals(six.text_type(e), 
-                      (six.u("{0} is not a valid URL. Did you mean: http://{0}").format(value)))
+                      (u"{0} is not a valid URL. Did you mean: http://{0}".format(value)))
 
 
 class TypesTestCase(unittest.TestCase):

@@ -109,12 +109,12 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_action_filter(self):
         arg = Argument("foo", action="filter")
-        self.assertEquals(arg.action, six.u("filter"))
+        self.assertEquals(arg.action, u"filter")
 
 
     def test_action(self):
         arg = Argument("foo", action="append")
-        self.assertEquals(arg.action, six.u("append"))
+        self.assertEquals(arg.action, u"append")
 
 
     def test_choices(self):
@@ -154,7 +154,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_action_default(self):
         arg = Argument("foo")
-        self.assertEquals(arg.action, six.u("store"))
+        self.assertEquals(arg.action, u"store")
 
 
     def test_choices_default(self):
@@ -221,7 +221,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument("foo")
 
         args = parser.parse_args(req)
-        self.assertEquals(args['foo'], six.u("barß"))
+        self.assertEquals(args['foo'], u"barß")
 
 
     def test_parse_unicode_app(self):
@@ -232,7 +232,7 @@ class ReqParseTestCase(unittest.TestCase):
 
         with app.test_request_context('/bubble?foo=barß'):
             args = parser.parse_args()
-            self.assertEquals(args['foo'], six.u("barß"))
+            self.assertEquals(args['foo'], u"barß")
 
 
     def test_json_location(self):

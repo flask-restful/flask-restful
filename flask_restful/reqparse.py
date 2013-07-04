@@ -124,7 +124,7 @@ class Argument(object):
                         value = value.lower()
                     if self.choices and value not in self.choices:
                         self.handle_validation_error(ValueError(
-                            six.u("{0} is not a valid choice").format(value)))
+                            u"{0} is not a valid choice".format(value)))
                     try:
                         value = self.convert(value, operator)
                     except Exception as error:
@@ -137,12 +137,12 @@ class Argument(object):
 
         if not results and self.required:
             if isinstance(self.location, basestring):
-                error_msg = six.u("{0} is required in {1}").format(
+                error_msg = u"{0} is required in {1}".format(
                     self.name,
                     self.location
                 )
             else:
-                error_msg = six.u("{0} is required in {1}").format(
+                error_msg = u"{0} is required in {1}".format(
                     self.name,
                     ' or '.join(self.location)
                 )

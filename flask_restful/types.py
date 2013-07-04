@@ -27,9 +27,9 @@ def url(value):
     :raises: ValueError
     """
     if not regex.search(value):
-        message = six.u("{0} is not a valid URL").format(value)
+        message = u"{0} is not a valid URL".format(value)
         if regex.search('http://' + value):
-            message += six.u(". Did you mean: http://{0}").format(value)
+            message += u". Did you mean: http://{0}".format(value)
         raise ValueError(message)
     return value
 
@@ -38,7 +38,7 @@ def date(value):
     """Parse a valid looking date in the format YYYY-mm-dd"""
     date = datetime.strptime(value, "%Y-%m-%d")
     if date.year < 1900:
-        raise ValueError(six.u("Year must be >= 1900"))
+        raise ValueError(u"Year must be >= 1900")
     return date
 
 
