@@ -11,6 +11,7 @@ from flask_restful import OrderedDict
 from json import dumps, loads
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals, assert_true # you need it for tests in form of continuations
+import six
 
 def check_unpack(expected, value):
     assert_equals(expected, value)
@@ -58,7 +59,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         exception = Mock()
         exception.code = 401
-        exception.data = {'foo': 'bar'}
+        exception.data = {"foo": "bar"}
 
         with app.test_request_context('/foo'):
             resp = api.handle_error(exception)
@@ -73,7 +74,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         exception = Mock()
         exception.code = 401
-        exception.data = {'foo': 'bar'}
+        exception.data = {"foo": "bar"}
 
         with app.test_request_context('/foo'):
             resp = api.handle_error(exception)
@@ -278,12 +279,12 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 500
-        exception.data = {'foo': 'bar'}
+        exception.data = {"foo": "bar"}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(resp.data.decode(), dumps({
                 'foo': 'bar',
             }))
 
@@ -294,14 +295,12 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 401
-        exception.data = {'foo': 'bar'}
+        exception.data = {"foo": "bar"}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 401)
-            self.assertEquals(resp.data, dumps({
-                'foo': 'bar',
-            }))
+            self.assertEquals(resp.data.decode(), dumps({'foo': 'bar',}))
 
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
@@ -318,7 +317,7 @@ class APITestCase(unittest.TestCase):
         resp = app.get("/api")
         assert_equals(resp.status_code, 404)
         assert_equals('application/json', resp.headers['Content-Type'])
-        data = loads(resp.data)
+        data = loads(resp.data.decode('utf-8'))
         assert_equals(data.get('status'), 404)
         assert_true('message' in data)
 
@@ -349,7 +348,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 400
-        exception.data = {'foo': 'bar'}
+        exception.data = {"foo": "bar"}
 
         recorded = []
         def record(sender, exception):
@@ -370,12 +369,12 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 400
-        exception.data = {'foo': 'bar'}
+        exception.data = {"foo": "bar"}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 400)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(resp.data.decode(), dumps({
                 'foo': 'bar',
             }))
 
@@ -395,14 +394,14 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/faaaaa"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(resp.data.decode(), dumps({
                 "status": 404, "message": "Not Found",
             }))
 
         with app.test_request_context("/fOo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(resp.data.decode(), dumps({
                 "status": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
             }))
 
@@ -410,7 +409,7 @@ class APITestCase(unittest.TestCase):
             del exception.data["message"]
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data, dumps({
+            self.assertEquals(resp.data.decode(), dumps({
                 "status": 404, "message": "You have requested this URI [/fOo] but did you mean /foo ?",
             }))
 
@@ -498,9 +497,9 @@ class APITestCase(unittest.TestCase):
 
         with app.test_client() as client:
             foo1 = client.get('/foo')
-            self.assertEquals(foo1.data, '"foo1"')
+            self.assertEquals(foo1.data, b'"foo1"')
             foo2 = client.get('/foo/toto')
-            self.assertEquals(foo2.data, '"foo1"')
+            self.assertEquals(foo2.data, b'"foo1"')
 
 
     def test_add_resource(self):
@@ -536,7 +535,7 @@ class APITestCase(unittest.TestCase):
             wrapper = api.output(make_empty_response)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
-            self.assertEquals(resp.data, '{"foo": "bar"}')
+            self.assertEquals(resp.data.decode(), '{"foo": "bar"}')
 
 
     def test_output_func(self):
@@ -551,7 +550,7 @@ class APITestCase(unittest.TestCase):
             wrapper = api.output(make_empty_resposne)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
-            self.assertEquals(resp.data, '')
+            self.assertEquals(resp.data.decode(), '')
 
 
     def test_resource(self):
@@ -575,7 +574,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
 
         def text(data, code, headers=None):
-            return flask.make_response(unicode(data))
+            return flask.make_response(six.text_type(data))
 
         class Foo(flask_restful.Resource):
 
@@ -589,7 +588,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo", headers={'Accept': 'text/plain'}):
             resource = Foo()
             resp = resource.dispatch_request()
-            self.assertEquals(resp.data, 'hello')
+            self.assertEquals(resp.data.decode(), 'hello')
 
 
     def test_resource_error(self):
@@ -671,13 +670,14 @@ class APITestCase(unittest.TestCase):
             # anyway), so we can't verify the actual output here.  We just
             # assert that they're properly prettyprinted.
             lines = foo.data.splitlines()
+            lines = [line.decode() for line in lines]
             self.assertEquals("{", lines[0])
             self.assertTrue(lines[1].startswith('    '))
             self.assertTrue(lines[2].startswith('    '))
             self.assertEquals("}", lines[3])
 
             # Assert our trailing newline.
-            self.assertTrue(foo.data.endswith('\n'))
+            self.assertTrue(foo.data.endswith(b'\n'))
 
     def test_will_pass_options_to_json(self):
         app = Flask(__name__)

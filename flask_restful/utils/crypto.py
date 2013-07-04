@@ -1,5 +1,5 @@
 import pickle
-from Crypto.Cipher import AES
+from .Crypto.Cipher import AES
 from base64 import b64encode, b64decode
 
 __all__ = "encrypt", "decrypt"

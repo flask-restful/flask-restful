@@ -14,7 +14,7 @@ try:
     #noinspection PyUnresolvedReferences
     from collections import OrderedDict
 except ImportError:
-    from utils.ordereddict import OrderedDict
+    from .utils.ordereddict import OrderedDict
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'abort')
 
@@ -218,7 +218,7 @@ class Api(object):
 
         if endpoint in self.app.view_functions.keys():
             try:
-                previous_view_class = self.app.view_functions[endpoint].func_dict['view_class']
+                previous_view_class = self.app.view_functions[endpoint].__dict__['view_class']
             except AttributeError:
                 # python3
                 previous_view_class = self.app.view_functions[endpoint].__dict__['view_class']

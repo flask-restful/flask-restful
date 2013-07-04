@@ -8,6 +8,16 @@ from werkzeug.wrappers import Request
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 
 import json
+import six
+
+# python3 doesn't have a 'unicode' type
+try:
+    unicode = unicode
+except NameError:
+    unicode = str
+    basestring = (str, bytes)
+else:
+    bytes = str
 
 class ReqParseTestCase(unittest.TestCase):
     def test_default_help(self):
@@ -99,12 +109,12 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_action_filter(self):
         arg = Argument("foo", action="filter")
-        self.assertEquals(arg.action, u"filter")
+        self.assertEquals(arg.action, six.u("filter"))
 
 
     def test_action(self):
         arg = Argument("foo", action="append")
-        self.assertEquals(arg.action, u"append")
+        self.assertEquals(arg.action, six.u("append"))
 
 
     def test_choices(self):
@@ -144,7 +154,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_action_default(self):
         arg = Argument("foo")
-        self.assertEquals(arg.action, u"store")
+        self.assertEquals(arg.action, six.u("store"))
 
 
     def test_choices_default(self):
@@ -211,7 +221,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument("foo")
 
         args = parser.parse_args(req)
-        self.assertEquals(args['foo'], u"barß")
+        self.assertEquals(args['foo'], six.u("barß"))
 
 
     def test_parse_unicode_app(self):
@@ -222,7 +232,7 @@ class ReqParseTestCase(unittest.TestCase):
 
         with app.test_request_context('/bubble?foo=barß'):
             args = parser.parse_args()
-            self.assertEquals(args['foo'], u"barß")
+            self.assertEquals(args['foo'], six.u("barß"))
 
 
     def test_json_location(self):

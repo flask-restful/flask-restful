@@ -1,6 +1,16 @@
 from flask import request
 from werkzeug.datastructures import MultiDict
 import flask_restful
+import six
+
+# python3 doesn't have a 'unicode' type
+try:
+    unicode = unicode
+except NameError:
+    unicode = str
+    basestring = (str, bytes)
+else:
+    bytes = str
 
 class Namespace(dict):
     def __getattr__(self, name):
@@ -114,7 +124,7 @@ class Argument(object):
                         value = value.lower()
                     if self.choices and value not in self.choices:
                         self.handle_validation_error(ValueError(
-                            u"{0} is not a valid choice".format(value)))
+                            six.u("{0} is not a valid choice").format(value)))
                     try:
                         value = self.convert(value, operator)
                     except Exception as error:
@@ -127,12 +137,12 @@ class Argument(object):
 
         if not results and self.required:
             if isinstance(self.location, basestring):
-                error_msg = u"{0} is required in {1}".format(
+                error_msg = six.u("{0} is required in {1}").format(
                     self.name,
                     self.location
                 )
             else:
-                error_msg = u"{0} is required in {1}".format(
+                error_msg = six.u("{0} is required in {1}").format(
                     self.name,
                     ' or '.join(self.location)
                 )

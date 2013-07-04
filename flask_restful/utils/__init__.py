@@ -1,4 +1,5 @@
 from werkzeug.http import HTTP_STATUS_CODES
+import six
 
 
 def http_status_message(code):
@@ -8,7 +9,7 @@ def http_status_message(code):
 
 def challenge(authentication, realm):
     """Constructs the string to be sent in the WWW-Authenticate header"""
-    return u"{0} realm=\"{1}\"".format(authentication, realm)
+    return six.u("{0} realm=\"{1}\"").format(authentication, realm)
 
 
 def unauthorized(response, realm):
