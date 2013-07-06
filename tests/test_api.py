@@ -62,7 +62,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         exception = Mock()
         exception.code = 401
-        exception.data = {"foo": "bar"}
+        exception.data = {'foo': 'bar'}
 
         with app.test_request_context('/foo'):
             resp = api.handle_error(exception)
@@ -77,7 +77,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         exception = Mock()
         exception.code = 401
-        exception.data = {"foo": "bar"}
+        exception.data = {'foo': 'bar'}
 
         with app.test_request_context('/foo'):
             resp = api.handle_error(exception)
@@ -282,7 +282,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 500
-        exception.data = {"foo": "bar"}
+        exception.data = {'foo': 'bar'}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
@@ -298,7 +298,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 401
-        exception.data = {"foo": "bar"}
+        exception.data = {'foo': 'bar'}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
@@ -320,7 +320,7 @@ class APITestCase(unittest.TestCase):
         resp = app.get("/api")
         assert_equals(resp.status_code, 404)
         assert_equals('application/json', resp.headers['Content-Type'])
-        data = loads(resp.data.decode('utf-8'))
+        data = loads(resp.data.decode())
         assert_equals(data.get('status'), 404)
         assert_true('message' in data)
 
@@ -351,7 +351,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 400
-        exception.data = {"foo": "bar"}
+        exception.data = {'foo': 'bar'}
 
         recorded = []
         def record(sender, exception):
@@ -372,7 +372,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 400
-        exception.data = {"foo": "bar"}
+        exception.data = {'foo': 'bar'}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
