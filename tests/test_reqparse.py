@@ -5,7 +5,11 @@ from flask import Flask
 from flask import request as flask_request
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
-from flask_restful.reqparse import Argument, RequestParser, Namespace
+from flask_restful.reqparse import Argument, RequestParser, Namespace, parse_with
+
+class MockParser(object):
+    def parse_args(self):
+        return 'RESULTS'
 
 import json
 
@@ -500,6 +504,43 @@ class ReqParseTestCase(unittest.TestCase):
     def test_namespace_configurability(self):
         self.assertTrue(isinstance(RequestParser().parse_args(), Namespace))
         self.assertTrue(type(RequestParser(namespace_class=dict).parse_args()) is dict)
+
+    def test_parse_with_for_functions(self):
+        @parse_with(MockParser())
+        def foo(result):
+            self.assertEquals(result, 'RESULTS')
+        @parse_with(MockParser())
+        def bar(result, argument):
+            self.assertEquals(result, 'RESULTS')
+            self.assertEquals(argument, 'ARGUMENT')
+        foo()
+        bar('ARGUMENT')
+
+    def test_parse_with_for_methods(self):
+        class Spam(object):
+            @parse_with(MockParser())
+            def foo(inner_self, result):
+                self.assertEquals(result, 'RESULTS')
+                return inner_self
+            @parse_with(MockParser())
+            def bar(inner_self, result, argument):
+                self.assertEquals(result, 'RESULTS')
+                self.assertEquals(argument, 'ARGUMENT')
+                return inner_self
+            @parse_with(MockParser())
+            @classmethod
+            def qux(cls, result):
+                self.assertEquals(result, 'RESULTS')
+                return cls
+            @parse_with(MockParser())
+            @staticmethod
+            def quux(result, argument):
+                self.assertEquals(result, 'RESULTS')
+        instance = Spam()
+        self.assertTrue(instance.foo() is instance)
+        self.assertTrue(instance.bar('ARGUMENT') is instance)
+        self.assertTrue(Spam.qux() is Spam)
+        instance.quux('ARGUMENT')
 
 if __name__ == '__main__':
     unittest.main()
