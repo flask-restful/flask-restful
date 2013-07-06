@@ -9,6 +9,7 @@ from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
 from werkzeug.http import HTTP_STATUS_CODES
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
+import sys
 
 try:
     #noinspection PyUnresolvedReferences
@@ -157,7 +158,13 @@ class Api(object):
         data = getattr(e, 'data', error_data(code))
 
         if code >= 500:
-            self.app.logger.exception("Internal Error")
+
+            # There's currently a bug in Python3 that disallows calling
+            # logging.exception() when an exception hasn't actually be raised
+            if sys.exc_info() == (None, None, None):
+                self.app.logger.error("Internal Error")
+            else:
+                self.app.logger.exception("Internal Error")
 
         if code == 404 and ('message' not in data or
                             data['message'] == HTTP_STATUS_CODES[404]):
