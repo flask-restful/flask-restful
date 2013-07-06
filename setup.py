@@ -14,11 +14,6 @@ setup(
     include_package_data=True,
     platforms='any',
     test_suite = 'nose.collector',
-    setup_requires=[
-        'nose>=1.1.2',
-        'mock>=0.8',
-        'blinker==1.2',
-    ],
     install_requires=[
         'Flask>=0.8',
     ],
@@ -26,5 +21,10 @@ setup(
     extras_require={
         'paging': 'pycrypto>=2.6',
         'docs': 'sphinx',
+        'tests': [
+            'nose>=1.1.2',
+            'mock>=0.8',
+            'blinker==1.2',
+        ]
     }
 )

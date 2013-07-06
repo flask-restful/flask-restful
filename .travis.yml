@@ -6,4 +6,4 @@ python:
 install: 
     - "pip install -e '.[paging]' --use-mirrors"
 # command to run tests, e.g. python setup.py test
-script: python setup.py nosetests
+script: make test-dependencies; make test
