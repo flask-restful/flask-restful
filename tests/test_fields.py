@@ -7,7 +7,6 @@ from datetime import datetime
 from flask import Flask
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals # you need it for tests in form of continuations
-import six
 
 
 class Foo(object):

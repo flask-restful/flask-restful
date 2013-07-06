@@ -5,7 +5,6 @@ import re
 # https://code.djangoproject.com/browser/django/trunk/django/core/validators.py
 # basic auth added by frank
 from calendar import timegm
-import six
 
 regex = re.compile(
     r'^(?:http|ftp)s?://'  # http:// or https://

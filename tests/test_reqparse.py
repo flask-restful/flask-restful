@@ -8,7 +8,6 @@ from werkzeug.wrappers import Request
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 
 import json
-import six
 
 # python3 doesn't have a 'unicode' type
 try:

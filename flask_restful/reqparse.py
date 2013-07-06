@@ -1,7 +1,6 @@
 from flask import request
 from werkzeug.datastructures import MultiDict
 import flask_restful
-import six
 
 # python3 doesn't have a 'unicode' type
 try:
