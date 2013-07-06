@@ -1,7 +1,10 @@
 import unittest
 from flask import Flask, views
 from flask.signals import got_request_exception, signals_available
-from mock import Mock, patch
+try:
+    from mock import Mock, patch
+except:
+    from unittest.mock import Mock, patch
 import flask
 import werkzeug
 from flask.ext.restful.utils import http_status_message, challenge, unauthorized, error_data, unpack
@@ -680,6 +683,7 @@ class APITestCase(unittest.TestCase):
             self.assertTrue(foo.data.endswith(b'\n'))
 
     def test_will_pass_options_to_json(self):
+
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
@@ -692,7 +696,8 @@ class APITestCase(unittest.TestCase):
         # We patch the representations module here, with two things:
         #   1. Set the settings dict() with some value
         #   2. Patch the json.dumps function in the module with a Mock object.
-        from flask_restful.representations import json as json_rep
+
+        from flask.ext.restful.representations import json as json_rep
         json_dumps_mock = Mock(return_value='bar')
         new_settings = {'indent': 123}
 
