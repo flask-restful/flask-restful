@@ -200,8 +200,7 @@ class APITestCase(unittest.TestCase):
         }
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz',
             'fee': ['fye', 'fum']}], fields)
-        self.assertEquals(output, [OrderedDict({'fee': (['fye', 'fum']),
-            'foo': 'bar'})])
+        self.assertEquals(output, [OrderedDict({'foo': 'bar', 'fee': (['fye', 'fum'])})])
 
 
     def test_marshal_list_of_nesteds(self):
@@ -213,8 +212,7 @@ class APITestCase(unittest.TestCase):
         }
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz',
             'fee': {'fye': 'fum'}}], fields)
-        self.assertEquals(output, [OrderedDict({'fee': [OrderedDict({'fye': 'fum'})],
-            'foo': 'bar'})])
+        self.assertEquals(output, [OrderedDict({'foo': 'bar', 'fee': [OrderedDict({'fye': 'fum'})]})])
 
 
     def test_marshal_list_of_lists(self):
@@ -225,8 +223,7 @@ class APITestCase(unittest.TestCase):
         }
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz',
             'fee': [['fye'], ['fum']]}], fields)
-        self.assertEquals(output, [OrderedDict({'fee': [['fye'], ['fum']],
-            'foo': 'bar'})])
+        self.assertEquals(output, [OrderedDict({'foo': 'bar', 'fee': [['fye'], ['fum']]})])
 
 
     def test_marshal_nested_dict(self):
