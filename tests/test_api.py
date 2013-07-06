@@ -4,6 +4,7 @@ from flask.signals import got_request_exception, signals_available
 try:
     from mock import Mock, patch
 except:
+    # python3
     from unittest.mock import Mock, patch
 import flask
 import werkzeug
