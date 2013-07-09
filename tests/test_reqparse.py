@@ -6,17 +6,9 @@ from flask import request as flask_request
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
 from flask_restful.reqparse import Argument, RequestParser, Namespace
+import six
 
 import json
-
-# python3 doesn't have a 'unicode' type
-try:
-    unicode = unicode
-except NameError:
-    unicode = str
-    basestring = (str, bytes)
-else:
-    bytes = str
 
 class ReqParseTestCase(unittest.TestCase):
     def test_default_help(self):
@@ -133,7 +125,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_default_type(self):
         arg = Argument("foo")
-        self.assertEquals(arg.type, unicode)
+        self.assertEquals(arg.type, six.text_type)
 
 
     def test_default_default(self):
