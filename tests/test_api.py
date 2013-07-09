@@ -95,12 +95,12 @@ class APITestCase(unittest.TestCase):
 
 
     def test_marshal(self):
-        fields = {'foo': flask_restful.fields.Raw}
+        fields = OrderedDict({'foo': flask_restful.fields.Raw})
         output = flask_restful.marshal({'foo': 'bar', 'bat': 'baz'}, fields)
         self.assertEquals(output, {'foo': 'bar'})
 
     def test_marshal_decorator(self):
-        fields = {'foo': flask_restful.fields.Raw}
+        fields = OrderedDict({'foo': flask_restful.fields.Raw})
 
         @flask_restful.marshal_with(fields)
         def try_me():
@@ -108,7 +108,7 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(try_me(), {'foo': 'bar'})
 
     def test_marshal_decorator_tuple(self):
-        fields = {'foo': flask_restful.fields.Raw}
+        fields = OrderedDict({'foo': flask_restful.fields.Raw})
 
         @flask_restful.marshal_with(fields)
         def try_me():
@@ -116,62 +116,62 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
 
     def test_marshal_field(self):
-        fields = {'foo': flask_restful.fields.Raw()}
+        fields = OrderedDict({'foo': flask_restful.fields.Raw()})
         output = flask_restful.marshal({'foo': 'bar', 'bat': 'baz'}, fields)
         self.assertEquals(output, {'foo': 'bar'})
 
 
 
     def test_marshal_tuple(self):
-        fields = {'foo': flask_restful.fields.Raw}
+        fields = OrderedDict({'foo': flask_restful.fields.Raw})
         output = flask_restful.marshal(({'foo': 'bar', 'bat': 'baz'},), fields)
         self.assertEquals(output, [{'foo': 'bar'}])
 
 
     def test_marshal_nested(self):
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
                 'fye': flask_restful.fields.String,
             })
-        }
+        })
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
             {'fye': 'fum'}}], fields)
         self.assertEquals(output, [{'fee': OrderedDict({'fye': 'fum'}), 'foo': 'bar'}])
 
     def test_marshal_nested_with_non_null(self):
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
                 'fye': flask_restful.fields.String,
                 'blah': flask_restful.fields.String,
             }, allow_null=False)
-        }
+        })
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
             None}], fields)
         self.assertEquals(output, [{'fee': { 'fye': None, 'blah': None}, 'foo': 'bar'}])
 
     def test_marshal_nested_with_null(self):
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
                 'fye': flask_restful.fields.String,
                 'blah': flask_restful.fields.String,
             }, allow_null=True)
-        }
+        }) 
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
             None}], fields)
         self.assertEquals(output, [{'fee': None, 'foo': 'bar'}])
 
 
     def test_allow_null_presents_data(self):
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
                 'fye': flask_restful.fields.String,
                 'blah': flask_restful.fields.String,
             }, allow_null=True)
-        }
+        })
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz', 'fee':
                                          {'blah': 'cool'}}], fields)
         self.assertEquals(output, [{'fee': {'blah': 'cool', 'fye': None}, 'foo': 'bar'}])
@@ -181,13 +181,13 @@ class APITestCase(unittest.TestCase):
             @property
             def fee(self):
                 return {'blah': 'cool'}
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.Nested({
                 'fye': flask_restful.fields.String,
                 'blah': flask_restful.fields.String,
             }, allow_null=True)
-        }
+        })
         obj = TestObject()
         obj.foo = 'bar'
         obj.bat = 'baz'
@@ -195,46 +195,46 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(output, [{'fee': {'blah': 'cool', 'fye': None}, 'foo': 'bar'}])
 
     def test_marshal_list(self):
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.List(flask_restful.fields.String)
-        }
+        })
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz',
             'fee': ['fye', 'fum']}], fields)
         self.assertEquals(output, [OrderedDict({'foo': 'bar', 'fee': (['fye', 'fum'])})])
 
 
     def test_marshal_list_of_nesteds(self):
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.List(flask_restful.fields.Nested({
                 'fye': flask_restful.fields.String
             }))
-        }
+        })
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz',
             'fee': {'fye': 'fum'}}], fields)
         self.assertEquals(output, [OrderedDict({'foo': 'bar', 'fee': [OrderedDict({'fye': 'fum'})]})])
 
 
     def test_marshal_list_of_lists(self):
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'fee': flask_restful.fields.List(flask_restful.fields.List(
                 flask_restful.fields.String))
-        }
+        })
         output = flask_restful.marshal([{'foo': 'bar', 'bat': 'baz',
             'fee': [['fye'], ['fum']]}], fields)
         self.assertEquals(output, [OrderedDict({'foo': 'bar', 'fee': [['fye'], ['fum']]})])
 
 
     def test_marshal_nested_dict(self):
-        fields = {
+        fields = OrderedDict({
             'foo': flask_restful.fields.Raw,
             'bar': {
                 'a': flask_restful.fields.Raw,
                 'b': flask_restful.fields.Raw,
             },
-        }
+        })
         output = flask_restful.marshal({'foo': 'foo-val', 'bar': 'bar-val', 'bat':
                                       'bat-val', 'a': 1, 'b': 2, 'c': 3}, fields)
         self.assertEquals(output, OrderedDict({'foo': 'foo-val',
