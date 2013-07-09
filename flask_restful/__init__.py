@@ -224,11 +224,7 @@ class Api(object):
         self.endpoints.add(endpoint)
 
         if endpoint in self.app.view_functions.keys():
-            try:
-                previous_view_class = self.app.view_functions[endpoint].__dict__['view_class']
-            except AttributeError:
-                # python3
-                previous_view_class = self.app.view_functions[endpoint].__dict__['view_class']
+            previous_view_class = self.app.view_functions[endpoint].__dict__['view_class']
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
             if previous_view_class != resource:
