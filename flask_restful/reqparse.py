@@ -1,15 +1,7 @@
 from flask import request
 from werkzeug.datastructures import MultiDict
 import flask_restful
-
-# python3 doesn't have a 'unicode' type
-try:
-    unicode = unicode
-except NameError:
-    unicode = str
-    basestring = (str, bytes)
-else:
-    bytes = str
+import six
 
 class Namespace(dict):
     def __getattr__(self, name):
@@ -23,7 +15,7 @@ class Namespace(dict):
 class Argument(object):
 
     def __init__(self, name, default=None, dest=None, required=False,
-                 ignore=False, type=unicode, location=('values',),
+                 ignore=False, type=six.text_type, location=('values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
         """
@@ -69,7 +61,7 @@ class Argument(object):
         """Pulls values off the request in the provided location
         :param request: The flask request object to parse arguments from
         """
-        if isinstance(self.location, basestring):
+        if isinstance(self.location, six.string_types):
             value = getattr(request, self.location, MultiDict())
             if value is not None:
                 return value
@@ -135,7 +127,7 @@ class Argument(object):
                     results.append(value)
 
         if not results and self.required:
-            if isinstance(self.location, basestring):
+            if isinstance(self.location, six.string_types):
                 error_msg = u"{0} is required in {1}".format(
                     self.name,
                     self.location
