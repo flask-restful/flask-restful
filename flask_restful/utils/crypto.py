@@ -5,8 +5,8 @@ from base64 import b64encode, b64decode
 __all__ = "encrypt", "decrypt"
 
 BLOCK_SIZE = 16
-INTERRUPT = '\0'  # something impossible to put in a string
-PADDING = '\1'
+INTERRUPT = b'\0'  # something impossible to put in a string
+PADDING = b'\1'
 
 def pad(data):
     return data + INTERRUPT + PADDING * (BLOCK_SIZE - (len(data) + 1) % BLOCK_SIZE)

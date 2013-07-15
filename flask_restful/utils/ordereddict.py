@@ -21,6 +21,7 @@
 #     OTHER DEALINGS IN THE SOFTWARE.
 
 from UserDict import DictMixin
+import six
 
 class OrderedDict(dict, DictMixin):
 
@@ -71,9 +72,9 @@ class OrderedDict(dict, DictMixin):
         if not self:
             raise KeyError('dictionary is empty')
         if last:
-            key = reversed(self).next()
+            key = six.advance_iterator(reversed(self))
         else:
-            key = iter(self).next()
+            key = six.advance_iterator(iter(self))
         value = self.pop(key)
         return key, value
 

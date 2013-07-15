@@ -1,5 +1,11 @@
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
-import urlparse
+import six
+try:
+    from urlparse import urlparse, urlunparse
+except ImportError:
+    # python3
+    from urllib.parse import urlparse, urlunparse
+
 from flask_restful import types, marshal
 from flask import url_for
 
@@ -15,7 +21,7 @@ class MarshallingException(Exception):
     def __init__(self, underlying_exception):
         # just put the contextual representation of the error to hint on what
         # went wrong without exposing internals
-        super(MarshallingException, self).__init__(unicode(underlying_exception))
+        super(MarshallingException, self).__init__(six.text_type(underlying_exception))
 
 
 def is_indexable_but_not_string(obj):
@@ -143,7 +149,7 @@ class List(Raw):
 class String(Raw):
     def format(self, value):
         try:
-            return unicode(value)
+            return six.text_type(value)
         except ValueError as ve:
             raise MarshallingException(ve)
 
@@ -169,7 +175,7 @@ class Boolean(Raw):
 class FormattedString(Raw):
     def __init__(self, src_str):
         super(FormattedString, self).__init__()
-        self.src_str = unicode(src_str)
+        self.src_str = six.text_type(src_str)
 
     def output(self, key, obj):
         try:
@@ -190,8 +196,8 @@ class Url(Raw):
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
-            o = urlparse.urlparse(url_for(self.endpoint, **data))
-            return urlparse.urlunparse(("", "", o.path, "", "", ""))
+            o = urlparse(url_for(self.endpoint, **data))
+            return urlunparse(("", "", o.path, "", "", ""))
         except TypeError as te:
             raise MarshallingException(te)
 
@@ -216,7 +222,7 @@ class Arbitrary(Raw):
     """
 
     def format(self, value):
-        return unicode(MyDecimal(value))
+        return six.text_type(MyDecimal(value))
 
 
 class DateTime(Raw):
@@ -239,6 +245,6 @@ class Fixed(Raw):
         dvalue = MyDecimal(value)
         if not dvalue.is_normal() and dvalue != ZERO:
             raise MarshallingException('Invalid Fixed precision number.')
-        return unicode(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
+        return six.text_type(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
 Price = Fixed
