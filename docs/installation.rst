@@ -24,4 +24,4 @@ installed if you use ``pip``):
 
 * `Flask <http://flask.pocoo.org>`_ version 0.8 or greater
 
-Flask-RESTful requires Python version 2.6 or 2.7.
+Flask-RESTful requires Python version 2.6, 2.7, or 3.3.
