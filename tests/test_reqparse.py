@@ -6,6 +6,7 @@ from flask import request as flask_request
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
 from flask_restful.reqparse import Argument, RequestParser, Namespace
+import six
 
 import json
 
@@ -124,7 +125,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_default_type(self):
         arg = Argument("foo")
-        self.assertEquals(arg.type, unicode)
+        self.assertEquals(arg.type, six.text_type)
 
 
     def test_default_default(self):
