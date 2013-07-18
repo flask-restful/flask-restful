@@ -113,6 +113,15 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals(field.output("foo", obj), 3)
 
 
+    def test_nested_raw_field(self):
+        foo = Mock()
+        bar = Mock()
+        bar.value = 3
+        foo.bar = bar
+        field = fields.Raw()
+        self.assertEquals(field.output("bar.value", foo), 3)
+
+
     def test_formatted_string_invalid_obj(self):
         field = fields.FormattedString("{hey}")
         self.assertRaises(MarshallingException, lambda: field.output("hey", None))

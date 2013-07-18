@@ -30,6 +30,21 @@ def is_indexable_but_not_string(obj):
 
 def get_value(key, obj, default=None):
     """Helper for pulling a keyed value off various types of objects"""
+    if type(key) == int:
+        return _get_value_for_key(key, obj, default)
+    else:
+        return _get_value_for_keys(key.split('.'), obj, default)
+
+
+def _get_value_for_keys(keys, obj, default):
+    if len(keys) == 1:
+        return _get_value_for_key(keys[0], obj, default)
+    else:
+        return _get_value_for_keys(
+            keys[1:], _get_value_for_key(keys[0], obj, default), default)
+
+
+def _get_value_for_key(key, obj, default):
     if is_indexable_but_not_string(obj):
         try:
             return obj[key]
