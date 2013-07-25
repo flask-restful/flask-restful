@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from mock import Mock, patch
+from mock import Mock, patch, NonCallableMock
 from flask import Flask
 from flask import request as flask_request
 from werkzeug import exceptions
@@ -67,6 +67,10 @@ class ReqParseTestCase(unittest.TestCase):
     def test_location_json(self):
         arg = Argument("foo", location="json")
         self.assertEquals(arg.location, "json")
+
+    def test_location_get_json(self):
+        arg = Argument("foo", location="get_json")
+        self.assertEquals(arg.location, "get_json")
 
     def test_location_header_list(self):
         arg = Argument("foo", location=["headers"])
@@ -172,6 +176,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_source_default_location(self):
         req = Mock(['values'])
+        req._get_child_mock = lambda **kwargs: NonCallableMock(**kwargs)
         arg = Argument('foo')
         self.assertEquals(arg.source(req), req.values)
 
@@ -235,6 +240,19 @@ class ReqParseTestCase(unittest.TestCase):
         with app.test_request_context('/bubble', method="post"):
             args = parser.parse_args()
             self.assertEquals(args['foo'], None)
+
+
+    def test_get_json_location(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", location="get_json")
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"foo": "bar"}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], 'bar')
 
 
     def test_parse_append_ignore(self):
