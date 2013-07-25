@@ -125,6 +125,7 @@ class Nested(Raw):
 
         return marshal(value, self.nested)
 
+
 class List(Raw):
     def __init__(self, cls_or_instance):
         super(List, self).__init__()
@@ -245,9 +246,10 @@ class DateTime(Raw):
 
 ZERO = MyDecimal()
 
+
 class Fixed(Raw):
-    def __init__(self, decimals=5):
-        super(Fixed, self).__init__()
+    def __init__(self, decimals=5, **kwargs):
+        super(Fixed, self).__init__(**kwargs)
         self.precision = MyDecimal('0.' + '0' * (decimals - 1) + '1')
 
     def format(self, value):

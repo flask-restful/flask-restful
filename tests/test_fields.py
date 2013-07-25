@@ -154,7 +154,6 @@ class FieldsTestCase(unittest.TestCase):
         with app.test_request_context("/"):
             self.assertEquals("/3", field.output("hey", Foo()))
 
-
     def test_int(self):
         field = fields.Integer()
         self.assertEquals(3, field.output("hey", {'hey': 3}))
@@ -211,6 +210,10 @@ class FieldsTestCase(unittest.TestCase):
     def test_advanced_fixed(self):
         field = fields.Fixed()
         self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': 'NaN'}))
+
+    def test_fixed_with_attribute(self):
+        field = fields.Fixed(4, attribute="bar")
+        self.assertEquals('3.0000', field.output("foo", {'bar': '3'}))
 
 
     def test_string(self):
