@@ -157,6 +157,14 @@ class Api(object):
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
 
+        if code == 500:
+            if self.app.propagate_exceptions:
+                exc_type, exc_value, tb = sys.exc_info()
+                if exc_value is e:
+                    raise exc_type, exc_value, tb
+                else:
+                    raise e
+
         if code >= 500:
 
             # There's currently a bug in Python3 that disallows calling
