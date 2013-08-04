@@ -161,7 +161,9 @@ class Api(object):
             if self.app.propagate_exceptions:
                 exc_type, exc_value, tb = sys.exc_info()
                 if exc_value is e:
-                    raise exc_type, exc_value, tb
+                    exc = exc_type(exc_value)
+                    exc.__traceback__ = tb
+                    raise exc
                 else:
                     raise e
 
