@@ -16,3 +16,4 @@ We'd like to thank the following people who have contributed to this project.
 - Yaniv Aknin &lt;yaniv@aknin.name>
 - Bret Barker &lt;bret@abitrandom.net>
 - y-p &lt;yoval@gmx.com>
+- Doug Black &lt;dblack@twilio.com>

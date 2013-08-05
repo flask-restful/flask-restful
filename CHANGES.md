@@ -3,6 +3,15 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.4
+-------------
+
+Released Aug 5, 2013
+
+- Python 3.3 support.
+- You can now marshal nested fields.
+- Small fixes in docs.
+
 Version 0.2.2
 -------------
 
