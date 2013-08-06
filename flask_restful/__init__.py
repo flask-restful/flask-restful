@@ -1,7 +1,7 @@
 import difflib
 from functools import wraps, partial
 import re
-from flask import request, Response
+from flask import request, Response, url_for
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from flask.signals import got_request_exception
@@ -231,6 +231,7 @@ class Api(object):
                 raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
+        resource.endpoint = endpoint
         resource_func = self.output(resource.as_view(endpoint))
 
         for decorator in self.decorators:
@@ -255,6 +256,10 @@ class Api(object):
             return self.make_response(data, code, headers=headers)
         return wrapper
 
+    def url_for(self, resource, **values):
+        """Generates a URL to the given resource."""
+        return url_for(resource.endpoint, **values)
+        
     def make_response(self, data, *args, **kwargs):
         """Looks up the representation transformer for the requested media
         type, invoking the transformer to create a response object. This
