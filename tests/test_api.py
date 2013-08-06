@@ -660,6 +660,15 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/ids/3'):
             self.assertTrue(api._has_fr_route())
 
+            
+    def test_url_for(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloWorld, '/ids/<int:id>')
+        with app.test_request_context('/foo'):
+            self.assertEqual(api.url_for(HelloWorld, id = 123), '/ids/123')
+
+            
     def test_fr_405(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
