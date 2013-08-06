@@ -63,11 +63,15 @@ class Argument(object):
         """
         if isinstance(self.location, six.string_types):
             value = getattr(request, self.location, MultiDict())
+            if callable(value):
+                value = value()
             if value is not None:
                 return value
         else:
             for l in self.location:
                 value = getattr(request, l, None)
+                if callable(value):
+                    value = value()
                 if value is not None:
                     return value
 
