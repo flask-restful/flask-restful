@@ -3,6 +3,16 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.5
+-------------
+
+Released Aug 6, 2013
+
+- add callable location
+- allow field type Fixed to take an attribute argument
+- added url_for() wrapper as Api.url_for(resource)
+
+
 Version 0.2.4
 -------------
 
