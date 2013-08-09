@@ -274,6 +274,14 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.List(fields.String)
         self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
 
+    def test_list_with_attribute(self):
+        class TestObject(object):
+            def __init__(self, list):
+                self.foo = list
+        obj = TestObject(['a', 'b', 'c'])
+        field = fields.List(fields.String, attribute='foo')
+        self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
+
     def test_null_list(self):
         class TestObject(object):
             def __init__(self, list):
