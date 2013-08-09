@@ -154,6 +154,15 @@ class Api(object):
         """
         got_request_exception.send(self.app, exception=e)
 
+        if not hasattr(e, 'code') and self.app.propagate_exceptions:
+            exc_type, exc_value, tb = sys.exc_info()
+            if exc_value is e:
+                exc = exc_type(exc_value)
+                exc.__traceback__ = tb
+                raise exc
+            else:
+                raise e
+
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
 
