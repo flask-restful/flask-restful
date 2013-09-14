@@ -7,6 +7,7 @@ from flask.views import MethodView
 from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
 from werkzeug.http import HTTP_STATUS_CODES
+from flask.ext.restful.crossdomain import crossdomain
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 import sys
@@ -57,18 +58,21 @@ class Api(object):
     :param catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
     :type catch_all_404s: bool
+    :param cors_support: enable cors support for all resources (default: False)
+    :type cors_support: bool
 
     """
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False):
+                 catch_all_404s=False, cors_support=False):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
+        self.cors_support = cors_support
 
         if app is not None:
             self.init_app(app)
@@ -219,6 +223,21 @@ class Api(object):
             Can be used to reference this route in :class:`fields.Url` fields
         :type endpoint: str
 
+        :param cors_support: enable cors support (defaults to False)
+        :type cors_support: bool
+        :param cors_origin: allowed origin for cors origin (defaults to '*' to allow all)
+        :type cors_origin: str
+        :param cors_methods: methods allowed for route via cors
+        :type cors_method: list
+        :param cors_headers: comma seperated list of headers to allow (default: 'origin, content-type, x-requested-with')
+        :type cors_headers: str
+        :param cors_max_age: max age of cors header (default: 21600)
+        :type cors_max_age: int
+        :param cors_attach_to_all: whether or not to attach to all methods on the route (default: True)
+        :type cors_attach_to_all: bool
+        :param cors_automatic_options: whether or not to automatically add OPTIONS to methods (default: True)
+        :type cors_automatic_options: bool
+
         Additional keyword arguments not specified above will be passed as-is
         to :meth:`flask.Flask.add_url_rule`.
 
@@ -227,6 +246,7 @@ class Api(object):
             api.add_resource(HelloWorld, '/', '/hello')
             api.add_resource(Foo, '/foo', endpoint="foo")
             api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
+            api.add_resource(FooSpecial, '/special/foo', endpoint="foo", cors_support=True)
 
         """
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
@@ -243,9 +263,23 @@ class Api(object):
         resource.endpoint = endpoint
         resource_func = self.output(resource.as_view(endpoint))
 
+        cors_support = kwargs.pop('cors_support', self.cors_support)
+        if cors_support is True:
+            cors_origin = kwargs.pop('cors_origin', '*')
+            cors_methods = kwargs.pop('cors_methods', None)
+            cors_headers = kwargs.pop('cors_headers', 'origin, content-type, x-requested-with')
+            cors_max_age = kwargs.pop('cors_max_age', 21600)
+            cors_attach_to_all = kwargs.pop('cors_attach_to_all', True)
+            cors_automatic_options = kwargs.pop('cors_automatic_options', True)
+
+            resource_func = crossdomain(origin=cors_origin, methods=cors_methods, headers=cors_headers, max_age=cors_max_age,
+                    attach_to_all=cors_attach_to_all, automatic_options=cors_automatic_options)(resource_func)
+
+            if not 'OPTIONS' in resource_func.methods:
+                resource_func.methods.append('OPTIONS')
+
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
-
 
         for url in urls:
             self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
