@@ -129,12 +129,14 @@ Another way to accomplish this is to subclass the :class:`~Api` class and
 provide your own output functions. ::
 
     class Api(restful.Api):
-        representations = {
-            'application/xml': output_xml,
-            'text/html': output_html,
-            'text/csv': output_csv,
-            'application/json': output_json,
-        }
+        def __init__(self, *args, **kwargs):
+            restful.Api.__init__(self, *args, **kwargs)
+            self.representations = {
+                'application/xml': output_xml,
+                'text/html': output_html,
+                'text/csv': output_csv,
+                'application/json': output_json,
+            }
 
 Resource Method Decorators
 --------------------------
