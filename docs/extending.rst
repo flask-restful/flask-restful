@@ -130,7 +130,7 @@ provide your own output functions. ::
 
     class Api(restful.Api):
         def __init__(self, *args, **kwargs):
-            restful.Api.__init__(self, *args, **kwargs)
+            super(Api, self).__init__(*args, **kwargs)
             self.representations = {
                 'application/xml': output_xml,
                 'text/html': output_html,
