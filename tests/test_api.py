@@ -8,7 +8,7 @@ except:
     from unittest.mock import Mock, patch
 import flask
 import werkzeug
-from flask.ext.restful.utils import http_status_message, challenge, unauthorized, error_data, unpack
+from flask.ext.restful.utils import http_status_message, error_data, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
@@ -39,22 +39,23 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(http_status_message(404), 'Not Found')
 
 
-    def test_challenge(self):
-        self.assertEquals(challenge('Basic', 'Foo'), 'Basic realm="Foo"')
-
-
     def test_unauthorized(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
         response = Mock()
         response.headers = {}
-        unauthorized(response, "flask-restful")
+        response = api.unauthorized(response)
         self.assertEquals(response.headers['WWW-Authenticate'],
                       'Basic realm="flask-restful"')
 
 
     def test_unauthorized_custom_realm(self):
+        app = Flask(__name__)
+        app.config['HTTP_BASIC_AUTH_REALM'] = 'Foo'
+        api = flask_restful.Api(app)
         response = Mock()
         response.headers = {}
-        unauthorized(response, realm='Foo')
+        response = api.unauthorized(response)
         self.assertEquals(response.headers['WWW-Authenticate'], 'Basic realm="Foo"')
 
 
@@ -660,7 +661,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/ids/3'):
             self.assertTrue(api._has_fr_route())
 
-            
+
     def test_url_for(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
@@ -668,7 +669,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/foo'):
             self.assertEqual(api.url_for(HelloWorld, id = 123), '/ids/123')
 
-            
+
     def test_fr_405(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
