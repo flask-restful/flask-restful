@@ -139,7 +139,7 @@ You can have a flat structure that marshal_with will transform to a nested struc
     >>> resource_fields['address']['state'] = fields.String
     >>> resource_fields['address']['zip'] = fields.String
     >>> data = {'name': 'bob', 'addr1': '123 fake street', 'addr2': '', 'city': 'New York', 'state': 'NY', 'zip': '10468'}
-    >>> json.dumps(marshal(data, fields))
+    >>> json.dumps(marshal(data, resource_fields))
     '{"name": "bob", "address": {"line 1": "123 fake street", "line 2": "", "state": "NY", "zip": "10468", "city": "New York"}}'
 
 Note: the address field doesn't actually exist on the data object, but any of
