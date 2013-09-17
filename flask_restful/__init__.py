@@ -1,7 +1,7 @@
 import difflib
 from functools import wraps, partial
 import re
-from flask import request, Response, url_for
+from flask import request, Response, url_for, current_app
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from flask.signals import got_request_exception
@@ -69,11 +69,14 @@ class Api(object):
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
+        self.endpoints = set()
+        self.resources = []
+        self.app = None
 
         if app is not None:
+            self.app = app
             self.init_app(app)
-        else:
-            self.app = None
+
 
     def init_app(self, app):
         """Initialize this class with the given :class:`flask.Flask`
@@ -89,10 +92,12 @@ class Api(object):
             api.add_resource(...)
 
         """
-        self.app = app
-        self.endpoints = set()
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+
+        if len(self.resources) > 0:
+            for resource, urls, kwargs in self.resources:
+                self._register_view(app, resource, *urls, **kwargs)
 
 
     def _should_use_fr_error_handler(self):
@@ -104,7 +109,7 @@ class Api(object):
 
         :return: bool
         """
-        adapter = self.app.create_url_adapter(request)
+        adapter = current_app.create_url_adapter(request)
 
         try:
             adapter.match()
@@ -152,9 +157,9 @@ class Api(object):
         :type e: Exception
 
         """
-        got_request_exception.send(self.app, exception=e)
+        got_request_exception.send(current_app._get_current_object(), exception=e)
 
-        if not hasattr(e, 'code') and self.app.propagate_exceptions:
+        if not hasattr(e, 'code') and current_app.propagate_exceptions:
             exc_type, exc_value, tb = sys.exc_info()
             if exc_value is e:
                 exc = exc_type(exc_value)
@@ -171,14 +176,14 @@ class Api(object):
             # There's currently a bug in Python3 that disallows calling
             # logging.exception() when an exception hasn't actually be raised
             if sys.exc_info() == (None, None, None):
-                self.app.logger.error("Internal Error")
+                current_app.logger.error("Internal Error")
             else:
-                self.app.logger.exception("Internal Error")
+                current_app.logger.exception("Internal Error")
 
         if code == 404 and ('message' not in data or
                             data['message'] == HTTP_STATUS_CODES[404]):
             rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
-                          for rule in self.app.url_map.iter_rules()])
+                          for rule in current_app.url_map.iter_rules()])
             close_matches = difflib.get_close_matches(request.path, rules.keys())
             if close_matches:
                 # If we already have a message, add punctuation and continue it.
@@ -196,7 +201,7 @@ class Api(object):
 
         if code == 401:
             resp = unauthorized(resp,
-                self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful"))
+                current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful"))
 
         return resp
 
@@ -229,11 +234,18 @@ class Api(object):
             api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
 
         """
+
+        if self.app is not None:
+            self._register_view(self.app, resource, *urls, **kwargs)
+        else:
+            self.resources.append((resource, urls, kwargs))
+
+    def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
 
-        if endpoint in self.app.view_functions.keys():
-            previous_view_class = self.app.view_functions[endpoint].__dict__['view_class']
+        if endpoint in app.view_functions.keys():
+            previous_view_class = app.view_functions[endpoint].__dict__['view_class']
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
             if previous_view_class != resource:
@@ -246,9 +258,8 @@ class Api(object):
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
 
-
         for url in urls:
-            self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
+            app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
@@ -268,7 +279,7 @@ class Api(object):
     def url_for(self, resource, **values):
         """Generates a URL to the given resource."""
         return url_for(resource.endpoint, **values)
-        
+
     def make_response(self, data, *args, **kwargs):
         """Looks up the representation transformer for the requested media
         type, invoking the transformer to create a response object. This
