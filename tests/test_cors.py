@@ -22,8 +22,10 @@ class CORSTestCase(unittest.TestCase):
             res = client.get('/')
             assert_equals(res.status_code, 200)
             assert_equals(res.headers['Access-Control-Allow-Origin'], '*')
-            assert_equals(res.headers['Access-Control-Allow-Methods'], 'HEAD, OPTIONS, GET')
             assert_equals(res.headers['Access-Control-Max-Age'], '21600')
+            assert_true('HEAD' in res.headers['Access-Control-Allow-Methods'])
+            assert_true('OPTIONS' in res.headers['Access-Control-Allow-Methods'])
+            assert_true('GET' in res.headers['Access-Control-Allow-Methods'])
 
     def test_no_crossdomain(self):
 
