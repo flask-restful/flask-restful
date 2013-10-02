@@ -270,6 +270,7 @@ class APITestCase(unittest.TestCase):
 
     def test_api_base(self):
         app = Mock()
+        app.configure_mock(**{'record.side_effect' : AttributeError})
         api = flask_restful.Api(app)
         self.assertEquals(api.urls, {})
         self.assertEquals(api.prefix, '')
@@ -286,6 +287,7 @@ class APITestCase(unittest.TestCase):
 
     def test_api_prefix(self):
         app = Mock()
+        app.configure_mock(**{'record.side_effect' : AttributeError})
         api = flask_restful.Api(app, prefix='/foo')
         self.assertEquals(api.prefix, '/foo')
 
