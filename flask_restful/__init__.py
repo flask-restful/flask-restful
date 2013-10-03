@@ -292,7 +292,6 @@ class Api(object):
             if hasattr(self.app, 'record'):
                 self.app.add_url_rule(url, view_func=resource_func, **kwargs)
             else:
-                print str(resource_func)
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
     def output(self, resource):
