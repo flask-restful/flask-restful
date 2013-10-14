@@ -1,19 +1,31 @@
-## Contributors
+Authors
+=======
 
-We'd like to thank the following people who have contributed to this project.
+A huge thanks to all of our contributors:
 
-- Andrew Dunham &lt;andrew@du.nham.ca>
-- Frank Stratton ☺ &lt;epanastasi@epanastasi.com>
-- Giorgio Salluzzo &lt;giorgio.salluzzo@gmail.com>
-- Guillaume BINET &lt;gbin@gootz.net>
-- Kamil Gałuszka &lt;galuszkak@gmail.com>
-- Kevin Burke &lt;kevin@twilio.com>
-- Kyle Conroy &lt;kyle@twilio.com>
-- Piotr Husiatyński &lt;phusiatynski@gmail.com>
-- Robert Warner &lt;radicalphoenix@gmail.com>
-- Ryan Horn &lt;ryanhorn@twilio.com>
-- Victor Neo &lt;icyisamu@gmail.com>
-- Yaniv Aknin &lt;yaniv@aknin.name>
-- Bret Barker &lt;bret@abitrandom.net>
-- y-p &lt;yoval@gmx.com>
-- Doug Black &lt;dblack@twilio.com>
+
+- Andrew Dunham 
+- Artur Rodrigues 
+- David Crawford 
+- Dimitris Theodorou 
+- Doug Black 
+- Frank Stratton 
+- Frank Stratton ☺ 
+- Giorgio Salluzzo 
+- Guillaume BINET 
+- Joakim Ekberg 
+- Kamil Gałuszka 
+- Kevin Burke 
+- Kyle Conroy 
+- Miguel Grinberg 
+- Pavel Tyslyatsky 
+- Piotr Husiatyński 
+- Robert Warner 
+- Ryan Horn 
+- Victor Neo 
+- Yaniv Aknin 
+- bret barker 
+- kelvinhammond 
+- muchosalsa 
+- siavashg 
+- y-p 
