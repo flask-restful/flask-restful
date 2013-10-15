@@ -527,13 +527,14 @@ class ReqParseTestCase(unittest.TestCase):
         parser = RequestParser()
         parser.add_argument("foo", type=FileStorage, location='files')
 
+        fdata = six.b('foo bar baz qux')
         with app.test_request_context('/bubble', method='POST',
-                                      data={'foo': (six.StringIO('foo bar baz qux'), 'baz.txt')}):
+                                      data={'foo': (six.BytesIO(fdata), 'baz.txt')}):
             args = parser.parse_args()
 
             self.assertEquals(args['foo'].name, 'foo')
             self.assertEquals(args['foo'].filename, 'baz.txt')
-            self.assertEquals(args['foo'].read(), 'foo bar baz qux')
+            self.assertEquals(args['foo'].read(), fdata)
 
 if __name__ == '__main__':
     unittest.main()
