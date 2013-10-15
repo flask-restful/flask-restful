@@ -280,7 +280,14 @@ class Api(object):
         for mediatype in self.mediatypes() + [self.default_mediatype]:
             if mediatype in self.representations:
                 resp = self.representations[mediatype](data, *args, **kwargs)
-                resp.headers['Content-Type'] = mediatype
+
+                cts = resp.headers.getlist('Content-Type')
+                if len(cts) > 1:
+                        resp.headers['Content-Type'] = cts[-1]
+                elif len(cts) == 1 and cts[0] != 'text/html; charset=utf-8':
+                        resp.headers['Content-Type'] = cts[0]
+                else:
+                    resp.headers['Content-Type'] = mediatype
                 return resp
 
     def mediatypes(self):
