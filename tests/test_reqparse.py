@@ -5,6 +5,7 @@ from flask import Flask
 from flask import request as flask_request
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
+from werkzeug.datastructures import FileStorage
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
 
@@ -519,6 +520,21 @@ class ReqParseTestCase(unittest.TestCase):
     def test_namespace_configurability(self):
         self.assertTrue(isinstance(RequestParser().parse_args(), Namespace))
         self.assertTrue(type(RequestParser(namespace_class=dict).parse_args()) is dict)
+
+    def test_type_filestorage(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=FileStorage, location='files')
+
+        fdata = six.b('foo bar baz qux')
+        with app.test_request_context('/bubble', method='POST',
+                                      data={'foo': (six.BytesIO(fdata), 'baz.txt')}):
+            args = parser.parse_args()
+
+            self.assertEquals(args['foo'].name, 'foo')
+            self.assertEquals(args['foo'].filename, 'baz.txt')
+            self.assertEquals(args['foo'].read(), fdata)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,5 @@
 from flask import request
-from werkzeug.datastructures import MultiDict
+from werkzeug.datastructures import MultiDict, FileStorage
 import flask_restful
 import six
 
@@ -115,18 +115,20 @@ class Argument(object):
                     values = [source.get(name)]
 
                 for value in values:
-                    if not self.case_sensitive:
+                    _is_file = isinstance(value, FileStorage)
+                    if not (self.case_sensitive or _is_file):
                         value = value.lower()
                     if self.choices and value not in self.choices:
                         self.handle_validation_error(ValueError(
                             u"{0} is not a valid choice".format(value)))
-                    try:
-                        value = self.convert(value, operator)
-                    except Exception as error:
-                        if self.ignore:
-                            continue
+                    if not _is_file:
+                        try:
+                            value = self.convert(value, operator)
+                        except Exception as error:
+                            if self.ignore:
+                                continue
 
-                        self.handle_validation_error(error)
+                            self.handle_validation_error(error)
 
                     results.append(value)
 
