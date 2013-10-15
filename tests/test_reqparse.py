@@ -9,7 +9,6 @@ from werkzeug.datastructures import FileStorage
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
 
-from StringIO import StringIO
 import json
 
 class ReqParseTestCase(unittest.TestCase):
@@ -529,7 +528,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument("foo", type=FileStorage, location='files')
 
         with app.test_request_context('/bubble', method='POST',
-                                      data={'foo': (StringIO('foo bar baz qux'), 'baz.txt')}):
+                                      data={'foo': (six.StringIO('foo bar baz qux'), 'baz.txt')}):
             args = parser.parse_args()
 
             self.assertEquals(args['foo'].name, 'foo')
