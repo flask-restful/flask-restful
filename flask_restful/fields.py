@@ -211,8 +211,8 @@ class Url(Raw):
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
-            o = urlparse(url_for(self.endpoint, **data))
-            return urlunparse(("", "", o.path, "", "", ""))
+            o = urlparse.urlparse(url_for(self.endpoint, _external = True, **data))
+            return urlparse.urlunparse((o.scheme, o.netloc, o.path, "", "", ""))
         except TypeError as te:
             raise MarshallingException(te)
 
