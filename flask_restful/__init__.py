@@ -77,10 +77,11 @@ class Api(object):
 
     def init_app(self, app):
         """Initialize this class with the given :class:`flask.Flask`
-        application object.
+        application or :class:`flask.Blueprint` object.
 
-        :param app: the Flask application object
+        :param app: the Flask application or blueprint object
         :type app: flask.Flask
+        :type app: flask.Blueprint
 
         Examples::
 
@@ -91,9 +92,62 @@ class Api(object):
         """
         self.app = app
         self.endpoints = set()
+        self.blueprint = None
+        # If app is a blueprint, defer the initialization 
+        try:
+            app.record(self._deferred_blueprint_init)
+        except AttributeError:
+            self._init_app(app)
+        else:
+            self.blueprint = app
+            if app.url_prefix and not self.prefix:
+                self.prefix = app.url_prefix
+            elif self.prefix and not app.url_prefix:
+                app.url_prefix = self.prefix
+            elif app.url_prefix and self.prefix and app.url_prefix != self.prefix:
+                raise ValueError("Cannot resolve url prefix; restful api and "
+                                 "blueprint both have prefixes but they do not match.")
+    
+    def _deferred_blueprint_init(self, setup_state):
+        """Synchronize prefix between blueprint/api and registration options, then
+        perform initialization with setup_state.app :class:`flask.Flask` object.  
+        When a :class:`flask_restful.Api` object is initialized with a blueprint, 
+        this method is recorded on the blueprint to be run when the blueprint is later
+        registered to a :class:`flask.Flask` object.
+        :param setup_state: The setup state object passed to deferred functions 
+        during blueprint registration
+        :type setup_state: flask.blueprints.BlueprintSetupState
+        
+        """
+        if not setup_state.first_registration:
+            raise ValueError('flask-restful blueprints can only be registered once.')
+        if setup_state.url_prefix:
+            if self.blueprint:
+                self.blueprint.url_prefix = setup_state.url_prefix
+            self.prefix = setup_state.url_prefix
+        elif self.prefix:
+            setup_state.url_prefix = setup_state.options['url_prefix'] = self.prefix
+        self._init_app(setup_state.app)
+    
+    def _init_app(self, app):
+        """Perform initialization actions with the given :class:`flask.Flask`
+        object.
+        :param app: The flask application object
+        :type app: flask.Flask
+        
+        """
+        self.app = app
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
-
+    
+    def owns_endpoint(self, endpoint):
+        
+        if self.blueprint:
+            if endpoint.startswith(self.blueprint.name):
+                endpoint = endpoint.split(self.blueprint.name + '.', 1)[-1]
+            else:
+                return False
+        return endpoint in self.endpoints
 
     def _should_use_fr_error_handler(self):
         """ Determine if error should be handled with FR or default Flask
@@ -105,14 +159,14 @@ class Api(object):
         :return: bool
         """
         adapter = self.app.create_url_adapter(request)
-
+        
         try:
             adapter.match()
         except MethodNotAllowed as e:
             # Check if the other HTTP methods at this url would hit the Api
             valid_route_method = e.valid_methods[0]
             rule, _ = adapter.match(method=valid_route_method, return_rule=True)
-            return rule.endpoint in self.endpoints
+            return self.owns_endpoint(rule.endpoint)
         except NotFound:
             return self.catch_all_404s
         except:
@@ -126,7 +180,9 @@ class Api(object):
         if self._should_use_fr_error_handler():
             return True
         # for all other errors, just check if FR dispatched the route
-        return request.url_rule and request.url_rule.endpoint in self.endpoints
+        if not request.url_rule:
+            return False
+        return self.owns_endpoint(request.url_rule.endpoint)
 
     def error_router(self, original_handler, e):
         """This function decides whether the error occured in a flask-restful
@@ -248,7 +304,10 @@ class Api(object):
 
 
         for url in urls:
-            self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
+            if hasattr(self.app, 'record'):
+                self.app.add_url_rule(url, view_func=resource_func, **kwargs)
+            else:
+                self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
