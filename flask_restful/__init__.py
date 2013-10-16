@@ -99,6 +99,7 @@ class Api(object):
         except AttributeError:
             self._init_app(app)
         else:
+            self.blueprint = app
             if app.url_prefix and not self.prefix:
                 self.prefix = app.url_prefix
             elif self.prefix and not app.url_prefix:
@@ -106,7 +107,6 @@ class Api(object):
             elif app.url_prefix and self.prefix and app.url_prefix != self.prefix:
                 raise ValueError("Cannot resolve url prefix; restful api and "
                                  "blueprint both have prefixes but they do not match.")
-            self.blueprint = app
     
     def _deferred_blueprint_init(self, setup_state):
         """Synchronize prefix between blueprint/api and registration options, then
@@ -122,6 +122,8 @@ class Api(object):
         if not setup_state.first_registration:
             raise ValueError('flask-restful blueprints can only be registered once.')
         if setup_state.url_prefix:
+            if self.blueprint:
+                self.blueprint.url_prefix = setup_state.url_prefix
             self.prefix = setup_state.url_prefix
         elif self.prefix:
             setup_state.url_prefix = setup_state.options['url_prefix'] = self.prefix
@@ -137,6 +139,15 @@ class Api(object):
         self.app = app
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+    
+    def owns_endpoint(self, endpoint):
+        
+        if self.blueprint:
+            if endpoint.startswith(self.blueprint.name):
+                endpoint = endpoint.split(self.blueprint.name + '.', 1)[-1]
+            else:
+                return False
+        return endpoint in self.endpoints
 
     def _should_use_fr_error_handler(self):
         """ Determine if error should be handled with FR or default Flask
@@ -148,17 +159,14 @@ class Api(object):
         :return: bool
         """
         adapter = self.app.create_url_adapter(request)
-
+        
         try:
             adapter.match()
         except MethodNotAllowed as e:
             # Check if the other HTTP methods at this url would hit the Api
             valid_route_method = e.valid_methods[0]
             rule, _ = adapter.match(method=valid_route_method, return_rule=True)
-            ep = rule.endpoint
-            if self.blueprint:
-                ep = ep.split(self.blueprint.name + '.', 1)[-1]
-            return ep in self.endpoints
+            return self.owns_endpoint(rule.endpoint)
         except NotFound:
             return self.catch_all_404s
         except:
@@ -174,10 +182,7 @@ class Api(object):
         # for all other errors, just check if FR dispatched the route
         if not request.url_rule:
             return False
-        ep = request.url_rule.endpoint
-        if self.blueprint:
-            ep = ep.split(self.blueprint.name + '.', 1)[-1]
-        return ep in self.endpoints
+        return self.owns_endpoint(request.url_rule.endpoint)
 
     def error_router(self, original_handler, e):
         """This function decides whether the error occured in a flask-restful
