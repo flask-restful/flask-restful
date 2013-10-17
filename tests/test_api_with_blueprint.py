@@ -1,5 +1,5 @@
 import unittest
-from flask import Flask, views, Blueprint
+from flask import Flask, views, Blueprint, request
 from flask.signals import got_request_exception, signals_available
 try:
     from mock import Mock, patch
@@ -51,58 +51,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.register_blueprint(blueprint)
         api.add_resource(HelloWorld, '/', endpoint="hello")
-
-
-    def test_api_prefix(self):
-        blueprint = Blueprint('test', __name__)
-        api = flask_restful.Api(blueprint, prefix='/foo')
-        app = Flask(__name__)
-        app.register_blueprint(blueprint)
-        self.assertEquals(api.prefix, '/foo')
-
-
-    def test_blueprint_prefix(self):
-        blueprint = Blueprint('test', __name__, url_prefix='/foo')
-        api = flask_restful.Api(blueprint)
-        app = Flask(__name__)
-        app.register_blueprint(blueprint)
-        self.assertEquals(api.prefix, '/foo')
-    
-    
-    def test_blueprint_registration_prefix(self):
-        blueprint = Blueprint('test', __name__)
-        api = flask_restful.Api(blueprint)
-        app = Flask(__name__)
-        app.register_blueprint(blueprint, url_prefix='/foo')
-        self.assertEquals(api.prefix, '/foo')
-    
-    
-    def test_blueprint_prefix_matches_api_prefix(self):
-        blueprint = Blueprint('test', __name__, url_prefix='/foo')
-        api = flask_restful.Api(blueprint, prefix='/foo')
-        app = Flask(__name__)
-        app.register_blueprint(blueprint)
-        self.assertEquals(api.prefix, '/foo')
-    
-    def test_registration_prefix_overrides_blueprint_prefix(self):
-        blueprint = Blueprint('test', __name__, url_prefix='/foo')
-        api = flask_restful.Api(blueprint)
-        app = Flask(__name__)
-        app.register_blueprint(blueprint, url_prefix='/bar')
-        self.assertEquals(api.prefix, '/bar')
-    
-    
-    def test_registration_prefix_overrides_api_prefix(self):
-        blueprint = Blueprint('test', __name__)
-        api = flask_restful.Api(blueprint, prefix='/foo')
-        app = Flask(__name__)
-        app.register_blueprint(blueprint, url_prefix='/bar')
-        self.assertEquals(api.prefix, '/bar')
-    
-    
-    def test_blueprint_prefix_does_not_match_api_prefx(self):
-        blueprint = Blueprint('test', __name__, url_prefix='/foo')
-        self.assertRaises(ValueError, flask_restful.Api, blueprint, prefix='/bar')
     
     
     def test_add_resource_endpoint(self):
@@ -124,6 +72,67 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         api.add_resource(view, '/foo', endpoint='bar')
         view.as_view.assert_called_with('bar')
     
+    
+    def test_url_with_api_prefix(self):
+        blueprint = Blueprint('test', __name__)
+        api = flask_restful.Api(blueprint, prefix='/api')
+        api.add_resource(HelloWorld, '/hi', endpoint='hello')
+        app = Flask(__name__)
+        app.register_blueprint(blueprint)
+        with app.test_request_context('/api/hi'):
+            self.assertEquals(request.endpoint, 'test.hello')
+    
+    
+    def test_url_with_blueprint_prefix(self):
+        blueprint = Blueprint('test', __name__, url_prefix='/bp')
+        api = flask_restful.Api(blueprint)
+        api.add_resource(HelloWorld, '/hi', endpoint='hello')
+        app = Flask(__name__)
+        app.register_blueprint(blueprint)
+        with app.test_request_context('/bp/hi'):
+            self.assertEquals(request.endpoint, 'test.hello')
+    
+    
+    def test_url_with_registration_prefix(self):
+        blueprint = Blueprint('test', __name__)
+        api = flask_restful.Api(blueprint)
+        api.add_resource(HelloWorld, '/hi', endpoint='hello')
+        app = Flask(__name__)
+        app.register_blueprint(blueprint, url_prefix='/reg')
+        with app.test_request_context('/reg/hi'):
+            self.assertEquals(request.endpoint, 'test.hello')
+    
+    
+    def test_registration_prefix_overrides_blueprint_prefix(self):
+        blueprint = Blueprint('test', __name__, url_prefix='/bp')
+        api = flask_restful.Api(blueprint)
+        api.add_resource(HelloWorld, '/hi', endpoint='hello')
+        app = Flask(__name__)
+        app.register_blueprint(blueprint, url_prefix='/reg')
+        with app.test_request_context('/reg/hi'):
+            self.assertEquals(request.endpoint, 'test.hello')
+    
+    
+    def test_url_with_api_and_blueprint_prefix(self):
+        blueprint = Blueprint('test', __name__, url_prefix='/bp')
+        api = flask_restful.Api(blueprint, prefix='/api')
+        api.add_resource(HelloWorld, '/hi', endpoint='hello')
+        app = Flask(__name__)
+        app.register_blueprint(blueprint)
+        with app.test_request_context('/bp/api/hi'):
+            self.assertEquals(request.endpoint, 'test.hello')
+    
+    
+    def test_url_part_order_aeb(self):
+        blueprint = Blueprint('test', __name__, url_prefix='/bp')
+        api = flask_restful.Api(blueprint, prefix='/api', url_part_order='aeb')
+        api.add_resource(HelloWorld, '/hi', endpoint='hello')
+        app = Flask(__name__)
+        app.register_blueprint(blueprint)
+        with app.test_request_context('/api/hi/bp'):
+            self.assertEquals(request.endpoint, 'test.hello')
+    
+    
     def test_error_routing(self):
         blueprint = Blueprint('test', __name__)
         api = flask_restful.Api(blueprint)
@@ -137,6 +146,7 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         with app.test_request_context('/bye'):
             api._should_use_fr_error_handler = Mock(return_value=False)
             assert_true(api._has_fr_route())
+    
     
     def test_non_blueprint_rest_error_routing(self):
         blueprint = Blueprint('test', __name__)
@@ -166,6 +176,7 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         with app.test_request_context('/blueprint/bye'):
             assert_true(api._has_fr_route())
             assert_false(api2._has_fr_route())
+    
     
     def test_non_blueprint_non_rest_error_routing(self):
         blueprint = Blueprint('test', __name__)

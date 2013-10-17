@@ -466,7 +466,7 @@ class APITestCase(unittest.TestCase):
         def return_zero(func):
             return 0
 
-        app = Mock()
+        app = Mock(flask.Flask)
         app.view_functions = {}
         view = Mock()
         api = flask_restful.Api(app)
@@ -522,7 +522,7 @@ class APITestCase(unittest.TestCase):
 
 
     def test_add_resource(self):
-        app = Mock()
+        app = Mock(flask.Flask)
         app.view_functions = {}
         api = flask_restful.Api(app)
         api.output = Mock()
@@ -532,7 +532,7 @@ class APITestCase(unittest.TestCase):
             view_func=api.output())
 
     def test_add_resource_kwargs(self):
-        app = Mock()
+        app = Mock(flask.Flask)
         app.view_functions = {}
         api = flask_restful.Api(app)
         api.output = Mock()

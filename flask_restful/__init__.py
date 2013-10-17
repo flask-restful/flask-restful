@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import difflib
 from functools import wraps, partial
 import re
@@ -10,6 +11,8 @@ from werkzeug.http import HTTP_STATUS_CODES
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 import sys
+from flask.helpers import _endpoint_from_view_func
+from types import MethodType
 
 try:
     #noinspection PyUnresolvedReferences
@@ -62,13 +65,15 @@ class Api(object):
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False):
+                 catch_all_404s=False, url_part_order='bae'):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
+        self.url_part_order = url_part_order
+        self.blueprint_setup = None
 
         if app is not None:
             self.init_app(app)
@@ -100,13 +105,36 @@ class Api(object):
             self._init_app(app)
         else:
             self.blueprint = app
-            if app.url_prefix and not self.prefix:
-                self.prefix = app.url_prefix
-            elif self.prefix and not app.url_prefix:
-                app.url_prefix = self.prefix
-            elif app.url_prefix and self.prefix and app.url_prefix != self.prefix:
-                raise ValueError("Cannot resolve url prefix; restful api and "
-                                 "blueprint both have prefixes but they do not match.")
+#            if app.url_prefix and not self.prefix:
+#                self.prefix = app.url_prefix
+#            elif self.prefix and not app.url_prefix:
+#                app.url_prefix = self.prefix
+#            elif app.url_prefix and self.prefix and app.url_prefix != self.prefix:
+#                raise ValueError("Cannot resolve url prefix; restful api and "
+#                                 "blueprint both have prefixes but they do not match.")
+    
+    def _complete_url(self, url_part, registration_prefix):
+        
+        parts = {'b' : registration_prefix,
+                 'a' : self.prefix,
+                 'e' : url_part}
+        return ''.join(parts[key] for key in self.url_part_order if parts[key])
+    
+    @staticmethod
+    def _blueprint_setup_add_url_rule_patch(blueprint_setup, rule, endpoint=None, view_func=None, **options):
+        
+        if callable(rule):
+            rule = rule(blueprint_setup.url_prefix)
+        elif blueprint_setup.url_prefix:
+            rule = blueprint_setup.url_prefix + rule
+        options.setdefault('subdomain', blueprint_setup.subdomain)
+        if endpoint is None:
+            endpoint = _endpoint_from_view_func(view_func)
+        defaults = blueprint_setup.url_defaults
+        if 'defaults' in options:
+            defaults = dict(defaults, **options.pop('defaults'))
+        blueprint_setup.app.add_url_rule(rule, '%s.%s' % (blueprint_setup.blueprint.name, endpoint),
+                                         view_func, defaults=defaults, **options)
     
     def _deferred_blueprint_init(self, setup_state):
         """Synchronize prefix between blueprint/api and registration options, then
@@ -119,14 +147,20 @@ class Api(object):
         :type setup_state: flask.blueprints.BlueprintSetupState
         
         """
+        
+        self.blueprint_setup = setup_state
+        if setup_state.add_url_rule.__name__ != '_blueprint_setup_add_url_rule_patch':
+            setup_state._original_add_url_rule = setup_state.add_url_rule
+            setup_state.add_url_rule = MethodType(Api._blueprint_setup_add_url_rule_patch,
+                                                  setup_state)
         if not setup_state.first_registration:
             raise ValueError('flask-restful blueprints can only be registered once.')
-        if setup_state.url_prefix:
-            if self.blueprint:
-                self.blueprint.url_prefix = setup_state.url_prefix
-            self.prefix = setup_state.url_prefix
-        elif self.prefix:
-            setup_state.url_prefix = setup_state.options['url_prefix'] = self.prefix
+#        if setup_state.url_prefix:
+#            if self.blueprint:
+#                self.blueprint.url_prefix = setup_state.url_prefix
+#            self.prefix = setup_state.url_prefix
+#        elif self.prefix:
+#            setup_state.url_prefix = setup_state.options['url_prefix'] = self.prefix
         self._init_app(setup_state.app)
     
     def _init_app(self, app):
@@ -260,7 +294,7 @@ class Api(object):
         """Return a method that returns a list of mediatypes
         """
         return lambda resource_cls: self.mediatypes() + [self.default_mediatype]
-
+    
     def add_resource(self, resource, *urls, **kwargs):
         """Adds a resource to the api.
 
@@ -304,10 +338,19 @@ class Api(object):
 
 
         for url in urls:
-            if hasattr(self.app, 'record'):
-                self.app.add_url_rule(url, view_func=resource_func, **kwargs)
+            if self.blueprint:
+                if self.blueprint_setup:
+                    rule = self._complete_url(url, self.blueprint_setup.url_prefix)
+                else:
+                    rule = partial(self._complete_url, url)
             else:
-                self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
+                rule = self._complete_url(url, '')
+            self.app.add_url_rule(rule, view_func=resource_func, **kwargs)
+#            if (self.app or self.blueprint) and self.app is self.blueprint:
+#            if hasattr(self.app, 'record'):
+#                self.app.add_url_rule(url, view_func=resource_func, **kwargs)
+#            else:
+#                self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
