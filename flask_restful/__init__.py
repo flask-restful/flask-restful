@@ -105,13 +105,6 @@ class Api(object):
             self._init_app(app)
         else:
             self.blueprint = app
-#            if app.url_prefix and not self.prefix:
-#                self.prefix = app.url_prefix
-#            elif self.prefix and not app.url_prefix:
-#                app.url_prefix = self.prefix
-#            elif app.url_prefix and self.prefix and app.url_prefix != self.prefix:
-#                raise ValueError("Cannot resolve url prefix; restful api and "
-#                                 "blueprint both have prefixes but they do not match.")
     
     def _complete_url(self, url_part, registration_prefix):
         
@@ -155,12 +148,6 @@ class Api(object):
                                                   setup_state)
         if not setup_state.first_registration:
             raise ValueError('flask-restful blueprints can only be registered once.')
-#        if setup_state.url_prefix:
-#            if self.blueprint:
-#                self.blueprint.url_prefix = setup_state.url_prefix
-#            self.prefix = setup_state.url_prefix
-#        elif self.prefix:
-#            setup_state.url_prefix = setup_state.options['url_prefix'] = self.prefix
         self._init_app(setup_state.app)
     
     def _init_app(self, app):
@@ -346,11 +333,6 @@ class Api(object):
             else:
                 rule = self._complete_url(url, '')
             self.app.add_url_rule(rule, view_func=resource_func, **kwargs)
-#            if (self.app or self.blueprint) and self.app is self.blueprint:
-#            if hasattr(self.app, 'record'):
-#                self.app.add_url_rule(url, view_func=resource_func, **kwargs)
-#            else:
-#                self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
