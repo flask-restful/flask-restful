@@ -152,7 +152,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url("foobar")
 
         with app.test_request_context("/"):
-            self.assertEquals("/3", field.output("hey", Foo()))
+            self.assertEquals("http://localhost/3", field.output("hey", Foo()))
 
 
     def test_int(self):
