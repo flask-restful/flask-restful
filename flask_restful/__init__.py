@@ -4,7 +4,7 @@ import re
 from flask import request, Response
 from flask import abort as original_flask_abort
 from flask.views import MethodView
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, NotAcceptable
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 
@@ -155,13 +155,19 @@ class Api(object):
         defaults to (application/json) if no transformer is found for the
         requested mediatype.
 
+        Returns HTTP 406 Not Acceptable if no representations that
+        match the Accept header are available.
+
         :param data: Python object containing response data to be transformed
+
         """
         for mediatype in self.mediatypes() + [self.default_mediatype]:
             if mediatype in self.representations:
                 resp = self.representations[mediatype](data, *args, **kwargs)
                 resp.headers['Content-Type'] = mediatype
                 return resp
+            else:
+                raise NotAcceptable()
 
     def mediatypes(self):
         """Returns a list of requested mediatypes sent in the Accept header"""
