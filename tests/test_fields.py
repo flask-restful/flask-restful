@@ -152,6 +152,15 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url("foobar")
 
         with app.test_request_context("/"):
+            self.assertEquals("/3", field.output("hey", Foo()))
+
+
+    def test_url_external(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url("foobar", external = True)
+
+        with app.test_request_context("/"):
             self.assertEquals("http://localhost/3", field.output("hey", Foo()))
 
 
