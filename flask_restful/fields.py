@@ -265,3 +265,39 @@ class Fixed(Raw):
         return six.text_type(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
 Price = Fixed
+
+class Map(Raw):
+    """
+    A map with specified key type and value_type.
+    It's also used to format a `dict`.
+    The difference between `Nested` and `Map` is that we don't need to know key's name.
+    """
+
+    def __init__(self, key_type, value_type, allow_null=False):
+        self.attribute = None
+        self.allow_null = allow_null
+        self.key_gen = key_type() \
+                if isinstance(key_type, type) else key_type
+        self.value_gen = value_type() \
+                if isinstance(value_type, type) else value_type
+
+    def format(self, value):
+        if not isinstance(value, dict):
+            raise MarshallingException("Value must be map-alike.")
+
+        result = {}
+        for k in value:
+            v = get_value(k, value)
+            _key = self.key_gen.format(k)
+
+            if v is None:
+                if self.allow_null:
+                    _value = None
+                else:
+                    continue
+            else:
+                _value = self.value_gen.format(v)
+
+            result[_key] = _value
+
+        return result
