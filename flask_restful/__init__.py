@@ -59,6 +59,10 @@ class Api(object):
     :type decorators: list
     :param catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
+    :param url_part_order: A string that controls the order that the pieces
+        of the url are concatenated when the full url is constructed.  'b'
+        is the blueprint (or blueprint registration) prefix, 'a' is the api
+        prefix, and 'e' is the path component the endpoint is added with
     :type catch_all_404s: bool
 
     """
@@ -101,12 +105,20 @@ class Api(object):
         # If app is a blueprint, defer the initialization 
         try:
             app.record(self._deferred_blueprint_init)
+        # Falsk.Blueprint has a 'record' attribute, Flask.Api does not
         except AttributeError:
             self._init_app(app)
         else:
             self.blueprint = app
     
     def _complete_url(self, url_part, registration_prefix):
+        """This method is used to defer the construction of the final url in
+        the case that the Api is created with a Blueprint.
+        
+        :param url_part: The part of the url the endpoint is registered with
+        :param registration_prefix: The part of the url contributed by the
+            blueprint.  Generally speaking, BlueprintSetupState.url_prefix
+        """
         
         parts = {'b' : registration_prefix,
                  'a' : self.prefix,
@@ -115,6 +127,17 @@ class Api(object):
     
     @staticmethod
     def _blueprint_setup_add_url_rule_patch(blueprint_setup, rule, endpoint=None, view_func=None, **options):
+        """Method used to patch BlueprintSetupState.add_url_rule for setup
+        state instance corresponding to this Api instance.  Exists primarily
+        to enable _complete_url's function.
+        :param blueprint_setup: The BlueprintSetupState instance (self)
+        :param rule: A string or callable that takes a string and returns a
+            string(_complete_url) that is the url rule for the endpoint
+            being registered
+        :param endpoint: See BlueprintSetupState.add_url_rule
+        :param view_func: See BlueprintSetupState.add_url_rule
+        :param **options: See BlueprintSetupState.add_url_rule
+        """
         
         if callable(rule):
             rule = rule(blueprint_setup.url_prefix)
@@ -134,7 +157,8 @@ class Api(object):
         perform initialization with setup_state.app :class:`flask.Flask` object.  
         When a :class:`flask_restful.Api` object is initialized with a blueprint, 
         this method is recorded on the blueprint to be run when the blueprint is later
-        registered to a :class:`flask.Flask` object.
+        registered to a :class:`flask.Flask` object.  This method also monkeypatches
+        BlueprintSetupState.add_url_rule with _blueprint_setup_add_url_rule_patch.
         :param setup_state: The setup state object passed to deferred functions 
         during blueprint registration
         :type setup_state: flask.blueprints.BlueprintSetupState
@@ -162,6 +186,11 @@ class Api(object):
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
     
     def owns_endpoint(self, endpoint):
+        """Tests if an endpoint name (not path) belongs to this Api.  Takes
+        in to account the Blueprint name part of the endpoint name.
+        :param endpoint: The name of the endpoint being checked
+        :return: bool
+        """
         
         if self.blueprint:
             if endpoint.startswith(self.blueprint.name):
@@ -325,13 +354,24 @@ class Api(object):
 
 
         for url in urls:
+            # If this Api has a blueprint
             if self.blueprint:
+                # And this Api has been setup
                 if self.blueprint_setup:
+                    # Set the rule to a string directly, as the blueprint is already
+                    # set up.
                     rule = self._complete_url(url, self.blueprint_setup.url_prefix)
                 else:
+                    # Set the rule to a function that expects the blueprint prefix
+                    # to construct the final url.  Allows deferment of url finalization
+                    # in the case that the associated Blueprint has not yet been
+                    # registered to an application, so we can wait for the registration
+                    # prefix
                     rule = partial(self._complete_url, url)
             else:
+                # If we've got no Blueprint, just build a url with no prefix
                 rule = self._complete_url(url, '')
+            # Add the url to the application or blueprint
             self.app.add_url_rule(rule, view_func=resource_func, **kwargs)
 
     def output(self, resource):
