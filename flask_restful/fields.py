@@ -205,11 +205,18 @@ class Url(Raw):
     """
     A string representation of a Url
     """
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, attributes=None):
         super(Url, self).__init__()
         self.endpoint = endpoint
+        self.attributes = attributes
 
     def output(self, key, obj):
+        if self.attributes:
+            data = {}
+            for k,v in self.attributes.iteritems():
+                data[k] = getattr(obj, v)
+            o = urlparse(url_for(self.endpoint, **data))
+            return urlunparse(("", "", o.path, "", "", ""))
         try:
             data = to_marshallable_type(obj)
             o = urlparse(url_for(self.endpoint, **data))
