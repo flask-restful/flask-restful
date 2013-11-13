@@ -154,6 +154,14 @@ class FieldsTestCase(unittest.TestCase):
         with app.test_request_context("/"):
             self.assertEquals("/3", field.output("hey", Foo()))
 
+    def test_url_parameters(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<foo>", "foobar", view_func=lambda x: x)
+        field = fields.Url("foobar", attributes={'foo': 'hey'})
+
+        with app.test_request_context("/"):
+            self.assertEquals("/3", field.output("hey", Foo()))
+
     def test_int(self):
         field = fields.Integer()
         self.assertEquals(3, field.output("hey", {'hey': 3}))
