@@ -78,6 +78,10 @@ class Argument(object):
         return MultiDict()
 
     def convert(self, value, op):
+        # check if we're expecting a string and the value is `None`
+        if value is None and issubclass(self.type, six.string_types):
+            return None
+            
         try:
             return self.type(value, self.name, op)
         except TypeError:
