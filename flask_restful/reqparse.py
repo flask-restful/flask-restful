@@ -12,6 +12,15 @@ class Namespace(dict):
     def __setattr__(self, name, value):
         self[name] = value
 
+_friendly_location = {
+    u'form': u'the post body',
+    u'args': u'the query string',
+    u'values': u'the post body or the query string',
+    u'headers': u'the HTTP headers',
+    u'cookies': u'the request\'s cookies',
+    u'files': u'an uploaded file',
+}
+
 class Argument(object):
 
     def __init__(self, name, default=None, dest=None, required=False,
@@ -25,7 +34,7 @@ class Argument(object):
             request.
         :param dest: The name of the attribute to be added to the object
             returned by parse_args(req).
-        :param required: Whether or not the argument may be omitted (optionals
+        :param bool required: Whether or not the argument may be omitted (optionals
             only).
         :param action: The basic type of action to be taken when this argument
             is encountered in the request.
@@ -40,8 +49,8 @@ class Argument(object):
         :param help: A brief description of the argument, returned in the
             response when the argument is invalid. This takes precedence over
             the message passed to a ValidationError raised by a type converter.
-        :param case_sensitive: Whether the arguments in the request are case
-            sensitive or not
+        :param bool case_sensitive: Whether the arguments in the request are
+            case sensitive or not
         """
 
         self.name = name
@@ -132,14 +141,16 @@ class Argument(object):
 
         if not results and self.required:
             if isinstance(self.location, six.string_types):
-                error_msg = u"{0} is required in {1}".format(
+                error_msg = u"Missing required parameter {0} in {1}".format(
                     self.name,
-                    self.location
+                    _friendly_location.get(self.location, self.location)
                 )
             else:
-                error_msg = u"{0} is required in {1}".format(
+                friendly_locations = [_friendly_location.get(loc, loc) \
+                                      for loc in self.location]
+                error_msg = u"Missing required parameter {0} in {1}".format(
                     self.name,
-                    ' or '.join(self.location)
+                    ' or '.join(friendly_locations)
                 )
             self.handle_validation_error(ValueError(error_msg))
 
