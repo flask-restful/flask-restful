@@ -246,7 +246,7 @@ class ReqParseTestCase(unittest.TestCase):
         app = Flask(__name__)
 
         parser = RequestParser()
-        parser.add_argument("foo", location="get_json")
+        parser.add_argument("foo", location="json")
 
         with app.test_request_context('/bubble', method="post",
                                       data=json.dumps({"foo": "bar"}),
