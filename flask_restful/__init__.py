@@ -268,7 +268,7 @@ class Api(object):
     def url_for(self, resource, **values):
         """Generates a URL to the given resource."""
         return url_for(resource.endpoint, **values)
-        
+
     def make_response(self, data, *args, **kwargs):
         """Looks up the representation transformer for the requested media
         type, invoking the transformer to create a response object. This
