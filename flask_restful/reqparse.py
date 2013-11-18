@@ -24,7 +24,7 @@ _friendly_location = {
 class Argument(object):
 
     def __init__(self, name, default=None, dest=None, required=False,
-                 ignore=False, type=six.text_type, location=('values',),
+                 ignore=False, type=six.text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
         """
