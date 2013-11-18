@@ -50,9 +50,7 @@ def _get_value_for_key(key, obj, default):
             return obj[key]
         except (IndexError, TypeError, KeyError):
             pass
-    if hasattr(obj, key):
-        return getattr(obj, key)
-    return default
+    return getattr(obj, key, default)
 
 
 def to_marshallable_type(obj):
