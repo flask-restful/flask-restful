@@ -8,7 +8,7 @@ from flask.views import MethodView
 from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
 from werkzeug.http import HTTP_STATUS_CODES
-from flask.ext.restful.utils import unauthorized, error_data, unpack
+from flask.ext.restful.utils import error_data, unpack
 from flask.ext.restful.representations.json import output_json
 import sys
 from flask.helpers import _endpoint_from_view_func
@@ -301,8 +301,7 @@ class Api(object):
         resp = self.make_response(data, code)
 
         if code == 401:
-            resp = unauthorized(resp,
-                self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful"))
+            resp = self.unauthorized(resp)
 
         return resp
 
@@ -436,6 +435,15 @@ class Api(object):
             self.representations[mediatype] = func
             return func
         return wrapper
+
+    def unauthorized(self, response):
+        """ Given a response, change it to ask for credentials"""
+
+        realm = self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
+        challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+
+        response.headers['WWW-Authenticate'] = challenge
+        return response
 
 
 class Resource(MethodView):

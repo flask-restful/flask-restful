@@ -4,18 +4,6 @@ def http_status_message(code):
     """Maps an HTTP status code to the textual status"""
     return HTTP_STATUS_CODES.get(code, '')
 
-
-def challenge(authentication, realm):
-    """Constructs the string to be sent in the WWW-Authenticate header"""
-    return u"{0} realm=\"{1}\"".format(authentication, realm)
-
-
-def unauthorized(response, realm):
-    """ Given a response, change it to ask for credentials"""
-    response.headers['WWW-Authenticate'] = challenge("Basic", realm)
-    return response
-
-
 def error_data(code):
     """Constructs a dictionary with status and message for returning in an
     error response"""
