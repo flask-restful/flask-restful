@@ -93,10 +93,10 @@ class Argument(object):
             
         try:
             return self.type(value, self.name, op)
-        except TypeError:
+        except (TypeError, LookupError):
             try:
                 return self.type(value, self.name)
-            except TypeError:
+            except (TypeError, LookupError):
                 return self.type(value)
 
     def handle_validation_error(self, error):
