@@ -48,11 +48,9 @@ def _get_value_for_key(key, obj, default):
     if is_indexable_but_not_string(obj):
         try:
             return obj[key]
-        except KeyError:
-            return default
-    if hasattr(obj, key):
-        return getattr(obj, key)
-    return default
+        except (IndexError, TypeError, KeyError):
+            pass
+    return getattr(obj, key, default)
 
 
 def to_marshallable_type(obj):

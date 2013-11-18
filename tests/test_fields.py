@@ -290,5 +290,20 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.List(fields.String)
         self.assertEquals(None, field.output('list', obj))
 
+    def test_indexable_object(self):
+        class TestObject(object):
+            def __init__(self, foo):
+                self.foo = foo
+            def __getitem__(self, n):
+                if type(n) is int:
+                    if n < 3:
+                        return n
+                    raise IndexError
+                raise TypeError
+
+        obj = TestObject("hi")
+        field = fields.String(attribute="foo")
+        self.assertEquals("hi", field.output("foo", obj))
+
 if __name__ == '__main__':
     unittest.main()
