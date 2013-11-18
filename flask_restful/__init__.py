@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import difflib
 from functools import wraps, partial
 import re
@@ -10,6 +11,8 @@ from werkzeug.http import HTTP_STATUS_CODES
 from flask.ext.restful.utils import unauthorized, error_data, unpack
 from flask.ext.restful.representations.json import output_json
 import sys
+from flask.helpers import _endpoint_from_view_func
+from types import MethodType
 
 try:
     #noinspection PyUnresolvedReferences
@@ -56,19 +59,25 @@ class Api(object):
     :type decorators: list
     :param catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
+    :param url_part_order: A string that controls the order that the pieces
+        of the url are concatenated when the full url is constructed.  'b'
+        is the blueprint (or blueprint registration) prefix, 'a' is the api
+        prefix, and 'e' is the path component the endpoint is added with
     :type catch_all_404s: bool
 
     """
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False):
+                 catch_all_404s=False, url_part_order='bae'):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
+        self.url_part_order = url_part_order
+        self.blueprint_setup = None
 
         if app is not None:
             self.init_app(app)
@@ -77,10 +86,11 @@ class Api(object):
 
     def init_app(self, app):
         """Initialize this class with the given :class:`flask.Flask`
-        application object.
+        application or :class:`flask.Blueprint` object.
 
-        :param app: the Flask application object
+        :param app: the Flask application or blueprint object
         :type app: flask.Flask
+        :type app: flask.Blueprint
 
         Examples::
 
@@ -91,9 +101,103 @@ class Api(object):
         """
         self.app = app
         self.endpoints = set()
+        self.blueprint = None
+        # If app is a blueprint, defer the initialization 
+        try:
+            app.record(self._deferred_blueprint_init)
+        # Falsk.Blueprint has a 'record' attribute, Flask.Api does not
+        except AttributeError:
+            self._init_app(app)
+        else:
+            self.blueprint = app
+    
+    def _complete_url(self, url_part, registration_prefix):
+        """This method is used to defer the construction of the final url in
+        the case that the Api is created with a Blueprint.
+        
+        :param url_part: The part of the url the endpoint is registered with
+        :param registration_prefix: The part of the url contributed by the
+            blueprint.  Generally speaking, BlueprintSetupState.url_prefix
+        """
+        
+        parts = {'b' : registration_prefix,
+                 'a' : self.prefix,
+                 'e' : url_part}
+        return ''.join(parts[key] for key in self.url_part_order if parts[key])
+    
+    @staticmethod
+    def _blueprint_setup_add_url_rule_patch(blueprint_setup, rule, endpoint=None, view_func=None, **options):
+        """Method used to patch BlueprintSetupState.add_url_rule for setup
+        state instance corresponding to this Api instance.  Exists primarily
+        to enable _complete_url's function.
+        :param blueprint_setup: The BlueprintSetupState instance (self)
+        :param rule: A string or callable that takes a string and returns a
+            string(_complete_url) that is the url rule for the endpoint
+            being registered
+        :param endpoint: See BlueprintSetupState.add_url_rule
+        :param view_func: See BlueprintSetupState.add_url_rule
+        :param **options: See BlueprintSetupState.add_url_rule
+        """
+        
+        if callable(rule):
+            rule = rule(blueprint_setup.url_prefix)
+        elif blueprint_setup.url_prefix:
+            rule = blueprint_setup.url_prefix + rule
+        options.setdefault('subdomain', blueprint_setup.subdomain)
+        if endpoint is None:
+            endpoint = _endpoint_from_view_func(view_func)
+        defaults = blueprint_setup.url_defaults
+        if 'defaults' in options:
+            defaults = dict(defaults, **options.pop('defaults'))
+        blueprint_setup.app.add_url_rule(rule, '%s.%s' % (blueprint_setup.blueprint.name, endpoint),
+                                         view_func, defaults=defaults, **options)
+    
+    def _deferred_blueprint_init(self, setup_state):
+        """Synchronize prefix between blueprint/api and registration options, then
+        perform initialization with setup_state.app :class:`flask.Flask` object.  
+        When a :class:`flask_restful.Api` object is initialized with a blueprint, 
+        this method is recorded on the blueprint to be run when the blueprint is later
+        registered to a :class:`flask.Flask` object.  This method also monkeypatches
+        BlueprintSetupState.add_url_rule with _blueprint_setup_add_url_rule_patch.
+        :param setup_state: The setup state object passed to deferred functions 
+        during blueprint registration
+        :type setup_state: flask.blueprints.BlueprintSetupState
+        
+        """
+        
+        self.blueprint_setup = setup_state
+        if setup_state.add_url_rule.__name__ != '_blueprint_setup_add_url_rule_patch':
+            setup_state._original_add_url_rule = setup_state.add_url_rule
+            setup_state.add_url_rule = MethodType(Api._blueprint_setup_add_url_rule_patch,
+                                                  setup_state)
+        if not setup_state.first_registration:
+            raise ValueError('flask-restful blueprints can only be registered once.')
+        self._init_app(setup_state.app)
+    
+    def _init_app(self, app):
+        """Perform initialization actions with the given :class:`flask.Flask`
+        object.
+        :param app: The flask application object
+        :type app: flask.Flask
+        
+        """
+        self.app = app
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
-
+    
+    def owns_endpoint(self, endpoint):
+        """Tests if an endpoint name (not path) belongs to this Api.  Takes
+        in to account the Blueprint name part of the endpoint name.
+        :param endpoint: The name of the endpoint being checked
+        :return: bool
+        """
+        
+        if self.blueprint:
+            if endpoint.startswith(self.blueprint.name):
+                endpoint = endpoint.split(self.blueprint.name + '.', 1)[-1]
+            else:
+                return False
+        return endpoint in self.endpoints
 
     def _should_use_fr_error_handler(self):
         """ Determine if error should be handled with FR or default Flask
@@ -105,14 +209,14 @@ class Api(object):
         :return: bool
         """
         adapter = self.app.create_url_adapter(request)
-
+        
         try:
             adapter.match()
         except MethodNotAllowed as e:
             # Check if the other HTTP methods at this url would hit the Api
             valid_route_method = e.valid_methods[0]
             rule, _ = adapter.match(method=valid_route_method, return_rule=True)
-            return rule.endpoint in self.endpoints
+            return self.owns_endpoint(rule.endpoint)
         except NotFound:
             return self.catch_all_404s
         except:
@@ -126,7 +230,9 @@ class Api(object):
         if self._should_use_fr_error_handler():
             return True
         # for all other errors, just check if FR dispatched the route
-        return request.url_rule and request.url_rule.endpoint in self.endpoints
+        if not request.url_rule:
+            return False
+        return self.owns_endpoint(request.url_rule.endpoint)
 
     def error_router(self, original_handler, e):
         """This function decides whether the error occured in a flask-restful
@@ -204,7 +310,7 @@ class Api(object):
         """Return a method that returns a list of mediatypes
         """
         return lambda resource_cls: self.mediatypes() + [self.default_mediatype]
-
+    
     def add_resource(self, resource, *urls, **kwargs):
         """Adds a resource to the api.
 
@@ -248,7 +354,25 @@ class Api(object):
 
 
         for url in urls:
-            self.app.add_url_rule(self.prefix + url, view_func=resource_func, **kwargs)
+            # If this Api has a blueprint
+            if self.blueprint:
+                # And this Api has been setup
+                if self.blueprint_setup:
+                    # Set the rule to a string directly, as the blueprint is already
+                    # set up.
+                    rule = self._complete_url(url, self.blueprint_setup.url_prefix)
+                else:
+                    # Set the rule to a function that expects the blueprint prefix
+                    # to construct the final url.  Allows deferment of url finalization
+                    # in the case that the associated Blueprint has not yet been
+                    # registered to an application, so we can wait for the registration
+                    # prefix
+                    rule = partial(self._complete_url, url)
+            else:
+                # If we've got no Blueprint, just build a url with no prefix
+                rule = self._complete_url(url, '')
+            # Add the url to the application or blueprint
+            self.app.add_url_rule(rule, view_func=resource_func, **kwargs)
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
