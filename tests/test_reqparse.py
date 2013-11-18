@@ -203,6 +203,7 @@ class ReqParseTestCase(unittest.TestCase):
 
         req = Mock()
         req.values = ()
+        req.json = None
         req.view_args = {"foo": "bar"}
         parser = RequestParser()
         parser.add_argument("foo", type=str)
