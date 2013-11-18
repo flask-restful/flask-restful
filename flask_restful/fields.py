@@ -48,7 +48,7 @@ def _get_value_for_key(key, obj, default):
     if is_indexable_but_not_string(obj):
         try:
             return obj[key]
-        except KeyError:
+        except (IndexError, TypeError, KeyError):
             pass
     if hasattr(obj, key):
         return getattr(obj, key)
