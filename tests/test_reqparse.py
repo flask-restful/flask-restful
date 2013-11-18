@@ -2,7 +2,6 @@
 import unittest
 from mock import Mock, patch, NonCallableMock
 from flask import Flask
-from flask import request as flask_request
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
 from flask_restful.reqparse import Argument, RequestParser, Namespace
@@ -246,7 +245,7 @@ class ReqParseTestCase(unittest.TestCase):
         app = Flask(__name__)
 
         parser = RequestParser()
-        parser.add_argument("foo", location="get_json")
+        parser.add_argument("foo", location="json")
 
         with app.test_request_context('/bubble', method="post",
                                       data=json.dumps({"foo": "bar"}),
@@ -401,7 +400,8 @@ class ReqParseTestCase(unittest.TestCase):
         except exceptions.BadRequest as e:
             message = e.data['message']
 
-        self.assertEquals(message, 'foo is required in values')
+        self.assertEquals(message, (u'Missing required parameter foo in the '
+                                    'post body or the query string'))
 
         parser = RequestParser()
         parser.add_argument("bar", required=True, location=['values', 'cookies'])
@@ -411,7 +411,9 @@ class ReqParseTestCase(unittest.TestCase):
         except exceptions.BadRequest as e:
             message = e.data['message']
 
-        self.assertEquals(message, 'bar is required in values or cookies')
+        self.assertEquals(message, (u"Missing required parameter bar in the "
+                                    "post body or the query string or the "
+                                    "request's cookies"))
 
 
     def test_parse_default_append(self):
