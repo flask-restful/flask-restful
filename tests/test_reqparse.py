@@ -522,5 +522,18 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertTrue(isinstance(RequestParser().parse_args(), Namespace))
         self.assertTrue(type(RequestParser(namespace_class=dict).parse_args()) is dict)
 
+    def test_none_argument(self):
+
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=str, location="json")
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"foo": None}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], None)
+
+
 if __name__ == '__main__':
     unittest.main()
