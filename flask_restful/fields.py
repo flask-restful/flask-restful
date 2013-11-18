@@ -204,16 +204,16 @@ class Url(Raw):
     """
     A string representation of a Url
     """
-    def __init__(self, endpoint, external = False):
+    def __init__(self, endpoint, absolute = False):
         super(Url, self).__init__()
         self.endpoint = endpoint
-        self.external = external
+        self.absolute = absolute
 
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
-            o = urlparse(url_for(self.endpoint, _external = self.external, **data))
-            if self.external:
+            o = urlparse(url_for(self.endpoint, _external = self.absolute, **data))
+            if self.absolute:
                 return urlunparse((o.scheme, o.netloc, o.path, "", "", ""))
             return urlunparse(("", "", o.path, "", "", ""))
         except TypeError as te:

@@ -155,10 +155,10 @@ class FieldsTestCase(unittest.TestCase):
             self.assertEquals("/3", field.output("hey", Foo()))
 
 
-    def test_url_external(self):
+    def test_url_absolute(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
-        field = fields.Url("foobar", external = True)
+        field = fields.Url("foobar", absolute = True)
 
         with app.test_request_context("/"):
             self.assertEquals("http://localhost/3", field.output("hey", Foo()))
