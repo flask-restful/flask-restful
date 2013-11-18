@@ -4,6 +4,7 @@ from mock import Mock, patch, NonCallableMock
 from flask import Flask
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
+from werkzeug.datastructures import FileStorage
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
 
@@ -534,6 +535,20 @@ class ReqParseTestCase(unittest.TestCase):
             args = parser.parse_args()
             self.assertEquals(args['foo'], None)
 
+    def test_type_filestorage(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=FileStorage, location='files')
+
+        fdata = six.b('foo bar baz qux')
+        with app.test_request_context('/bubble', method='POST',
+                                      data={'foo': (six.BytesIO(fdata), 'baz.txt')}):
+            args = parser.parse_args()
+
+            self.assertEquals(args['foo'].name, 'foo')
+            self.assertEquals(args['foo'].filename, 'baz.txt')
+            self.assertEquals(args['foo'].read(), fdata)
 
 if __name__ == '__main__':
     unittest.main()
