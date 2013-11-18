@@ -3,6 +3,17 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.6
+-------------
+
+Released November 18, 2013
+
+- blueprint support
+- CORS support
+- allow custom unauthorized response
+- when failing to marshal custom indexable objects, its attributes are checked
+- better error messages
+
 Version 0.2.5
 -------------
 
@@ -11,7 +22,6 @@ Released Aug 6, 2013
 - add callable location
 - allow field type Fixed to take an attribute argument
 - added url_for() wrapper as Api.url_for(resource)
-
 
 Version 0.2.4
 -------------

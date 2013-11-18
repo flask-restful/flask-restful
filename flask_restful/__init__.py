@@ -102,7 +102,7 @@ class Api(object):
         self.app = app
         self.endpoints = set()
         self.blueprint = None
-        # If app is a blueprint, defer the initialization 
+        # If app is a blueprint, defer the initialization
         try:
             app.record(self._deferred_blueprint_init)
         # Falsk.Blueprint has a 'record' attribute, Flask.Api does not
@@ -110,21 +110,21 @@ class Api(object):
             self._init_app(app)
         else:
             self.blueprint = app
-    
+
     def _complete_url(self, url_part, registration_prefix):
         """This method is used to defer the construction of the final url in
         the case that the Api is created with a Blueprint.
-        
+
         :param url_part: The part of the url the endpoint is registered with
         :param registration_prefix: The part of the url contributed by the
             blueprint.  Generally speaking, BlueprintSetupState.url_prefix
         """
-        
+
         parts = {'b' : registration_prefix,
                  'a' : self.prefix,
                  'e' : url_part}
         return ''.join(parts[key] for key in self.url_part_order if parts[key])
-    
+
     @staticmethod
     def _blueprint_setup_add_url_rule_patch(blueprint_setup, rule, endpoint=None, view_func=None, **options):
         """Method used to patch BlueprintSetupState.add_url_rule for setup
@@ -138,7 +138,7 @@ class Api(object):
         :param view_func: See BlueprintSetupState.add_url_rule
         :param **options: See BlueprintSetupState.add_url_rule
         """
-        
+
         if callable(rule):
             rule = rule(blueprint_setup.url_prefix)
         elif blueprint_setup.url_prefix:
@@ -151,20 +151,20 @@ class Api(object):
             defaults = dict(defaults, **options.pop('defaults'))
         blueprint_setup.app.add_url_rule(rule, '%s.%s' % (blueprint_setup.blueprint.name, endpoint),
                                          view_func, defaults=defaults, **options)
-    
+
     def _deferred_blueprint_init(self, setup_state):
         """Synchronize prefix between blueprint/api and registration options, then
-        perform initialization with setup_state.app :class:`flask.Flask` object.  
-        When a :class:`flask_restful.Api` object is initialized with a blueprint, 
+        perform initialization with setup_state.app :class:`flask.Flask` object.
+        When a :class:`flask_restful.Api` object is initialized with a blueprint,
         this method is recorded on the blueprint to be run when the blueprint is later
         registered to a :class:`flask.Flask` object.  This method also monkeypatches
         BlueprintSetupState.add_url_rule with _blueprint_setup_add_url_rule_patch.
-        :param setup_state: The setup state object passed to deferred functions 
+        :param setup_state: The setup state object passed to deferred functions
         during blueprint registration
         :type setup_state: flask.blueprints.BlueprintSetupState
-        
+
         """
-        
+
         self.blueprint_setup = setup_state
         if setup_state.add_url_rule.__name__ != '_blueprint_setup_add_url_rule_patch':
             setup_state._original_add_url_rule = setup_state.add_url_rule
@@ -173,25 +173,25 @@ class Api(object):
         if not setup_state.first_registration:
             raise ValueError('flask-restful blueprints can only be registered once.')
         self._init_app(setup_state.app)
-    
+
     def _init_app(self, app):
         """Perform initialization actions with the given :class:`flask.Flask`
         object.
         :param app: The flask application object
         :type app: flask.Flask
-        
+
         """
         self.app = app
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
-    
+
     def owns_endpoint(self, endpoint):
         """Tests if an endpoint name (not path) belongs to this Api.  Takes
         in to account the Blueprint name part of the endpoint name.
         :param endpoint: The name of the endpoint being checked
         :return: bool
         """
-        
+
         if self.blueprint:
             if endpoint.startswith(self.blueprint.name):
                 endpoint = endpoint.split(self.blueprint.name + '.', 1)[-1]
@@ -209,7 +209,7 @@ class Api(object):
         :return: bool
         """
         adapter = self.app.create_url_adapter(request)
-        
+
         try:
             adapter.match()
         except MethodNotAllowed as e:
@@ -309,7 +309,7 @@ class Api(object):
         """Return a method that returns a list of mediatypes
         """
         return lambda resource_cls: self.mediatypes() + [self.default_mediatype]
-    
+
     def add_resource(self, resource, *urls, **kwargs):
         """Adds a resource to the api.
 
