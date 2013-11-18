@@ -49,7 +49,7 @@ def _get_value_for_key(key, obj, default):
         try:
             return obj[key]
         except KeyError:
-            return default
+            pass
     if hasattr(obj, key):
         return getattr(obj, key)
     return default
