@@ -203,7 +203,7 @@ class Url(Raw):
     """
     A string representation of a Url
     """
-    def __init__(self, endpoint, absolute = False):
+    def __init__(self, endpoint, absolute=False):
         super(Url, self).__init__()
         self.endpoint = endpoint
         self.absolute = absolute

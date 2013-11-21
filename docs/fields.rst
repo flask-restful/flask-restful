@@ -124,10 +124,10 @@ your data object. ::
 
 
 By default ``fields.Url`` returns a relative uri. To generate an absolute uri that includes
-the scheme, hostname and port pass ``absolute = True`` in the field declaration. ::
+the scheme, hostname and port pass ``absolute=True`` in the field declaration. ::
 
     fields = {
-        'uri': fields.Url('todo_resource', external = True)
+        'uri': fields.Url('todo_resource', absolute=True)
     }
 
 Complex Structures
