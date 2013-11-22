@@ -163,6 +163,14 @@ class FieldsTestCase(unittest.TestCase):
         with app.test_request_context("/"):
             self.assertEquals("http://localhost/3", field.output("hey", Foo()))
 
+    def test_url_absolute_scheme(self):
+        """Url.scheme should override current_request.scheme"""
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url("foobar", absolute=True, scheme='https')
+
+        with app.test_request_context("/", base_url="http://localhost"):
+            self.assertEquals("https://localhost/3", field.output("hey", Foo()))
 
     def test_int(self):
         field = fields.Integer()

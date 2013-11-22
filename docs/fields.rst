@@ -124,10 +124,12 @@ your data object. ::
 
 
 By default ``fields.Url`` returns a relative uri. To generate an absolute uri that includes
-the scheme, hostname and port pass ``absolute=True`` in the field declaration. ::
+the scheme, hostname and port pass ``absolute=True`` in the field declaration. To override
+the default scheme, pass the ``scheme`` keyword argument::
 
     fields = {
         'uri': fields.Url('todo_resource', absolute=True)
+        'https_uri': fields.Url('todo_resource', absolute=True, scheme='https')
     }
 
 Complex Structures
