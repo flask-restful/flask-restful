@@ -105,7 +105,7 @@ class Api(object):
         # If app is a blueprint, defer the initialization
         try:
             app.record(self._deferred_blueprint_init)
-        # Falsk.Blueprint has a 'record' attribute, Flask.Api does not
+        # Flask.Blueprint has a 'record' attribute, Flask.Api does not
         except AttributeError:
             self._init_app(app)
         else:
