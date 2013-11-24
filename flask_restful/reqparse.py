@@ -21,10 +21,12 @@ _friendly_location = {
     u'files': u'an uploaded file',
 }
 
+text_type = lambda x: six.text_type(x)
+
 class Argument(object):
 
     def __init__(self, name, default=None, dest=None, required=False,
-                 ignore=False, type=six.text_type, location=('json', 'values',),
+                 ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True):
         """
