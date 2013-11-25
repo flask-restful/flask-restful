@@ -3,6 +3,13 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.8
+-------------
+
+Released November 22, 2013
+
+- Add 'absolute' and 'scheme' to fields.Url
+
 Version 0.2.6
 -------------
 
