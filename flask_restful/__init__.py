@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import difflib
 from functools import wraps, partial
 import re
-from flask import request, Response, url_for
+from flask import request, url_for
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from flask.signals import got_request_exception
@@ -383,7 +383,7 @@ class Api(object):
         @wraps(resource)
         def wrapper(*args, **kwargs):
             resp = resource(*args, **kwargs)
-            if isinstance(resp, Response) or isinstance(resp, ResponseBase):  # There may be a better way to test
+            if isinstance(resp, ResponseBase):  # There may be a better way to test
                 return resp
             data, code, headers = unpack(resp)
             return self.make_response(data, code, headers=headers)
@@ -473,7 +473,7 @@ class Resource(MethodView):
 
         resp = meth(*args, **kwargs)
 
-        if isinstance(resp, Response):  # There may be a better way to test
+        if isinstance(resp, ResponseBase):  # There may be a better way to test
             return resp
 
         representations = self.representations or {}
