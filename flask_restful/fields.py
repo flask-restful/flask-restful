@@ -151,7 +151,7 @@ class List(Raw):
         # we cannot really test for external dict behavior
         if is_indexable_but_not_string(value) and not isinstance(value, dict):
             # Convert all instances in typed list to container type
-            return [self.container.output(idx, value) for idx, val
+            return [self.container.output(idx, val) for idx, val
                     in enumerate(value)]
 
         if value is None:
