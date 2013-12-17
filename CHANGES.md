@@ -3,6 +3,14 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.9
+-------------
+
+Released December 17, 2013
+
+- Adds new `positive` and `iso8601interval` types.
+- Typo fix.
+
 Version 0.2.8
 -------------
 
