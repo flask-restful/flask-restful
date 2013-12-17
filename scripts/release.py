@@ -21,19 +21,7 @@ def main():
     if len(subprocess.check_output(["git", "status", "-s"]).strip()) > 0:
         raise Exception("Uncommited changes, please commit or stash")
 
-    new_version = point_release(args.version)
-    option = "version='{}'"
-
-    setup = open('setup.py').read()
-    
-    with open('setup.py', 'w') as f:
-        f.write(setup.replace(option.format(args.version),
-                              option.format(new_version)))
-
-    subprocess.call(["git", "add", "setup.py"])
-    subprocess.call(["git", "commit", "-am",
-                     "Bump to version {}".format(new_version)])
-    subprocess.call(["git", "tag", new_version])
+    subprocess.call(["git", "tag", args.version])
     subprocess.call(["git", "push", "origin", "master"])
     subprocess.call(["git", "push", "--tags"])
     subprocess.call(["python", "setup.py", "sdist", "upload"])
