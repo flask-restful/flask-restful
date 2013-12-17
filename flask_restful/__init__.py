@@ -105,7 +105,7 @@ class Api(object):
         # If app is a blueprint, defer the initialization
         try:
             app.record(self._deferred_blueprint_init)
-        # Falsk.Blueprint has a 'record' attribute, Flask.Api does not
+        # Flask.Blueprint has a 'record' attribute, Flask.Api does not
         except AttributeError:
             self._init_app(app)
         else:
@@ -437,7 +437,7 @@ class Api(object):
         return wrapper
 
     def unauthorized(self, response):
-        """ Given a response, change it to ask for credentials"""
+        """ Given a response, change it to ask for credentials """
 
         realm = self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
         challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
@@ -448,12 +448,13 @@ class Api(object):
 
 class Resource(MethodView):
     """
-    Represents an abstract RESTful resource. Concrete resources should extend
-    from this class and expose methods for each supported HTTP method. If a
-    resource is invoked with an unsupported HTTP method, the API will return a
-    response with status 405 Method Not Allowed. Otherwise the appropriate
-    method is called and passed all arguments from the url rule used when
-    adding the resource to an Api instance. See Api.add_resource for details.
+    Represents an abstract RESTful resource. Concrete resources should
+    extend from this class and expose methods for each supported HTTP
+    method. If a resource is invoked with an unsupported HTTP method,
+    the API will return a response with status 405 Method Not Allowed.
+    Otherwise the appropriate method is called and passed all arguments
+    from the url rule used when adding the resource to an Api instance. See
+    :meth:`~flask.ext.restful.Api.add_resource` for details.
     """
     representations = None
     method_decorators = []

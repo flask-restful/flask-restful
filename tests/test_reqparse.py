@@ -127,9 +127,12 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(arg.operators[0], "=")
         self.assertEquals(len(arg.operators), 1)
 
-    def test_default_type(self):
+    @patch('flask_restful.reqparse.six')
+    def test_default_type(self, mock_six):
         arg = Argument("foo")
-        self.assertEquals(arg.type, six.text_type)
+        sentinel = object()
+        arg.type(sentinel)
+        mock_six.text_type.assert_called_with(sentinel)
 
 
     def test_default_default(self):
