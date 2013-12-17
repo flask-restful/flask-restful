@@ -15,8 +15,10 @@ setup(
     platforms='any',
     test_suite = 'nose.collector',
     install_requires=[
+        'aniso8601>=0.82',
         'Flask>=0.8',
         'six>=1.3.0',
+        'pytz',
     ],
     # Install these with "pip install -e '.[paging]'" or '.[docs]'
     extras_require={

@@ -9,13 +9,14 @@ API Docs
 .. autofunction:: marshal
 .. autofunction:: marshal_with
 .. autofunction:: abort
-.. autofunction:: unauthorized
 
 
 Api
 ---
 .. autoclass:: Api
    :members:
+
+    .. automethod:: unauthorized
 
 .. autoclass:: Resource
    :members:
@@ -41,6 +42,7 @@ Types
 .. module:: flask.ext.restful.types 
 .. autofunction:: url
 .. autofunction:: date
+.. autofunction:: iso8601interval
 .. autofunction:: natural 
 .. autofunction:: boolean
 .. autofunction:: rfc822
