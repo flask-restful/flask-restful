@@ -130,11 +130,7 @@ class TypesTestCase(unittest.TestCase):
 
 
     def test_date_later_than_1900(self):
-<<<<<<< HEAD
-        assert_equal(types.date("1900-01-01"), datetime.datetime(1900, 1, 1))
-=======
-        self.assertEquals(types.date("1900-01-01"), datetime(1900, 1, 1))
->>>>>>> master
+        assert_equal(types.date("1900-01-01"), datetime(1900, 1, 1))
 
 
     def test_date_too_early(self):
@@ -145,11 +141,7 @@ class TypesTestCase(unittest.TestCase):
         assert_raises(ValueError, lambda: types.date("2008-13-13"))
 
     def test_date_input(self):
-<<<<<<< HEAD
-        assert_equal(types.date("2008-08-01"), datetime.datetime(2008, 8, 1))
-=======
-        self.assertEquals(types.date("2008-08-01"), datetime(2008, 8, 1))
->>>>>>> master
+        assert_equal(types.date("2008-08-01"), datetime(2008, 8, 1))
 
     def test_natual_negative(self):
         assert_raises(ValueError, lambda: types.natural(-1))
