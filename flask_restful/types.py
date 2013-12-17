@@ -150,19 +150,6 @@ def iso8601interval(value, argument='argument'):
             "date/time interval.".format(arg=argument, value=value),
         )
 
-    if start.year < 2000:
-        raise ValueError(
-            "Invalid {arg}: {value}. The year must be >= 2000.".format(
-                arg=argument, value=value
-            ),
-        )
-
-    if start.microsecond != 0 or end.microsecond != 0:
-        raise ValueError(
-            "Invalid {arg}: {value}. The smallest supported resolution "
-            "for datetimes is one second.".format(arg=argument, value=value),
-        )
-
     return start, end
 
 
