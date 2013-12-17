@@ -41,11 +41,30 @@ def date(value):
     return date
 
 
-def natural(value):
-    """Parse a non-negative integer value"""
-    value = int(value)
+def _get_integer(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        raise ValueError('{} is not a valid integer'.format(value))
+
+
+def natural(value, argument='argument'):
+    """ Restrict input type to the natural numbers (0, 1, 2, 3...) """
+    value = _get_integer(value)
     if value < 0:
-        raise ValueError("Invalid literal for natural(): '{}'".format(value))
+        error = ('Invalid {arg}: {value}. {arg} must be a non-negative '
+                 'integer'.format(arg=argument, value=value))
+        raise ValueError(error)
+    return value
+
+
+def positive(value, argument='argument'):
+    """ Restrict input type to the positive integers (1, 2, 3...) """
+    value = _get_integer(value)
+    if value < 1:
+        error = ('Invalid {arg}: {value}. {arg} must be a positive '
+                 'integer'.format(arg=argument, value=value))
+        raise ValueError(error)
     return value
 
 
