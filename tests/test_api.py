@@ -361,8 +361,9 @@ class APITestCase(unittest.TestCase):
 
 
     def test_handle_error_signal(self):
+        # This test requires the blinker lib to run.
         if not signals_available:
-            self.skipTest("Can't test signals without signal support")
+            raise unittest.skipTest("Can't test signals without signal support")
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
