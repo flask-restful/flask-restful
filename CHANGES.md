@@ -10,6 +10,8 @@ Released December 17, 2013
 
 - Adds new `positive` and `iso8601interval` types.
 - Typo fix.
+- Updating the test infrastructure to use common Twilio conventions and testing
+  styles.
 
 Version 0.2.8
 -------------
