@@ -3,10 +3,18 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.10
+--------------
+
+Released December 17, 2013
+
+- Removes twilio-specific type checks present in version 0.2.9.
+- Correctly bump version number in setup.py.
+
 Version 0.2.9
 -------------
 
-Released December 17, 2013
+Released December 17, 2013.
 
 - Adds new `positive` and `iso8601interval` types.
 - Typo fix.
