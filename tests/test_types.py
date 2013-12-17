@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, tzinfo
 import unittest
 
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equal # you need it for tests in form of continuations
+from nose.tools import assert_equal, assert_raises # you need it for tests in form of continuations
 import pytz
 import six
 
@@ -304,6 +304,56 @@ def test_isointerval():
         yield assert_equal, types.iso8601interval(value), expected
 
 
+def test_isointerval_too_early():
+    with assert_raises(ValueError) as cm:
+        types.iso8601interval('1847-03-03/1922-08-02')
+
+    error = cm.exception
+    assert_equal(
+        error.message,
+        "Invalid argument: 1847-03-03/1922-08-02. The year must be >= 2000.",
+    )
+
+
+def test_invalid_isointerval_error():
+    with assert_raises(ValueError) as cm:
+        types.iso8601interval('2013-01-01/blah')
+
+    error = cm.exception
+    assert_equal(
+        error.message,
+        "Invalid argument: 2013-01-01/blah. argument must be a valid ISO8601 "
+        "date/time interval.",
+    )
+
+
+def test_no_subsecond_isointerval():
+    with assert_raises(ValueError) as cm:
+        types.iso8601interval('2013-01-01T12:00:00.1')
+
+    error = cm.exception
+    assert_equal(
+        error.message,
+        "Invalid argument: 2013-01-01T12:00:00.1. The smallest supported "
+        "resolution for datetimes is one second.",
+    )
+
+
+def test_bad_isointervals():
+    bad_intervals = [
+        '2013-01T14:',
+        '',
+        'asdf',
+        '01/01/2013',
+    ]
+
+    for bad_interval in bad_intervals:
+        yield (
+            assert_raises,
+            ValueError,
+            types.iso8601interval,
+            bad_interval,
+        )
 
 if __name__ == '__main__':
     unittest.main()
