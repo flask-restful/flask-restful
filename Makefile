@@ -1,20 +1,25 @@
 .PHONY: test install docs analysis
 
+clean:
+	rm -rf venv *.egg-info
+
 install: venv
-	. venv/bin/activate; python setup.py develop
+	. venv/bin/activate; pip install --editable . \
+		--download-cache /tmp/pipcache --use-mirrors
 
 venv:
 	virtualenv venv
 
-docs-dependencies: install
+docs-install: install
 	. venv/bin/activate; pip install -e '.[docs]' --use-mirrors
 
 docs:
 	. venv/bin/activate; cd docs && make html
 
 # Pycrypto is required to run the unit tests
-test-dependencies: install
-	. venv/bin/activate; pip install -e '.[paging]' --use-mirrors
+test-install: install
+	. venv/bin/activate; pip install --editable '.[paging,tests]' \
+		--download-cache /tmp/pipcache --use-mirrors
 
 test:
 	. venv/bin/activate; python setup.py nosetests
