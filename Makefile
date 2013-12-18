@@ -37,7 +37,7 @@ release: test
 	#
 	# This script will run tests, tag a release, push it to GH, and 
 	# upload a new version for you.
-	$(shell python scripts/release.py $(shell python setup.py -V))
+	python scripts/release.py $(shell python setup.py -V)
 
 authors:
 	echo "Authors\n=======\n\nA huge thanks to all of our contributors:\n\n" > AUTHORS.md

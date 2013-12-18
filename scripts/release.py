@@ -19,7 +19,7 @@ def main():
         raise Exception("Must be on master branch to release")
 
     if len(subprocess.check_output(["git", "status", "-s"]).strip()) > 0:
-        raise Exception("Uncommited changes, please commit or stash")
+        raise Exception("Uncommitted changes, please commit or stash")
 
     subprocess.call(["git", "tag", args.version])
     subprocess.call(["git", "push", "origin", "master"])
