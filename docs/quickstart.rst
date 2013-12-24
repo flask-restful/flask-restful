@@ -332,9 +332,9 @@ Add a new task ::
 
 Update a task ::
 
-    $ curl http://localhost:5000/todos/todo3 -d "task=something different" -X POST -v
+    $ curl http://localhost:5000/todos/todo3 -d "task=something different" -X PUT -v
 
-    > POST /todos/todo3 HTTP/1.1
+    > PUT /todos/todo3 HTTP/1.1
     > Host: localhost:5000
     > Accept: */*
     > Content-Length: 20
