@@ -19,6 +19,7 @@ A huge thanks to all of our contributors:
 - JuneHyeon Bae
 - Kamil Gałuszka
 - Kevin Burke
+- Kevin Deldycke
 - Kyle Conroy
 - Lance Ingle
 - Miguel Grinberg
