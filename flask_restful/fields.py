@@ -25,7 +25,7 @@ class MarshallingException(Exception):
 
 
 def is_indexable_but_not_string(obj):
-    return not hasattr(obj, "strip") and hasattr(obj, "__getitem__")
+    return not hasattr(obj, "strip") and hasattr(obj, "__iter__")
 
 
 def get_value(key, obj, default=None):
@@ -59,7 +59,7 @@ def to_marshallable_type(obj):
     if obj is None:
         return None  # make it idempotent for None
 
-    if hasattr(obj, '__getitem__'):
+    if hasattr(obj, '__iter__'):
         return obj  # it is indexable it is ok
 
     if hasattr(obj, '__marshallable__'):
@@ -151,6 +151,8 @@ class List(Raw):
         # we cannot really test for external dict behavior
         if is_indexable_but_not_string(value) and not isinstance(value, dict):
             # Convert all instances in typed list to container type
+            if isinstance(value, set):
+                value = list(value)
             return [self.container.output(idx, value) for idx, val
                     in enumerate(value)]
 
