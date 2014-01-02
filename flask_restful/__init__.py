@@ -357,7 +357,8 @@ class Api(object):
                 if self.blueprint_setup:
                     # Set the rule to a string directly, as the blueprint is already
                     # set up.
-                    rule = self._complete_url(url, self.blueprint_setup.url_prefix)
+                    self.blueprint_setup.add_url_rule(url, view_func=resource_func, **kwargs)
+                    return
                 else:
                     # Set the rule to a function that expects the blueprint prefix
                     # to construct the final url.  Allows deferment of url finalization
