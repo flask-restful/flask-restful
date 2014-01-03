@@ -536,6 +536,30 @@ class ReqParseTestCase(unittest.TestCase):
             args = parser.parse_args()
             self.assertEquals(args['foo'], None)
 
+    def test_type_callable(self):
+        req = Request.from_values("/bubble?foo=1")
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=lambda x: x, required=False),
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], "1")
+
+    def test_type_callable_none(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=lambda x: x, location="json", required=False),
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"foo": None}),
+                                      content_type='application/json'):
+            try:
+                args = parser.parse_args()
+                self.assertEquals(args['foo'], None)
+            except exceptions.BadRequest:
+                self.fail()
+
     def test_type_filestorage(self):
         app = Flask(__name__)
 
