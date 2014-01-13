@@ -1,5 +1,5 @@
 import unittest
-from flask import Flask, views
+from flask import Flask, redirect, views
 from flask.signals import got_request_exception, signals_available
 try:
     from mock import Mock, patch
@@ -739,6 +739,20 @@ class APITestCase(unittest.TestCase):
         self.assertTrue(json_dumps_mock.called)
         self.assertEqual(123, kwargs['indent'])
 
+    def test_redirect(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class FooResource(flask_restful.Resource):
+            def get(self):
+                return redirect('/')
+
+        api.add_resource(FooResource, '/api')
+
+        app = app.test_client()
+        resp = app.get('/api')
+        self.assertEquals(resp.status_code, 302)
+        self.assertEquals(resp.headers['Location'], 'http://localhost/')
 
 if __name__ == '__main__':
     unittest.main()
