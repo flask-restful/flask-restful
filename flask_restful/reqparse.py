@@ -1,6 +1,7 @@
 from flask import request
 from werkzeug.datastructures import MultiDict, FileStorage
 import flask_restful
+import inspect
 import six
 
 class Namespace(dict):
@@ -90,7 +91,7 @@ class Argument(object):
 
     def convert(self, value, op):
         # check if we're expecting a string and the value is `None`
-        if value is None and issubclass(self.type, six.string_types):
+        if value is None and inspect.isclass(self.type) and issubclass(self.type, six.string_types):
             return None
 
         try:
