@@ -59,7 +59,7 @@ def to_marshallable_type(obj):
     if obj is None:
         return None  # make it idempotent for None
 
-    if hasattr(obj, '__iter__'):
+    if hasattr(obj, '__getitem__'):
         return obj  # it is indexable it is ok
 
     if hasattr(obj, '__marshallable__'):
