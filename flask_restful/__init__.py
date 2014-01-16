@@ -280,8 +280,9 @@ class Api(object):
             else:
                 self.app.logger.exception("Internal Error")
 
-        if code == 404 and ('message' not in data or
-                            data['message'] == HTTP_STATUS_CODES[404]):
+        help_on_404 = self.app.config.get("ERROR_404_HELP", True)
+        if code == 404 and help_on_404 and ('message' not in data or
+                                            data['message'] == HTTP_STATUS_CODES[404]):
             rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
                           for rule in self.app.url_map.iter_rules()])
             close_matches = difflib.get_close_matches(request.path, rules.keys())
