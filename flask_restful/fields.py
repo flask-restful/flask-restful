@@ -10,7 +10,8 @@ from flask_restful import types, marshal
 from flask import url_for
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
-           "Integer", "Arbitrary", "Nested", "List", "Raw"]
+           "Integer", "Arbitrary", "Nested", "List", "Raw", "Boolean",
+           "Fixed", "Price"]
 
 
 class MarshallingException(Exception):
