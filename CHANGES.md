@@ -8,14 +8,14 @@ Version 0.2.11
 
 Released January 17, 2014
 
-- Fixes the List field when marshalling a list of dictionaries. (#165)
-- Adds Boolean and Price types to fields.__all__ (#180)
-- Adds support for serializing a set object with a List field. (#175)
-- Fixes support for using callables as reqparser type arguments (#167)
-- Add configuration variable to control smart-errors behavior on 404 responses. (#181)
-- Fixes bug preventing use of Flask redirects. (#162)
-- Documentation fixes (#173)
-- Fixes bug swallowing tracebacks in handle_error. (#166)
+- Fixes the List field when marshalling a list of dictionaries. ([#165](https://github.com/twilio/flask-restful/issues/165))
+- Adds Boolean and Price types to fields.__all__ ([#180](https://github.com/twilio/flask-restful/issues/180))
+- Adds support for serializing a set object with a List field. ([#175](https://github.com/twilio/flask-restful/pull/175))
+- Fixes support for using callables as reqparser type arguments ([#167](https://github.com/twilio/flask-restful/pull/167))
+- Add configuration variable to control smart-errors behavior on 404 responses. ([#181](https://github.com/twilio/flask-restful/issues/181))
+- Fixes bug preventing use of Flask redirects. ([#162](https://github.com/twilio/flask-restful/pull/162))
+- Documentation fixes ([#173](https://github.com/twilio/flask-restful/pull/173))
+- Fixes bug swallowing tracebacks in handle_error. ([#166](https://github.com/twilio/flask-restful/pull/166))
 
 Version 0.2.10
 --------------
