@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import difflib
 from functools import wraps, partial
 import re
-from flask import request, url_for
+from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from flask.signals import got_request_exception
@@ -79,11 +79,13 @@ class Api(object):
         self.catch_all_404s = catch_all_404s
         self.url_part_order = url_part_order
         self.blueprint_setup = None
+        self.endpoints = set()
+        self.resources = []
+        self.app = None
 
         if app is not None:
+            self.app = app
             self.init_app(app)
-        else:
-            self.app = None
 
     def init_app(self, app):
         """Initialize this class with the given :class:`flask.Flask`
@@ -100,8 +102,6 @@ class Api(object):
             api.add_resource(...)
 
         """
-        self.app = app
-        self.endpoints = set()
         self.blueprint = None
         # If app is a blueprint, defer the initialization
         try:
@@ -131,6 +131,7 @@ class Api(object):
         """Method used to patch BlueprintSetupState.add_url_rule for setup
         state instance corresponding to this Api instance.  Exists primarily
         to enable _complete_url's function.
+
         :param blueprint_setup: The BlueprintSetupState instance (self)
         :param rule: A string or callable that takes a string and returns a
             string(_complete_url) that is the url rule for the endpoint
@@ -160,8 +161,9 @@ class Api(object):
         this method is recorded on the blueprint to be run when the blueprint is later
         registered to a :class:`flask.Flask` object.  This method also monkeypatches
         BlueprintSetupState.add_url_rule with _blueprint_setup_add_url_rule_patch.
+
         :param setup_state: The setup state object passed to deferred functions
-        during blueprint registration
+            during blueprint registration
         :type setup_state: flask.blueprints.BlueprintSetupState
 
         """
@@ -178,17 +180,21 @@ class Api(object):
     def _init_app(self, app):
         """Perform initialization actions with the given :class:`flask.Flask`
         object.
+
         :param app: The flask application object
         :type app: flask.Flask
-
         """
-        self.app = app
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+
+        if len(self.resources) > 0:
+            for resource, urls, kwargs in self.resources:
+                self._register_view(app, resource, *urls, **kwargs)
 
     def owns_endpoint(self, endpoint):
         """Tests if an endpoint name (not path) belongs to this Api.  Takes
         in to account the Blueprint name part of the endpoint name.
+
         :param endpoint: The name of the endpoint being checked
         :return: bool
         """
@@ -209,7 +215,7 @@ class Api(object):
 
         :return: bool
         """
-        adapter = self.app.create_url_adapter(request)
+        adapter = current_app.create_url_adapter(request)
 
         try:
             adapter.match()
@@ -259,9 +265,9 @@ class Api(object):
         :type e: Exception
 
         """
-        got_request_exception.send(self.app, exception=e)
+        got_request_exception.send(current_app._get_current_object(), exception=e)
 
-        if not hasattr(e, 'code') and self.app.propagate_exceptions:
+        if not hasattr(e, 'code') and current_app.propagate_exceptions:
             exc_type, exc_value, tb = sys.exc_info()
             if exc_value is e:
                 raise
@@ -276,15 +282,15 @@ class Api(object):
             # There's currently a bug in Python3 that disallows calling
             # logging.exception() when an exception hasn't actually be raised
             if sys.exc_info() == (None, None, None):
-                self.app.logger.error("Internal Error")
+                current_app.logger.error("Internal Error")
             else:
-                self.app.logger.exception("Internal Error")
+                current_app.logger.exception("Internal Error")
 
         help_on_404 = self.app.config.get("ERROR_404_HELP", True)
         if code == 404 and help_on_404 and ('message' not in data or
                                             data['message'] == HTTP_STATUS_CODES[404]):
             rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
-                          for rule in self.app.url_map.iter_rules()])
+                          for rule in current_app.url_map.iter_rules()])
             close_matches = difflib.get_close_matches(request.path, rules.keys())
             if close_matches:
                 # If we already have a message, add punctuation and continue it.
@@ -334,11 +340,18 @@ class Api(object):
             api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
 
         """
+        if self.app is not None:
+            self._register_view(self.app, resource, *urls, **kwargs)
+        else:
+            self.resources.append((resource, urls, kwargs))
+
+
+    def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
 
-        if endpoint in self.app.view_functions.keys():
-            previous_view_class = self.app.view_functions[endpoint].__dict__['view_class']
+        if endpoint in app.view_functions.keys():
+            previous_view_class = app.view_functions[endpoint].__dict__['view_class']
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
             if previous_view_class != resource:
@@ -371,7 +384,7 @@ class Api(object):
                 # If we've got no Blueprint, just build a url with no prefix
                 rule = self._complete_url(url, '')
             # Add the url to the application or blueprint
-            self.app.add_url_rule(rule, view_func=resource_func, **kwargs)
+            app.add_url_rule(rule, view_func=resource_func, **kwargs)
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
@@ -439,7 +452,7 @@ class Api(object):
     def unauthorized(self, response):
         """ Given a response, change it to ask for credentials """
 
-        realm = self.app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
+        realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
         challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
 
         response.headers['WWW-Authenticate'] = challenge
