@@ -328,5 +328,11 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.String(attribute="foo")
         self.assertEquals("hi", field.output("foo", obj))
 
+    def test_list_from_dict_with_attribute(self):
+        obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
+        field = fields.List(fields.Integer(attribute='a'))
+        self.assertEquals([1, 2, 3], field.output('list', obj))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -10,7 +10,8 @@ from flask_restful import types, marshal
 from flask import url_for
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
-           "Integer", "Arbitrary", "Nested", "List", "Raw"]
+           "Integer", "Arbitrary", "Nested", "List", "Raw", "Boolean",
+           "Fixed", "Price"]
 
 
 class MarshallingException(Exception):
@@ -153,8 +154,12 @@ class List(Raw):
             # Convert all instances in typed list to container type
             if isinstance(value, set):
                 value = list(value)
-            return [self.container.output(idx, value) for idx, val
-                    in enumerate(value)]
+
+            return [
+                self.container.output(idx,
+                                      val if isinstance(val, dict) else value)
+                for idx, val in enumerate(value)
+            ]
 
         if value is None:
             return self.default
