@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Flask-RESTful',
-    version='0.2.10',
+    version='0.2.11',
     url='https://www.github.com/twilio/flask-restful/',
     author='Kyle Conroy',
     author_email='help@twilio.com',
