@@ -122,6 +122,29 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals(field.output("bar.value", foo), 3)
 
 
+    def test_formatting_dict_as_map(self):
+        obj = {"map": {"foo": 3}}
+        field = fields.Map(fields.String, fields.String())
+        self.assertEquals(field.output("map", obj), {"foo": "3"})
+
+
+    def test_formatting_allow_null(self):
+        obj = {"map": {"foo": None}}
+        field = fields.Map(fields.String, fields.String(), allow_null=True)
+        self.assertEquals(field.output("map", obj), {"foo": None})
+
+    def test_formatting_disallow_null(self):
+        obj = {"map": {"foo": None}}
+        field = fields.Map(fields.String, fields.String(), allow_null=False)
+        self.assertEquals(field.output("map", obj), {})
+
+
+    def test_formatting_invalid_map(self):
+        obj = {"map": ['a', 'b', ]}
+        field = fields.Map(fields.Integer, fields.String())
+        self.assertRaises(MarshallingException, lambda: field.output("map", obj))
+
+
     def test_formatted_string_invalid_obj(self):
         field = fields.FormattedString("{hey}")
         self.assertRaises(MarshallingException, lambda: field.output("hey", None))
