@@ -164,7 +164,10 @@ class Argument(object):
             self.handle_validation_error(ValueError(error_msg))
 
         if not results:
-            return self.default
+            if callable(self.default):
+                return self.default()
+            else:
+                return self.default
 
         if self.action == 'append':
             return results
