@@ -53,7 +53,7 @@ Resourceful Routing
 -------------------
 The main building block provided by Flask-RESTful are resources. Resources are
 built on top of `Flask pluggable views <http://flask.pocoo.org/docs/views/>`_,
-giving you easy access to multiple HTTP methods just be defining methods on
+giving you easy access to multiple HTTP methods just by defining methods on
 your resource. A basic CRUD resource for a todo application (of course) looks
 like this: ::
 
