@@ -9,7 +9,7 @@ setup(
     author='Kyle Conroy',
     author_email='help@twilio.com',
     description='Simple framework for creating REST APIs',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     zip_safe=False,
     include_package_data=True,
     platforms='any',
