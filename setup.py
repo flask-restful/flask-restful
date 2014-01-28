@@ -6,7 +6,7 @@ setup(
     name='Flask-RESTful',
     version='0.2.11',
     url='https://www.github.com/twilio/flask-restful/',
-    author='Kyle Conroy',
+    author='Twilio API Team',
     author_email='help@twilio.com',
     description='Simple framework for creating REST APIs',
     packages=find_packages(exclude=['tests']),
