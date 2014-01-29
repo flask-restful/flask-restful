@@ -175,7 +175,6 @@ class TypesTestCase(unittest.TestCase):
         assert_raises(ValueError, lambda: types.int_range(0, 5, 6, 'my_arg'))
 
 
-
 def test_isointerval():
     intervals = [
         (
