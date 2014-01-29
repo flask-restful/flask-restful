@@ -188,6 +188,17 @@ def positive(value, argument='argument'):
     return value
 
 
+def int_range(low, high, value, argument='argument'):
+    """ Restrict input to an integer in a range (inclusive) """
+    value = _get_integer(value)
+    if value < low or value > high:
+        error = ('Invalid {arg}: {val}. {arg} must be within the range {lo} - {hi}'
+                 .format(arg=argument, val=value, lo=low, hi=high))
+        raise ValueError(error)
+
+    return value
+
+
 def boolean(value):
     """Parse the string "true" or "false" as a boolean (case insensitive)"""
     value = value.lower()

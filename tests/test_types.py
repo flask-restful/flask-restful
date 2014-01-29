@@ -149,7 +149,6 @@ class TypesTestCase(unittest.TestCase):
     def test_natural(self):
         assert_equal(3, types.natural(3))
 
-
     def test_natual_string(self):
         assert_raises(ValueError, lambda: types.natural('foo'))
 
@@ -162,6 +161,19 @@ class TypesTestCase(unittest.TestCase):
 
     def test_positive_negative_input(self):
         assert_raises(ValueError, lambda: types.positive(-1))
+
+    def test_int_range_good(self):
+        assert_equal(3, types.int_range(1, 5, 3, 'my_arg'))
+
+    def test_int_range_inclusive(self):
+        assert_equal(5, types.int_range(1, 5, 5, 'my_arg'))
+
+    def test_int_range_low(self):
+        assert_raises(ValueError, lambda: types.int_range(0, 5, -1, 'my_arg'))
+
+    def test_int_range_high(self):
+        assert_raises(ValueError, lambda: types.int_range(0, 5, 6, 'my_arg'))
+
 
 
 def test_isointerval():
