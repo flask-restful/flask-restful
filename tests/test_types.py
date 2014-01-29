@@ -163,6 +163,30 @@ class TypesTestCase(unittest.TestCase):
     def test_positive_negative_input(self):
         assert_raises(ValueError, lambda: types.positive(-1))
 
+    def test_int_range_pos(self):
+        assert_equal(3, types.int_range(3, 'my_arg', 1, 3))
+
+    def test_int_range_pos_low_only(self):
+        assert_equal(3, types.int_range(3, 'my_arg', 1))
+
+    def test_int_range_pos_high_only(self):
+        assert_equal(3, types.int_range(3, 'my_arg', max=3))
+
+    def test_int_range_pos_inclusive(self):
+        assert_equal(5, types.int_range(5, 'my_arg', 1, 5))
+
+    def test_int_range_neg_low(self):
+        assert_raises(ValueError, lambda: types.int_range(-1, 'my_arg', 1, 5))
+
+    def test_int_range_neg_high(self):
+        assert_raises(ValueError, lambda: types.int_range(6, 'my_arg', 0, 5))
+
+    def test_int_range_neg_low_only(self):
+        assert_raises(ValueError, lambda: types.int_range(-1, 'my_arg', 1))
+
+    def test_int_range_neg_high_only(self):
+        assert_raises(ValueError, lambda: types.int_range(6, 'my_arg', max=5))
+
 
 def test_isointerval():
     intervals = [
