@@ -54,7 +54,7 @@ Renaming Attributes
 -------------------
 
 Often times your public facing field name is different from your internal
-attribute naming.  To configure this mapping, use the ``attribute`` kwarg. ::
+attribute naming. To configure this mapping, use the ``attribute`` kwarg. ::
 
     fields = {
         'name': fields.String(attribute='private_name'),

@@ -176,6 +176,15 @@ class String(Raw):
 
 
 class Integer(Raw):
+    """ Field for outputting an integer value.
+
+    :param int default: The default value for the field, if no value is
+        specified.
+
+    :param attribute: If the public facing value differs from the internal
+        value, use this to retrieve a different attribute from the response
+        than the publicly named value.
+    """
     def __init__(self, default=0, attribute=None):
         super(Integer, self).__init__(default, attribute)
 
