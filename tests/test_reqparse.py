@@ -441,6 +441,16 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(args['foo'], "bar")
 
 
+    def test_parse_callable_default(self):
+        req = Request.from_values("/bubble")
+
+        parser = RequestParser()
+        parser.add_argument("foo", default=lambda: "bar")
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], "bar")
+
+
     def test_parse(self):
         req = Request.from_values("/bubble?foo=bar")
 
