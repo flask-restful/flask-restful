@@ -134,17 +134,15 @@ class Nested(Raw):
 class List(Raw):
     def __init__(self, cls_or_instance, **kwargs):
         super(List, self).__init__(**kwargs)
+        error_msg = ("The type of the list elements must be a subclass of "
+                     "flask_restful.fields.Raw")
         if isinstance(cls_or_instance, type):
             if not issubclass(cls_or_instance, Raw):
-                raise MarshallingException("The type of the list elements "
-                                           "must be a subclass of "
-                                           "flask_restful.fields.Raw")
+                raise MarshallingException(error_msg)
             self.container = cls_or_instance()
         else:
             if not isinstance(cls_or_instance, Raw):
-                raise MarshallingException("The instances of the list "
-                                           "elements must be of type "
-                                           "flask_restful.fields.Raw")
+                raise MarshallingException(error_msg)
             self.container = cls_or_instance
 
     def output(self, key, data):
