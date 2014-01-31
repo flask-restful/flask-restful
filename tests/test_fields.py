@@ -2,6 +2,7 @@ from decimal import Decimal
 import unittest
 from mock import Mock
 from flask.ext.restful.fields import MarshallingException
+from flask.ext.restful.utils.ordereddict import OrderedDict
 from flask_restful import fields
 from datetime import datetime
 from flask import Flask
@@ -332,6 +333,12 @@ class FieldsTestCase(unittest.TestCase):
         obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
         field = fields.List(fields.Integer(attribute='a'))
         self.assertEquals([1, 2, 3], field.output('list', obj))
+
+    def test_list_of_nested(self):
+        obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
+        field = fields.List(fields.Nested({'a': fields.Integer}))
+        self.assertEquals([OrderedDict([('a', 1)]), OrderedDict([('a', 2)]), OrderedDict([('a', 3)])],
+                          field.output('list', obj))
 
 
 if __name__ == '__main__':

@@ -155,7 +155,9 @@ class List(Raw):
 
             return [
                 self.container.output(idx,
-                                      val if isinstance(val, dict) else value)
+                                      val if isinstance(val, dict) and
+                                      not isinstance(self.container, Nested)
+                                      else value)
                 for idx, val in enumerate(value)
             ]
 
