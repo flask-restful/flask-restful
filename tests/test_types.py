@@ -335,7 +335,7 @@ def test_invalid_isointerval_error():
 
     error = cm.exception
     assert_equal(
-        error.message,
+        str(error),
         "Invalid argument: 2013-01-01/blah. argument must be a valid ISO8601 "
         "date/time interval.",
     )
