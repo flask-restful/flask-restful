@@ -286,7 +286,7 @@ class Api(object):
             else:
                 current_app.logger.exception("Internal Error")
 
-        help_on_404 = self.app.config.get("ERROR_404_HELP", True)
+        help_on_404 = current_app.config.get("ERROR_404_HELP", True)
         if code == 404 and help_on_404 and ('message' not in data or
                                             data['message'] == HTTP_STATUS_CODES[404]):
             rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
