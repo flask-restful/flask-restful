@@ -5,10 +5,9 @@ Quickstart
 
 .. currentmodule:: flask.ext.restful
 
-It1s time to write your first REST API. This guide assumes you have `Flask
-<http://flask.pocoo.org>`_ and Flask-RESTful installed and a working
-understanding of Flask. If not, follow the steps in the Installation section,
-or read through the Flask Quickstart.
+It's time to write your first REST API. This guide assumes you have a working understanding of `Flask
+<http://flask.pocoo.org>`_, and that you have already installed both Flask and Flask-RESTful.
+If not, then follow the steps in the installation_ section.
 
 
 
@@ -173,9 +172,9 @@ functions such as :py:meth:`types.date` and :py:meth:`types.url`.
 Data Formatting
 ---------------
 
-By default, all fields in your return iterable will be rendered as is. While
+By default, all fields in your return iterable will be rendered as-is. While
 this works great when you're just dealing with Python data structures,
-it can become very frustrating when working with objects. To solve with
+it can become very frustrating when working with objects. To solve this
 problem, Flask-RESTful provides the :py:class:`fields` module and the
 :py:meth:`marshal_with` decorator. Similar to the Django ORM and WTForm, you
 use the fields module to describe the structure of your response. ::
@@ -205,7 +204,7 @@ The above example takes a python object and prepares it to be serialized. The
 :py:meth:`marshal_with` decorator will apply the transformation described by
 ``resource_fields``. The only field extracted from the object is ``task``. The
 :py:class:`fields.Url` field is a special field that takes an endpoint name
-and generates a Url for that endpoint in the response. Many of the field types
+and generates a URL for that endpoint in the response. Many of the field types
 you need are already included. See the :py:class:`fields` guide for a complete
 list.
 
