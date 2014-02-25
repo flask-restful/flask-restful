@@ -157,6 +157,7 @@ class List(Raw):
                 self.container.output(idx,
                                       val if isinstance(val, dict) and
                                       not isinstance(self.container, Nested)
+                                      and not type(self.container) is Raw
                                       else value)
                 for idx, val in enumerate(value)
             ]

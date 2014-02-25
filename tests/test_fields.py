@@ -340,6 +340,18 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals([OrderedDict([('a', 1)]), OrderedDict([('a', 2)]), OrderedDict([('a', 3)])],
                           field.output('list', obj))
 
+    def test_list_of_raw(self):
+        obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
+        field = fields.List(fields.Raw)
+        self.assertEquals([OrderedDict([('a', 1), ('b', 1), ]),
+                           OrderedDict([('a', 2), ('b', 1), ]),
+                           OrderedDict([('a', 3), ('b', 1), ])],
+                          field.output('list', obj))
+
+        obj = {'list': [1, 2, 'a']}
+        field = fields.List(fields.Raw)
+        self.assertEquals([1, 2, 'a'], field.output('list', obj))
+
 
 if __name__ == '__main__':
     unittest.main()
