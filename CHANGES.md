@@ -3,6 +3,15 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.2.12
+--------------
+
+Released March 4, 2014
+
+- Fixed a bug in error handling code.
+- Don't install tests by default.
+- Doc fixes and updates.
+
 Version 0.2.11
 --------------
 
