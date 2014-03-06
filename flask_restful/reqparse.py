@@ -108,6 +108,8 @@ class Argument(object):
 
         :param error: the error that was raised
         """
+        if error.code == 400:
+            raise
         msg = self.help if self.help is not None else str(error)
         flask_restful.abort(400, message=msg)
 
