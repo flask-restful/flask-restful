@@ -34,7 +34,7 @@ def abort(http_status_code, **kwargs):
     except HTTPException as e:
         if len(kwargs):
             e.data = kwargs
-        raise e
+        raise
 
 DEFAULT_REPRESENTATIONS = {'application/json': output_json}
 
