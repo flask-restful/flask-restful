@@ -194,12 +194,14 @@ class RequestParser(object):
         self.argument_class = argument_class
         self.namespace_class = namespace_class
 
-    def add_argument(self, *args, **kwargs):
+    def add_argument(self, name, *args, **kwargs):
         """Adds an argument to be parsed. See :class:`Argument`'s constructor
         for documentation on the available options.
         """
-
-        self.args.append(self.argument_class(*args, **kwargs))
+        if isinstance(name, self.argument_class):
+            self.args.append(name)
+        else:
+            self.args.append(self.argument_class(name, *args, **kwargs))
         return self
 
     def parse_args(self, req=None):
