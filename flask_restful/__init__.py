@@ -9,8 +9,8 @@ from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
-from flask.ext.restful.utils import error_data, unpack
-from flask.ext.restful.representations.json import output_json
+from .utils import error_data, unpack
+from .representations.json import output_json
 import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
