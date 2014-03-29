@@ -568,7 +568,7 @@ class marshal_with(object):
 
 class marshal_with_field(object):
     """
-    A decorator that formats the return values of your methods using a single field.
+    A decorator that formats the return values of your methods with a single field.
 
     >>> from flask.ext.restful import marshal_with_field, fields
     >>> @marshal_with_field(fields.List(fields.Integer))
