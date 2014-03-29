@@ -564,3 +564,39 @@ class marshal_with(object):
             else:
                 return marshal(resp, self.fields)
         return wrapper
+
+
+class marshal_with_field(object):
+    """
+    A decorator that formats the return values of your methods using a single field.
+
+    >>> from flask.ext.restful import marshal_with_field, fields
+    >>> @marshal_with_field(fields.List(fields.Integer))
+    ... def get():
+    ...     return ['1', 2, 3.0]
+    ...
+    >>> get()
+    [1, 2, 3]
+
+    see :meth:`flask.ext.restful.marshal_with`
+    """
+    def __init__(self, field):
+        """
+        :param field: a single field with which to marshal the output.
+        """
+        if isinstance(field, type):
+            self.field = field()
+        else:
+            self.field = field
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            resp = f(*args, **kwargs)
+
+            if isinstance(resp, tuple):
+                data, code, headers = unpack(resp)
+                return self.field.format(data), code, headers
+            return self.field.format(resp)
+
+        return wrapper

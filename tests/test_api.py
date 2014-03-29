@@ -119,12 +119,27 @@ class APITestCase(unittest.TestCase):
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
         self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
 
+    def test_marshal_field_decorator(self):
+        field = flask_restful.fields.Raw
+
+        @flask_restful.marshal_with_field(field)
+        def try_me():
+            return 'foo'
+        self.assertEquals(try_me(), 'foo')
+
+    def test_marshal_field_decorator_tuple(self):
+        field = flask_restful.fields.Raw
+
+        @flask_restful.marshal_with_field(field)
+        def try_me():
+            return 'foo', 200, {'X-test': 123}
+        self.assertEquals(('foo', 200, {'X-test': 123}), try_me())
+
     def test_marshal_field(self):
         fields = OrderedDict({'foo': flask_restful.fields.Raw()})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = flask_restful.marshal(marshal_fields, fields)
         self.assertEquals(output, {'foo': 'bar'})
-
 
     def test_marshal_tuple(self):
         fields = OrderedDict({'foo': flask_restful.fields.Raw})
