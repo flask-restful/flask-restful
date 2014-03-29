@@ -21,7 +21,7 @@ try:
 except ImportError:
     from .utils.ordereddict import OrderedDict
 
-__all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'abort')
+__all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
 
 def abort(http_status_code, **kwargs):
