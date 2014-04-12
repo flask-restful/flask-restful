@@ -588,5 +588,13 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'].filename, 'baz.txt')
             self.assertEquals(args['foo'].read(), fdata)
 
+    def test_passing_arguments_object(self):
+        req = Request.from_values("/bubble?foo=bar")
+        parser = RequestParser()
+        parser.add_argument(Argument("foo", type=str))
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], u"bar")
+
 if __name__ == '__main__':
     unittest.main()
