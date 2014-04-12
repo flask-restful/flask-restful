@@ -246,7 +246,7 @@ class Float(Raw):
 
     def format(self, value):
         try:
-            return repr(float(value))
+            return float(value)
         except ValueError as ve:
             raise MarshallingException(ve)
 

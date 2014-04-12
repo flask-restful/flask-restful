@@ -22,12 +22,12 @@ def check_field(expected, field, value):
 
 def test_float():
     values = [
-        ("-3.13", "-3.13"),
-        (str(-3.13), "-3.13"),
-        (3, "3"),
+        ("-3.13", -3.13),
+        (str(-3.13), -3.13),
+        (3, 3.0),
     ]
     for value, expected in values:
-        yield check_field, expected, fields.Arbitrary(), value
+        yield check_field, expected, fields.Float(), value
 
 
 def test_boolean():
@@ -193,7 +193,7 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_float(self):
         field = fields.Float()
-        self.assertEquals('3.0', field.output("hey", {'hey': 3.0}))
+        self.assertEquals(3.0, field.output("hey", {'hey': 3.0}))
 
     def test_float_decode_error(self):
         field = fields.Float()
