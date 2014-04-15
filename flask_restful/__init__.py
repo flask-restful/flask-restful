@@ -362,7 +362,9 @@ class Api(object):
         resource_func = self.output(resource.as_view(endpoint))
 
         for decorator in self.decorators:
+            methods = resource_func.methods
             resource_func = decorator(resource_func)
+            resource_func.methods = methods
 
 
         for url in urls:
