@@ -8,7 +8,7 @@ from werkzeug.datastructures import FileStorage
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
 
-import json
+from flask import json
 
 class ReqParseTestCase(unittest.TestCase):
     def test_default_help(self):
