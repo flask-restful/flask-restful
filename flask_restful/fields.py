@@ -145,22 +145,25 @@ class List(Raw):
                 raise MarshallingException(error_msg)
             self.container = cls_or_instance
 
+    def format(self, value):
+        # Convert all instances in typed list to container type
+        if isinstance(value, set):
+            value = list(value)
+
+        return [
+            self.container.output(idx,
+                                  val if isinstance(val, dict) and
+                                         not isinstance(self.container, Nested)
+                                  and not type(self.container) is Raw
+                                  else value)
+            for idx, val in enumerate(value)
+        ]
+
     def output(self, key, data):
         value = get_value(key if self.attribute is None else self.attribute, data)
         # we cannot really test for external dict behavior
         if is_indexable_but_not_string(value) and not isinstance(value, dict):
-            # Convert all instances in typed list to container type
-            if isinstance(value, set):
-                value = list(value)
-
-            return [
-                self.container.output(idx,
-                                      val if isinstance(val, dict) and
-                                      not isinstance(self.container, Nested)
-                                      and not type(self.container) is Raw
-                                      else value)
-                for idx, val in enumerate(value)
-            ]
+            return self.format(value)
 
         if value is None:
             return self.default

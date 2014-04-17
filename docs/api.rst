@@ -8,6 +8,7 @@ API Docs
 
 .. autofunction:: marshal
 .. autofunction:: marshal_with
+.. autofunction:: marshal_with_field
 .. autofunction:: abort
 
 
