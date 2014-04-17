@@ -229,7 +229,7 @@ class Url(Raw):
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
-            o = urlparse(url_for(self.endpoint, _external = self.absolute, **data))
+            o = urlparse(url_for(self.endpoint, _external=self.absolute, **data))
             if self.absolute:
                 scheme = self.scheme if self.scheme is not None else o.scheme
                 return urlunparse((scheme, o.netloc, o.path, "", "", ""))

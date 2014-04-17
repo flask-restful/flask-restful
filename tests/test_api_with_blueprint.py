@@ -21,12 +21,12 @@ class HelloWorld(flask_restful.Resource):
 class GoodbyeWorld(flask_restful.Resource):
     def __init__(self, err):
         self.err = err
+
     def get(self):
         flask.abort(self.err)
 
 
 class APIWithBlueprintTestCase(unittest.TestCase):
-
 
     def test_api_base(self):
         blueprint = Blueprint('test', __name__)
@@ -37,7 +37,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         self.assertEquals(api.prefix, '')
         self.assertEquals(api.default_mediatype, 'application/json')
 
-
     def test_api_delayed_initialization(self):
         blueprint = Blueprint('test', __name__)
         api = flask_restful.Api()
@@ -46,26 +45,23 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app.register_blueprint(blueprint)
         api.add_resource(HelloWorld, '/', endpoint="hello")
 
-
     def test_add_resource_endpoint(self):
         blueprint = Blueprint('test', __name__)
         api = flask_restful.Api(blueprint)
-        view = Mock(**{'as_view.return_value' : Mock(__name__='test_view')})
+        view = Mock(**{'as_view.return_value': Mock(__name__='test_view')})
         api.add_resource(view, '/foo', endpoint='bar')
         app = Flask(__name__)
         app.register_blueprint(blueprint)
         view.as_view.assert_called_with('bar')
-
 
     def test_add_resource_endpoint_after_registration(self):
         blueprint = Blueprint('test', __name__)
         api = flask_restful.Api(blueprint)
         app = Flask(__name__)
         app.register_blueprint(blueprint)
-        view = Mock(**{'as_view.return_value' : Mock(__name__='test_view')})
+        view = Mock(**{'as_view.return_value': Mock(__name__='test_view')})
         api.add_resource(view, '/foo', endpoint='bar')
         view.as_view.assert_called_with('bar')
-
 
     def test_url_with_api_prefix(self):
         blueprint = Blueprint('test', __name__)
@@ -76,7 +72,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         with app.test_request_context('/api/hi'):
             self.assertEquals(request.endpoint, 'test.hello')
 
-
     def test_url_with_blueprint_prefix(self):
         blueprint = Blueprint('test', __name__, url_prefix='/bp')
         api = flask_restful.Api(blueprint)
@@ -85,7 +80,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app.register_blueprint(blueprint)
         with app.test_request_context('/bp/hi'):
             self.assertEquals(request.endpoint, 'test.hello')
-
 
     def test_url_with_registration_prefix(self):
         blueprint = Blueprint('test', __name__)
@@ -96,7 +90,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         with app.test_request_context('/reg/hi'):
             self.assertEquals(request.endpoint, 'test.hello')
 
-
     def test_registration_prefix_overrides_blueprint_prefix(self):
         blueprint = Blueprint('test', __name__, url_prefix='/bp')
         api = flask_restful.Api(blueprint)
@@ -105,7 +98,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app.register_blueprint(blueprint, url_prefix='/reg')
         with app.test_request_context('/reg/hi'):
             self.assertEquals(request.endpoint, 'test.hello')
-
 
     def test_url_with_api_and_blueprint_prefix(self):
         blueprint = Blueprint('test', __name__, url_prefix='/bp')
@@ -116,7 +108,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         with app.test_request_context('/bp/api/hi'):
             self.assertEquals(request.endpoint, 'test.hello')
 
-
     def test_url_part_order_aeb(self):
         blueprint = Blueprint('test', __name__, url_prefix='/bp')
         api = flask_restful.Api(blueprint, prefix='/api', url_part_order='aeb')
@@ -125,7 +116,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app.register_blueprint(blueprint)
         with app.test_request_context('/api/hi/bp'):
             self.assertEquals(request.endpoint, 'test.hello')
-
 
     def test_error_routing(self):
         blueprint = Blueprint('test', __name__)
@@ -140,7 +130,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         with app.test_request_context('/bye'):
             api._should_use_fr_error_handler = Mock(return_value=False)
             assert_true(api._has_fr_route())
-
 
     def test_non_blueprint_rest_error_routing(self):
         blueprint = Blueprint('test', __name__)
@@ -171,7 +160,6 @@ class APIWithBlueprintTestCase(unittest.TestCase):
             assert_true(api._has_fr_route())
             assert_false(api2._has_fr_route())
 
-
     def test_non_blueprint_non_rest_error_routing(self):
         blueprint = Blueprint('test', __name__)
         api = flask_restful.Api(blueprint)
@@ -179,9 +167,11 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         api.add_resource(GoodbyeWorld(404), '/bye', endpoint="bye")
         app = Flask(__name__)
         app.register_blueprint(blueprint, url_prefix='/blueprint')
+
         @app.route('/hi')
         def hi():
             return 'hi'
+
         @app.route('/bye')
         def bye():
             flask.abort(404)

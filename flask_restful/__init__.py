@@ -120,10 +120,11 @@ class Api(object):
         :param registration_prefix: The part of the url contributed by the
             blueprint.  Generally speaking, BlueprintSetupState.url_prefix
         """
-
-        parts = {'b' : registration_prefix,
-                 'a' : self.prefix,
-                 'e' : url_part}
+        parts = {
+            'b': registration_prefix,
+            'a': self.prefix,
+            'e': url_part
+        }
         return ''.join(parts[key] for key in self.url_part_order if parts[key])
 
     @staticmethod
@@ -230,7 +231,6 @@ class Api(object):
             # Werkzeug throws other kinds of exceptions, such as Redirect
             pass
 
-
     def _has_fr_route(self):
         """Encapsulating the rules for whether the request was to a Flask endpoint"""
         # 404's, 405's, which might not have a url_rule
@@ -300,9 +300,10 @@ class Api(object):
                     data["message"] = ""
 
                 data['message'] += 'You have requested this URI [' + request.path + \
-                        '] but did you mean ' + \
-                        ' or '.join((rules[match]
-                                     for match in close_matches)) + ' ?'
+                                   '] but did you mean ' + \
+                                   ' or '.join((
+                                       rules[match] for match in close_matches)
+                                   ) + ' ?'
 
         resp = self.make_response(data, code)
 
@@ -526,8 +527,8 @@ def marshal(data, fields):
         return [marshal(d, fields) for d in data]
 
     items = ((k, marshal(data, v) if isinstance(v, dict)
-                                  else make(v).output(k, data))
-                                  for k, v in fields.items())
+              else make(v).output(k, data))
+             for k, v in fields.items())
     return OrderedDict(items)
 
 

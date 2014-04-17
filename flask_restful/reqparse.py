@@ -4,12 +4,14 @@ import flask_restful
 import inspect
 import six
 
+
 class Namespace(dict):
     def __getattr__(self, name):
         try:
             return self[name]
         except KeyError:
             raise AttributeError(name)
+
     def __setattr__(self, name, value):
         self[name] = value
 
@@ -23,6 +25,7 @@ _friendly_location = {
 }
 
 text_type = lambda x: six.text_type(x)
+
 
 class Argument(object):
 
@@ -155,7 +158,7 @@ class Argument(object):
                     _friendly_location.get(self.location, self.location)
                 )
             else:
-                friendly_locations = [_friendly_location.get(loc, loc) \
+                friendly_locations = [_friendly_location.get(loc, loc)
                                       for loc in self.location]
                 error_msg = u"Missing required parameter {0} in {1}".format(
                     self.name,

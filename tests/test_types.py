@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, tzinfo
 import unittest
 
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equal, assert_raises # you need it for tests in form of continuations
+from nose.tools import assert_equal, assert_raises  # you need it for tests in form of continuations
 import pytz
 import six
 
@@ -25,16 +25,18 @@ class UTC(tzinfo):
     def dst(self, dt):
         return ZERO
 
+
 def test_datetime_formatters():
     dates = [
         (datetime(2011, 1, 1), "Sat, 01 Jan 2011 00:00:00 -0000"),
         (datetime(2011, 1, 1, 23, 59, 59),
          "Sat, 01 Jan 2011 23:59:59 -0000"),
         (datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC()),
-                  "Sat, 01 Jan 2011 23:59:59 -0000"),
-        ]
+         "Sat, 01 Jan 2011 23:59:59 -0000"),
+    ]
     for date_obj, expected in dates:
         yield assert_equal, types.rfc822(date_obj), expected
+
 
 def test_urls():
     urls = [
@@ -54,10 +56,11 @@ def test_urls():
         'http://foo:@example.com',
         'http://foo:@2001:db8:85a3::8a2e:370:7334',
         'http://foo2:qd1%r@example.com',
-        ]
+    ]
 
     for value in urls:
         yield assert_equal, types.url(value), value
+
 
 def check_bad_url_raises(value):
     try:
@@ -65,6 +68,7 @@ def check_bad_url_raises(value):
         assert False, "shouldn't get here"
     except ValueError as e:
         assert_equal(six.text_type(e), u"{0} is not a valid URL".format(value))
+
 
 def test_bad_urls():
     values = [
@@ -87,6 +91,7 @@ def test_bad_urls():
     for value in values:
         yield check_bad_url_raises, value
 
+
 def test_bad_url_error_message():
     values = [
         'google.com',
@@ -98,13 +103,14 @@ def test_bad_url_error_message():
     for value in values:
         yield check_url_error_message, value
 
+
 def check_url_error_message(value):
     try:
         types.url(value)
         assert False, u"types.url({0}) should raise an exception".format(value)
     except ValueError as e:
         assert_equal(six.text_type(e),
-                      (u"{0} is not a valid URL. Did you mean: http://{0}".format(value)))
+                     (u"{0} is not a valid URL. Did you mean: http://{0}".format(value)))
 
 
 class TypesTestCase(unittest.TestCase):
@@ -112,30 +118,23 @@ class TypesTestCase(unittest.TestCase):
     def test_boolean_false(self):
         assert_equal(types.boolean("False"), False)
 
-
     def test_boolean_true(self):
         assert_equal(types.boolean("true"), True)
-
 
     def test_boolean_upper_case(self):
         assert_equal(types.boolean("FaLSE"), False)
 
-
     def test_boolean(self):
         assert_equal(types.boolean("FaLSE"), False)
-
 
     def test_bad_boolean(self):
         assert_raises(ValueError, lambda: types.boolean("blah"))
 
-
     def test_date_later_than_1900(self):
         assert_equal(types.date("1900-01-01"), datetime(1900, 1, 1))
 
-
     def test_date_too_early(self):
         assert_raises(ValueError, lambda: types.date("0001-01-01"))
-
 
     def test_date_input_error(self):
         assert_raises(ValueError, lambda: types.date("2008-13-13"))
