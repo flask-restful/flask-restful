@@ -201,6 +201,8 @@ def int_range(low, high, value, argument='argument'):
 
 def boolean(value):
     """Parse the string "true" or "false" as a boolean (case insensitive)"""
+    if not value:
+        raise ValueError("boolean type must be non-null")
     value = value.lower()
     if value == 'true':
         return True

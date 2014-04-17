@@ -308,7 +308,6 @@ class Api(object):
 
         if code == 401:
             resp = self.unauthorized(resp)
-
         return resp
 
     def mediatypes_method(self):
@@ -345,7 +344,6 @@ class Api(object):
         else:
             self.resources.append((resource, urls, kwargs))
 
-
     def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
@@ -363,7 +361,6 @@ class Api(object):
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
-
 
         for url in urls:
             # If this Api has a blueprint
