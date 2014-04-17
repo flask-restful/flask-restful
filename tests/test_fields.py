@@ -7,18 +7,22 @@ from flask_restful import fields
 from datetime import datetime
 from flask import Flask
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals # you need it for tests in form of continuations
+from nose.tools import assert_equals  # you need it for tests in form of continuations
 
 
 class Foo(object):
     def __init__(self):
         self.hey = 3
+
+
 class Bar(object):
     def __marshallable__(self):
         return {"hey": 3}
 
+
 def check_field(expected, field, value):
     assert_equals(expected, field.output('a', {'a': value}))
+
 
 def test_float():
     values = [
@@ -37,7 +41,7 @@ def test_boolean():
         ({}, False),
         ("false", True),  # These are different from php
         ("0", True),      # Will this be a problem?
-        ]
+    ]
     for value, expected in values:
         yield check_field, expected, fields.Boolean(), value
 
@@ -52,45 +56,38 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.String()
         self.assertEquals(field.output("foo", obj), "3")
 
-
     def test_no_attribute(self):
         obj = {"bar": 3}
         field = fields.String()
         self.assertEquals(field.output("foo", obj), None)
-
 
     def test_date_field_invalid(self):
         obj = {"bar": 3}
         field = fields.DateTime()
         self.assertRaises(MarshallingException, lambda: field.output("bar", obj))
 
-
     def test_attribute(self):
         obj = {"bar": 3}
         field = fields.String(attribute="bar")
         self.assertEquals(field.output("foo", obj), "3")
-
 
     def test_formatting_field_none(self):
         obj = {}
         field = fields.FormattedString("/foo/{0[account_sid]}/{0[sid]}/")
         self.assertRaises(MarshallingException, lambda: field.output("foo", obj))
 
-
     def test_formatting_field_tuple(self):
         obj = (3, 4)
         field = fields.FormattedString("/foo/{0[account_sid]}/{0[sid]}/")
         self.assertRaises(MarshallingException, lambda: field.output("foo", obj))
 
-
     def test_formatting_field_dict(self):
         obj = {
             "sid": 3,
             "account_sid": 4,
-            }
+        }
         field = fields.FormattedString("/foo/{account_sid}/{sid}/")
         self.assertEquals(field.output("foo", obj), "/foo/4/3/")
-
 
     def test_formatting_field(self):
         obj = Mock()
@@ -99,20 +96,17 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.FormattedString("/foo/{account_sid}/{sid}/")
         self.assertEquals(field.output("foo", obj), "/foo/4/3/")
 
-
     def test_basic_field(self):
         obj = Mock()
         obj.foo = 3
         field = fields.Raw()
         self.assertEquals(field.output("foo", obj), 3)
 
-
     def test_raw_field(self):
         obj = Mock()
         obj.foo = 3
         field = fields.Raw()
         self.assertEquals(field.output("foo", obj), 3)
-
 
     def test_nested_raw_field(self):
         foo = Mock()
@@ -122,21 +116,17 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Raw()
         self.assertEquals(field.output("bar.value", foo), 3)
 
-
     def test_formatted_string_invalid_obj(self):
         field = fields.FormattedString("{hey}")
         self.assertRaises(MarshallingException, lambda: field.output("hey", None))
-
 
     def test_formatted_string(self):
         field = fields.FormattedString("{hey}")
         self.assertEquals("3", field.output("hey", Foo()))
 
-
     def test_string_with_attribute(self):
         field = fields.String(attribute="hey")
         self.assertEquals("3", field.output("foo", Foo()))
-
 
     def test_url_invalid_object(self):
         app = Flask(__name__)
@@ -146,7 +136,6 @@ class FieldsTestCase(unittest.TestCase):
         with app.test_request_context("/"):
             self.assertRaises(MarshallingException, lambda: field.output("hey", None))
 
-
     def test_url(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
@@ -154,7 +143,6 @@ class FieldsTestCase(unittest.TestCase):
 
         with app.test_request_context("/"):
             self.assertEquals("/3", field.output("hey", Foo()))
-
 
     def test_url_absolute(self):
         app = Flask(__name__)
@@ -177,11 +165,9 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Integer()
         self.assertEquals(3, field.output("hey", {'hey': 3}))
 
-
     def test_int_default(self):
         field = fields.Integer(default=1)
         self.assertEquals(1, field.output("hey", {'hey': None}))
-
 
     def test_no_int(self):
         field = fields.Integer()
@@ -225,7 +211,6 @@ class FieldsTestCase(unittest.TestCase):
         self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': '+inf'}))
         self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': '-inf'}))
 
-
     def test_advanced_fixed(self):
         field = fields.Fixed()
         self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': 'NaN'}))
@@ -234,32 +219,26 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Fixed(4, attribute="bar")
         self.assertEquals('3.0000', field.output("foo", {'bar': '3'}))
 
-
     def test_string(self):
         field = fields.String()
         self.assertEquals("3", field.output("hey", Foo()))
-
 
     def test_string_no_value(self):
         field = fields.String()
         self.assertEquals(None, field.output("bar", Foo()))
 
-
     def test_string_none(self):
         field = fields.String()
         self.assertEquals(None, field.output("empty", {'empty': None}))
-
 
     def test_date_field_with_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
         field = fields.DateTime()
         self.assertEquals("Mon, 22 Aug 2011 20:58:45 -0000", field.output("bar", obj))
 
-
     def test_to_dict(self):
         obj = {"hey": 3}
         self.assertEquals(obj, fields.to_marshallable_type(obj))
-
 
     def test_to_dict_obj(self):
         obj = {"hey": 3}
@@ -272,10 +251,8 @@ class FieldsTestCase(unittest.TestCase):
     def test_get_value(self):
         self.assertEquals(3, fields.get_value("hey", {"hey": 3}))
 
-
     def test_get_value_no_value(self):
         self.assertEquals(None, fields.get_value("foo", {"hey": 3}))
-
 
     def test_get_value_obj(self):
         self.assertEquals(3, fields.get_value("hey", Foo()))
@@ -318,6 +295,7 @@ class FieldsTestCase(unittest.TestCase):
         class TestObject(object):
             def __init__(self, foo):
                 self.foo = foo
+
             def __getitem__(self, n):
                 if type(n) is int:
                     if n < 3:
