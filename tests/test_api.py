@@ -752,5 +752,21 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(resp.status_code, 302)
         self.assertEquals(resp.headers['Location'], 'http://localhost/')
 
+    def test_json_float_marshalled(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class FooResource(flask_restful.Resource):
+            fields = {'foo': flask_restful.fields.Float}
+            def get(self):
+                return flask_restful.marshal({"foo": 3.0}, self.fields)
+
+        api.add_resource(FooResource, '/api')
+
+        app = app.test_client()
+        resp = app.get('/api')
+        self.assertEquals(resp.status_code, 200)
+        self.assertEquals(resp.data, '{"foo": 3.0}')
+
 if __name__ == '__main__':
     unittest.main()
