@@ -196,3 +196,29 @@ to attach custom error handlers to an exception. ::
     from flask import got_request_exception
     got_request_exception.connect(log_exception, app)
 
+Define Custom Error Messages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You may want to return a specific message and/or status code when certain errors
+are encountered during a request. You can tell Flask-RESTful how you want to handle
+each error/exception so you won't have to fill your API code with try/except blocks. ::
+
+    errors = {
+        'UserAlreadyExistsError': {
+            'message': "A user with that username already exists.",
+            'status': 409,
+        },
+        'ResourceDoesNotExist': {
+            'message': "A resource with that ID no longer exists.",
+            'status': 410,
+            'extra': "Any extra information you want.",
+        },
+    }
+
+Including the `'status'` key will set the Response's status code. If not specified
+it will default to 500.
+
+Once your `errors` dictionary is defined, simply pass it to the :class:`~flask.ext.restful.Api`
+constructor ::
+
+    app = Flask(__name__)
+    api = flask_restful.Api(app, errors=errors)

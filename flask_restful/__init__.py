@@ -65,12 +65,15 @@ class Api(object):
         is the blueprint (or blueprint registration) prefix, 'a' is the api
         prefix, and 'e' is the path component the endpoint is added with
     :type catch_all_404s: bool
+    :param errors: A dictionary to define a custom response for each
+        exception or error raised during a request
+    :type errors: dict
 
     """
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False, url_part_order='bae'):
+                 catch_all_404s=False, url_part_order='bae', errors=None):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
@@ -78,6 +81,7 @@ class Api(object):
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
         self.url_part_order = url_part_order
+        self.errors = errors or {}
         self.blueprint_setup = None
         self.endpoints = set()
         self.resources = []
@@ -304,6 +308,12 @@ class Api(object):
                                    ' or '.join((
                                        rules[match] for match in close_matches)
                                    ) + ' ?'
+
+        error_cls_name = type(e).__name__
+        if error_cls_name in self.errors:
+            custom_data = self.errors.get(error_cls_name, {})
+            code = custom_data.get('status', 500)
+            data.update(custom_data)
 
         resp = self.make_response(data, code)
 
