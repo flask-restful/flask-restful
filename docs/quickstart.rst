@@ -80,17 +80,18 @@ like this: ::
 
 You can try it like this: ::
 
-    You can try this example as follow:
-        $ curl http://localhost:5000/todo1 -d "data=Remember the milk" -X PUT
-        {"todo1": "Remember the milk"}
-        $ curl http://localhost:5000/todo1
-        {"todo1": "Remember the milk"}
-        $ curl http://localhost:5000/todo2 -d "data=Change my breakpads" -X PUT
-        {"todo2": "Change my breakpads"}
-        $ curl http://localhost:5000/todo2
-        {"todo2": "Change my breakpads"}
+    $ curl http://localhost:5000/todo1 -d "data=Remember the milk" -X PUT
+    {"todo1": "Remember the milk"}
+    $ curl http://localhost:5000/todo1
+    {"todo1": "Remember the milk"}
+    $ curl http://localhost:5000/todo2 -d "data=Change my breakpads" -X PUT
+    {"todo2": "Change my breakpads"}
+    $ curl http://localhost:5000/todo2
+    {"todo2": "Change my breakpads"}
 
-    Or from python if you have the requests library installed:
+
+Or from python if you have the requests library installed::
+
      >>> from requests import put, get
      >>> put('http://localhost:5000/todo1', data={'data': 'Remember the milk'}).json()
      {u'todo1': u'Remember the milk'}
