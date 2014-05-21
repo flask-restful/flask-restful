@@ -18,10 +18,10 @@ how it will be formatted.
 
 Basic Usage
 -----------
-You can define a dict of fields whose keys are names of attributes or keys on
-the object to render, and whose values are a class that will format & return
-the value for that field  This example has three fields, two are Strings and
-one is a DateTime (formatted as rfc822 date strings) ::
+You can define a dict or OrderedDict of fields whose keys are names of
+attributes or keys on the object to render, and whose values are a class that
+will format & return the value for that field  This example has three fields,
+two are Strings and one is a DateTime (formatted as rfc822 date strings) ::
 
     from flask.ext.restful import Resource, fields, marshal_with
 

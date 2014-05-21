@@ -515,9 +515,9 @@ def marshal(data, fields):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
+    :param data: the actual object(s) from which the fields are taken from
     :param fields: a dict of whose keys will make up the final serialized
                    response output
-    :param data: the actual object(s) from which the fields are taken from
 
 
     >>> from flask.ext.restful import fields, marshal
