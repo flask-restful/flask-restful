@@ -766,7 +766,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data, '{"foo": 3.0}')
+        self.assertEquals(resp.data.decode(), '{"foo": 3.0}')
 
     def test_custom_error_message(self):
         errors = {
