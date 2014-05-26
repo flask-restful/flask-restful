@@ -12,7 +12,7 @@ from flask.ext.restful.utils import http_status_message, error_data, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps, loads
+from flask.json import dumps, loads
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals, assert_true  # you need it for tests in form of continuations
 import six
@@ -766,7 +766,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data, '{"foo": 3.0}')
+        self.assertEquals(resp.data.decode(), '{"foo": 3.0}')
 
     def test_custom_error_message(self):
         errors = {
@@ -790,6 +790,34 @@ class APITestCase(unittest.TestCase):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 418)
             self.assertDictEqual(loads(resp.data), {"message": "api is foobar", "status": 418})
+
+    def test_custom_json_encoder(self):
+        from datetime import datetime
+        from flask.json import JSONEncoder
+        class JsonEncoder(JSONEncoder):
+            def default(self, obj):
+                if hasattr(obj, '__json__'):
+                    return obj.__json__()
+                if isinstance(obj, datetime):
+                    return obj.isoformat()
+                return super(JsonEncoder, self).default(obj)
+        class Custom:
+            def __init__(self, custom):
+                self.custom = custom
+            def __json__(self):
+                return dict(custom=self.custom)
+        date = datetime(2014,5,26,23,59,59)
+        class DateResource(flask_restful.Resource):
+            def get(self):
+                return Custom(date)
+        app = Flask(__name__)
+        app.json_encoder = JsonEncoder
+        api = flask_restful.Api(app)
+        api.add_resource(DateResource, '/date')
+        client = app.test_client()
+        resp = client.get('/date')
+        self.assertEquals(resp.data.decode(), '{"custom": "2014-05-26T23:59:59"}')
+
 
 if __name__ == '__main__':
     unittest.main()

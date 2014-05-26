@@ -100,14 +100,20 @@ class OrderedDict(dict, DictMixin):
     pop = DictMixin.pop
     values = DictMixin.values
     items = DictMixin.items
-    iterkeys = DictMixin.iterkeys
-    itervalues = DictMixin.itervalues
-    iteritems = DictMixin.iteritems
+
+    def iterkeys(self, **kwargs):
+        return six.iterkeys(self, **kwargs)
+
+    def itervalues(self, **kwargs):
+        return six.itervalues(self, **kwargs)
+
+    def iteritems(self, **kwargs):
+        return six.iteritems(self, **kwargs)
 
     def __repr__(self):
         if not self:
             return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, self.items())
+        return '%s(%r)' % (self.__class__.__name__, list(self.iteritems()))
 
     def copy(self):
         return self.__class__(self)
