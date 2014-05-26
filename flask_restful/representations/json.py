@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from flask import make_response, current_app
-from json import dumps
+from flask.json import dumps
 
 
 # This dictionary contains any kwargs that are to be passed to the json.dumps
