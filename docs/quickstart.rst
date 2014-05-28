@@ -7,8 +7,8 @@ Quickstart
 
 It's time to write your first REST API. This guide assumes you have a working
 understanding of `Flask <http://flask.pocoo.org>`_, and that you have already
-installed both Flask and Flask-RESTful.  If not, then follow the steps in the 
-installation_ section.
+installed both Flask and Flask-RESTful.  If not, then follow the steps in the
+:ref:`installation` section.
 
 
 
