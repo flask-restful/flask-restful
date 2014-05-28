@@ -23,6 +23,10 @@ test-install: install
 	. venv/bin/activate; pip install --requirement tests/requirements.txt \
 		--download-cache /tmp/pipcache --use-mirrors
 
+nopyc:
+	find . -name '*.pyc' | xargs rm -f || true
+	find . -name __pycache__ | xargs rm -rf || true
+
 test:
 	. venv/bin/activate; nosetests --with-coverage --cover-package=flask_restful
 
