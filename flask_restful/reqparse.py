@@ -134,20 +134,23 @@ class Argument(object):
                     values = [source.get(name)]
 
                 for value in values:
-                    _is_file = isinstance(value, FileStorage)
-                    if not (self.case_sensitive or _is_file):
-                        value = value.lower()
-                    if self.choices and value not in self.choices:
-                        self.handle_validation_error(ValueError(
-                            u"{0} is not a valid choice".format(value)))
-                    if not _is_file:
+                    if not isinstance(value, FileStorage):
+                        if not self.case_sensitive:
+                            value = value.lower()
+
                         try:
                             value = self.convert(value, operator)
                         except Exception as error:
                             if self.ignore:
                                 continue
-
                             self.handle_validation_error(error)
+
+                        if self.choices and value not in self.choices:
+                            self.handle_validation_error(
+                                ValueError(u"{0} is not a valid choice".format(
+                                    value
+                                ))
+                            )
 
                     results.append(value)
 

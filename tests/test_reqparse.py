@@ -543,5 +543,38 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], u"bar")
 
+    def test_int_choice_types(self):
+        app = Flask(__name__)
+        parser = RequestParser()
+        parser.add_argument("foo", type=int, choices=[1, 2, 3], location='json')
+
+        with app.test_request_context(
+                '/bubble', method='post',
+                data=json.dumps({'foo': 5}),
+                content_type='application/json'
+        ):
+            try:
+                parser.parse_args()
+                self.fail()
+            except exceptions.BadRequest:
+                pass
+
+    def test_int_range_choice_types(self):
+        app = Flask(__name__)
+        parser = RequestParser()
+        parser.add_argument("foo", type=int, choices=range(100), location='json')
+
+        with app.test_request_context(
+                '/bubble', method='post',
+                data=json.dumps({'foo': 101}),
+                content_type='application/json'
+        ):
+            try:
+                parser.parse_args()
+                self.fail()
+            except exceptions.BadRequest:
+                pass
+
+
 if __name__ == '__main__':
     unittest.main()
