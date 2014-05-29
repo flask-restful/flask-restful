@@ -103,8 +103,8 @@ nice to convert them to seperate string fields. ::
         'status': UnreadItem(attribute='flags'),
     }
 
-Url Field
----------
+Url & Other Concrete Fields
+---------------------------
 
 Flask-RESTful includes a special field, ``fields.Url``, that synthesizes a
 uri for the resource that's being requested.  This is also a good
@@ -112,7 +112,7 @@ example of how to add data to your response that's not actually present on
 your data object. ::
 
     class RandomNumber(fields.Raw):
-        def format(self, value):
+        def output(self, key, obj):
             return random.random()
 
     fields = {
