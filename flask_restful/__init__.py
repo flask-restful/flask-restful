@@ -102,8 +102,8 @@ class Api(object):
         Examples::
 
             api = Api()
-            api.init_app(app)
             api.add_resource(...)
+            api.init_app(app)
 
         """
         self.blueprint = None
