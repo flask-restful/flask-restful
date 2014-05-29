@@ -81,7 +81,8 @@ class Raw(object):
         self.default = default
 
     def format(self, value):
-        """Formats a field's value. No-op by default, concrete fields should
+        """Formats a field's value. No-op by default - field classes that 
+        modify how the value of existing object keys should be presented should 
         override this and apply the appropriate formatting.
 
         :param value: The value to format
@@ -97,7 +98,11 @@ class Raw(object):
 
     def output(self, key, obj):
         """Pulls the value for the given key from the object, applies the
-        field's formatting and returns the result.
+        field's formatting and returns the result. If the key is not found 
+        in the object, returns the default value. Field classes that create 
+        values which do not require the existence of the key in the object 
+        should override this and return the desired value.
+        
         :exception MarshallingException: In case of formatting problem
         """
 
