@@ -38,6 +38,17 @@ def test_datetime_formatters():
         yield assert_equal, types.rfc822(date_obj), expected
 
 
+def test_reverse_datetime():
+    dates = [
+        ("Sat, 01 Jan 2011 00:00:00 -0000", datetime(2011, 1, 1, tzinfo=UTC())),
+        ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
+        ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
+    ]
+
+    for date_string, expected in dates:
+        yield assert_equal, types.datetime_from_rfc822(date_string), expected
+
+
 def test_urls():
     urls = [
         'http://www.djangoproject.com/',
