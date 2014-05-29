@@ -1,6 +1,6 @@
 from calendar import timegm
 from datetime import datetime, time, timedelta
-from email.utils import formatdate
+from email.utils import formatdate, parsedate_tz, mktime_tz
 import re
 
 import aniso8601
@@ -223,3 +223,17 @@ def rfc822(dt):
     :return: A RFC 822 formatted date string
     """
     return formatdate(timegm(dt.utctimetuple()))
+
+
+def datetime_from_rfc822(datetime_str):
+    """Turns an RFC822 formatted date into a datetime object.
+
+    Example::
+
+        types.datetime_from_rfc822("Wed, 02 Oct 2002 08:00:00 EST")
+
+    :param datetime_str: The RFC822-complying string to transform
+    :type datetime_str: str
+    :return: A datetime
+    """
+    return datetime.fromtimestamp(mktime_tz(parsedate_tz(datetime_str)), pytz.utc)
