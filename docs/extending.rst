@@ -62,7 +62,7 @@ Inputs
 ~~~~~~
 
 For parsing arguments, you might want to perform custom validation.  Creating
-your own input types lets you extend request parsing with ease.  ::
+your own input type lets you extend request parsing with ease.  ::
 
     def odd_number(value):
         if value % 2 == 0:
