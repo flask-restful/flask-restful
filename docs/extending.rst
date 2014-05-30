@@ -90,7 +90,7 @@ You can also convert public parameter values to internal representations ::
         return statuses.index(value)
 
 
-Then you can use these custom types in your RequestParser ::
+Then you can use these custom input type in your RequestParser ::
 
     parser = reqparse.RequestParser()
     parser.add_argument('OddNumber', type=odd_number)
