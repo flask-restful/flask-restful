@@ -167,8 +167,8 @@ a 400 Bad Request and a response highlighting the error. ::
     {'status': 400, 'message': 'foo cannot be converted to int'}
 
 
-The :py:class:`types` module provides a number of included common conversion
-functions such as :py:meth:`types.date` and :py:meth:`types.url`.
+The :py:class:`inputs` module provides a number of included common conversion
+functions such as :py:meth:`inputs.date` and :py:meth:`inputs.url`.
 
 
 Data Formatting

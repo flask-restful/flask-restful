@@ -37,10 +37,10 @@ Fields
 .. automodule:: fields
    :members:
 
-Types
+Inputs
 -----
 
-.. module:: flask.ext.restful.types 
+.. module:: flask.ext.restful.inputs 
 .. autofunction:: url
 .. autofunction:: date
 .. autofunction:: iso8601interval

@@ -216,7 +216,7 @@ def rfc822(dt):
 
     Example::
 
-        types.rfc822(datetime(2011, 1, 1)) => "Sat, 01 Jan 2011 00:00:00 -0000"
+        inputs.rfc822(datetime(2011, 1, 1)) => "Sat, 01 Jan 2011 00:00:00 -0000"
 
     :param dt: The datetime to transform
     :type dt: datetime
@@ -230,7 +230,7 @@ def datetime_from_rfc822(datetime_str):
 
     Example::
 
-        types.datetime_from_rfc822("Wed, 02 Oct 2002 08:00:00 EST")
+        inputs.datetime_from_rfc822("Wed, 02 Oct 2002 08:00:00 EST")
 
     :param datetime_str: The RFC822-complying string to transform
     :type datetime_str: str

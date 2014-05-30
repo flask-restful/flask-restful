@@ -6,7 +6,7 @@ except ImportError:
     # python3
     from urllib.parse import urlparse, urlunparse
 
-from flask_restful import types, marshal
+from flask_restful import inputs, marshal
 from flask import url_for
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
@@ -274,7 +274,7 @@ class DateTime(Raw):
 
     def format(self, value):
         try:
-            return types.rfc822(value)
+            return inputs.rfc822(value)
         except AttributeError as ae:
             raise MarshallingException(ae)
 

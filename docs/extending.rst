@@ -62,7 +62,7 @@ Inputs
 ~~~~~~
 
 For parsing arguments, you might want to perform custom validation.  Creating
-your own input type lets you extend request parsing with ease.  ::
+your own input types lets you extend request parsing with ease.  ::
 
     def odd_number(value):
         if value % 2 == 0:
@@ -90,7 +90,7 @@ You can also convert public parameter values to internal representations ::
         return statuses.index(value)
 
 
-Then you can use these custom types in your RequestParser ::
+Then you can use these custom input type in your RequestParser ::
 
     parser = reqparse.RequestParser()
     parser.add_argument('OddNumber', type=odd_number)
