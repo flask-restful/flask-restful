@@ -6,7 +6,7 @@ from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
 from flask.views import MethodView
 from flask.signals import got_request_exception
-from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
 from flask.ext.restful.utils import error_data, unpack
@@ -14,6 +14,7 @@ from flask.ext.restful.representations.json import output_json
 import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
+import operator
 
 try:
     #noinspection PyUnresolvedReferences
@@ -315,6 +316,10 @@ class Api(object):
             code = custom_data.get('status', 500)
             data.update(custom_data)
 
+        if code == 406 and self.default_mediatype is None:
+            # if we are handling NotAcceptable (406), make sure we have a default_mediatype with which to return it
+            self.default_mediatype = self.representations.keys()[0]
+
         resp = self.make_response(data, code)
 
         if code == 401:
@@ -417,20 +422,23 @@ class Api(object):
     def make_response(self, data, *args, **kwargs):
         """Looks up the representation transformer for the requested media
         type, invoking the transformer to create a response object. This
-        defaults to (application/json) if no transformer is found for the
-        requested mediatype.
+        defaults to default_mediatype if no transformer is found for the
+        requested mediatype. If default_mediatype is None, a 406 Not 
+        Acceptable response will be sent as per RFC 2616 section 14.1
 
         :param data: Python object containing response data to be transformed
         """
-        for mediatype in self.mediatypes() + [self.default_mediatype]:
-            if mediatype in self.representations:
-                resp = self.representations[mediatype](data, *args, **kwargs)
-                resp.headers['Content-Type'] = mediatype
-                return resp
+        mediatype = request.accept_mimetypes.best_match(self.representations, default=self.default_mediatype)
+        if mediatype is None:
+            raise NotAcceptable()
+        if mediatype in self.representations:
+            resp = self.representations[mediatype](data, *args, **kwargs)
+            resp.headers['Content-Type'] = mediatype
+            return resp
 
     def mediatypes(self):
         """Returns a list of requested mediatypes sent in the Accept header"""
-        return [h for h, q in request.accept_mimetypes]
+        return [h for h, q in sorted(request.accept_mimetypes, key=operator.itemgetter(1), reverse=True)]
 
     def representation(self, mediatype):
         """Allows additional representation transformers to be declared for the
@@ -501,12 +509,12 @@ class Resource(MethodView):
         representations = self.representations or {}
 
         #noinspection PyUnresolvedReferences
-        for mediatype in self.mediatypes():
-            if mediatype in representations:
-                data, code, headers = unpack(resp)
-                resp = representations[mediatype](data, code, headers)
-                resp.headers['Content-Type'] = mediatype
-                return resp
+        mediatype = request.accept_mimetypes.best_match(representations, default=None)
+        if mediatype in representations:
+            data, code, headers = unpack(resp)
+            resp = representations[mediatype](data, code, headers)
+            resp.headers['Content-Type'] = mediatype
+            return resp
 
         return resp
 
