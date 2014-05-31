@@ -317,10 +317,17 @@ class Api(object):
             data.update(custom_data)
 
         if code == 406 and self.default_mediatype is None:
-            # if we are handling NotAcceptable (406), make sure we have a default_mediatype with which to return it
-            self.default_mediatype = self.representations.keys()[0]
-
-        resp = self.make_response(data, code)
+            # if we are handling NotAcceptable (406), make sure that
+            # make_response uses a representation we support as the
+            # default mediatype (so that make_response doesn't throw
+            # another NotAcceptable error).
+            resp = self.make_response(
+                data,
+                code,
+                override_default_mediatype = self.representations.keys()[0]
+                )
+        else:
+            resp = self.make_response(data, code)
 
         if code == 401:
             resp = self.unauthorized(resp)
@@ -430,7 +437,8 @@ class Api(object):
         """
         mediatype = request.accept_mimetypes.best_match(
             self.representations, 
-            default=self.default_mediatype
+            default = kwargs.pop('override_default_mediatype',
+                                 None) or self.default_mediatype
             )
         if mediatype is None:
             raise NotAcceptable()
