@@ -428,7 +428,10 @@ class Api(object):
 
         :param data: Python object containing response data to be transformed
         """
-        mediatype = request.accept_mimetypes.best_match(self.representations, default=self.default_mediatype)
+        mediatype = request.accept_mimetypes.best_match(
+            self.representations, 
+            default=self.default_mediatype
+            )
         if mediatype is None:
             raise NotAcceptable()
         if mediatype in self.representations:
@@ -438,7 +441,8 @@ class Api(object):
 
     def mediatypes(self):
         """Returns a list of requested mediatypes sent in the Accept header"""
-        return [h for h, q in sorted(request.accept_mimetypes, key=operator.itemgetter(1), reverse=True)]
+        return [h for h, q in sorted(request.accept_mimetypes,
+                                     key=operator.itemgetter(1), reverse=True)]
 
     def representation(self, mediatype):
         """Allows additional representation transformers to be declared for the
