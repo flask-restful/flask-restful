@@ -321,11 +321,12 @@ class Api(object):
             # make_response uses a representation we support as the
             # default mediatype (so that make_response doesn't throw
             # another NotAcceptable error).
+            supported_mediatypes = self.representations.keys()
             resp = self.make_response(
                 data,
                 code,
-                override_default_mediatype = self.representations.keys()[0]
-                )
+                fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else None
+            )
         else:
             resp = self.make_response(data, code)
 
@@ -435,11 +436,11 @@ class Api(object):
 
         :param data: Python object containing response data to be transformed
         """
+        default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
         mediatype = request.accept_mimetypes.best_match(
             self.representations, 
-            default = kwargs.pop('override_default_mediatype',
-                                 None) or self.default_mediatype
-            )
+            default=default_mediatype,
+        )
         if mediatype is None:
             raise NotAcceptable()
         if mediatype in self.representations:
