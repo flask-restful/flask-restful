@@ -228,3 +228,19 @@ class RequestParser(object):
             namespace[arg.dest or arg.name] = arg.parse(req)
 
         return namespace
+
+    def copy(self):
+        """ Creates a copy of this RequestParser with the same set of arguments """
+        child_parser = RequestParser(self.argument_class, self.namespace_class)
+        child_parser.args = self.args
+        return child_parser
+
+    def replace_argument(self, name, *args, **kwargs):
+        """ Replace the argument matching the given name with a new version. """
+        new_arg = self.argument_class(name, *args, **kwargs)
+        for index, arg in enumerate(self.args[:]):
+            if new_arg.name == arg.name:
+                del self.args[index]
+                self.args.append(new_arg)
+                break
+        return self

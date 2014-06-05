@@ -575,6 +575,27 @@ class ReqParseTestCase(unittest.TestCase):
             except exceptions.BadRequest:
                 pass
 
+    def test_request_parser_copy(self):
+        req = Request.from_values("/bubble?foo=101&bar=baz")
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        parser_copy = parser.copy()
+        parser_copy.add_argument('bar', type=str)
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], 101)
+        self.assertEquals(args['bar'], u'baz')
+
+    def test_request_parser_replace_argument(self):
+        req = Request.from_values("/bubble?foo=baz")
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        parser_copy = parser.copy()
+        parser_copy.replace_argument('foo', type=str)
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], u'baz')
+
 
 if __name__ == '__main__':
     unittest.main()
