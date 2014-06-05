@@ -12,6 +12,7 @@ Flask-RESTful with Flask.
    reqparse 
    fields
    extending
+   intermediate-usage
 
 API Reference
 -------------
