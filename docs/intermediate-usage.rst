@@ -89,7 +89,7 @@ exercise a larger amount of options. We'll define a resource named "User". ::
         else:
             raise ValidationError("{} is not a valid email")
 
-    post_parser = reqparse.ArgumentParser()
+    post_parser = reqparse.RequestParser()
     post_parser.add_argument(
         'username', dest='username',
         type=str, location='form',
