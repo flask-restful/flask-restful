@@ -100,3 +100,28 @@ alternate locations to pull the values from. Any variable on the
     # From file uploads
     parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
 
+Parser Inheritance
+------------------
+
+Often you will make a different parser for each resource you write.
+The problem with this is if parsers have arguments in common. Instead of 
+rewriting arguments you can write a parent parser containing all the 
+shared arguments and then extend the parser with 
+:py:attr:`flask.RequestParser.copy`. You can also overwrite any argument
+in the parent with :py:attr:`flask.RequestParser.replace_argument`. 
+For example: ::
+
+    from flask.ext.restful import RequestParser
+
+    parser = RequestParser()
+    parser.add_argument('foo', type=int)
+
+    parser_copy = parser.copy()
+    parser_copy.add_argument('bar', type=int)
+
+    # parser_copy has both 'foo' and 'bar'
+
+    parser_copy.replace_argument('foo', type=str, required=True, location='json')
+    # 'foo' is now a required str located in json, not an int as defined
+    #  by original parser
+
