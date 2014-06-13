@@ -2,7 +2,7 @@
 import unittest
 from mock import Mock, patch, NonCallableMock
 from flask import Flask
-from werkzeug import exceptions
+from werkzeug import exceptions, MultiDict
 from werkzeug.wrappers import Request
 from werkzeug.datastructures import FileStorage
 from flask_restful.reqparse import Argument, RequestParser, Namespace
@@ -144,10 +144,10 @@ class ReqParseTestCase(unittest.TestCase):
         req.args = {'foo': 'bar'}
         req.headers = {'baz': 'bat'}
         arg = Argument('foo', location=['args'])
-        self.assertEquals(arg.source(req), req.args)
+        self.assertEquals(arg.source(req), MultiDict(req.args))
 
         arg = Argument('foo', location=['headers'])
-        self.assertEquals(arg.source(req), req.headers)
+        self.assertEquals(arg.source(req), MultiDict(req.headers))
 
     def test_source_bad_location(self):
         req = Mock(['values'])
@@ -156,7 +156,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_source_default_location(self):
         req = Mock(['values'])
-        req._get_child_mock = lambda **kwargs: NonCallableMock(**kwargs)
+        req._get_child_mock = lambda **kwargs: MultiDict()
         arg = Argument('foo')
         self.assertEquals(arg.source(req), req.values)
 
