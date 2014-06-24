@@ -1,6 +1,7 @@
 from flask import request
 from werkzeug.datastructures import MultiDict, FileStorage
 import flask_restful
+import decimal
 import inspect
 import six
 
@@ -101,7 +102,10 @@ class Argument(object):
             return self.type(value, self.name, op)
         except TypeError:
             try:
-                return self.type(value, self.name)
+                if self.type is decimal.Decimal:
+                    return self.type(str(value), self.name)
+                else:
+                    return self.type(value, self.name)
             except TypeError:
                 return self.type(value)
 
