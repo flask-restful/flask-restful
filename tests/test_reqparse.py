@@ -582,7 +582,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser_copy = parser.copy()
         parser_copy.add_argument('bar', type=str)
 
-        args = parser.parse_args(req)
+        args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], 101)
         self.assertEquals(args['bar'], u'baz')
 
@@ -593,7 +593,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser_copy = parser.copy()
         parser_copy.replace_argument('foo', type=str)
 
-        args = parser.parse_args(req)
+        args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], u'baz')
 
 
