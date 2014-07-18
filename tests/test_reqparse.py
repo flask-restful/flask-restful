@@ -609,6 +609,23 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], u'baz')
 
+    def test_nested_keys(self):
+        parser = RequestParser()
+        parser.add_argument("bar", nesting=['foo'])
+
+        req = Mock(['values'])
+        req.values = {"foo": {"bar": "baz"}}
+        args = parser.parse_args(req)
+        self.assertEquals(args['bar'], "baz")
+
+    def test_multiple_nested_keys(self):
+        parser = RequestParser()
+        parser.add_argument("baz", nesting=['foo', 'bar'])
+
+        req = Mock(['values'])
+        req.values = {"foo": {"bar": {"baz": "qux"}}}
+        args = parser.parse_args(req)
+        self.assertEquals(args['baz'], "qux")
 
 if __name__ == '__main__':
     unittest.main()

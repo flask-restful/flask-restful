@@ -33,7 +33,7 @@ class Argument(object):
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True):
+                 case_sensitive=True, nesting=()):
         """
         :param name: Either a name or a list of option strings, e.g. foo or
                         -f, --foo.
@@ -58,6 +58,8 @@ class Argument(object):
             the message passed to a ValidationError raised by a type converter.
         :param bool case_sensitive: Whether the arguments in the request are
             case sensitive or not
+        :param list nesting: A list of keys representing the nested levels of
+            the argument.
         """
 
         self.name = name
@@ -72,24 +74,31 @@ class Argument(object):
         self.help = help
         self.case_sensitive = case_sensitive
         self.operators = operators
+        self.nesting = nesting
 
     def source(self, request):
         """Pulls values off the request in the provided location
         :param request: The flask request object to parse arguments from
         """
+        value = None
+
         if isinstance(self.location, six.string_types):
             value = getattr(request, self.location, MultiDict())
-            if callable(value):
-                value = value()
-            if value is not None:
-                return value
         else:
             for l in self.location:
                 value = getattr(request, l, None)
-                if callable(value):
-                    value = value()
-                if value is not None:
-                    return value
+
+        if callable(value):
+            value = value()
+
+        if isinstance(value, dict) and len(self.nesting) > 0:
+            for level in self.nesting:
+                value = value.get(level, None)
+                if value is None:
+                    break
+
+        if value is not None:
+            return value
 
         return MultiDict()
 
