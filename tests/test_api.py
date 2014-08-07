@@ -91,7 +91,7 @@ class APITestCase(unittest.TestCase):
 
     def test_error_data(self):
         self.assertEquals(error_data(400), {
-            'status': 400,
+            'status_code': 400,
             'message': 'Bad Request',
         })
 
@@ -412,7 +412,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 404
-        exception.data = {"status": 404, "message": "Not Found"}
+        exception.data = {"status_code": 404, "message": "Not Found"}
         api.add_resource(view, '/foo', endpoint='bor')
         api.add_resource(view, '/fee', endpoint='bir')
         api.add_resource(view, '/fii', endpoint='ber')
@@ -421,14 +421,14 @@ class APITestCase(unittest.TestCase):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data.decode(), dumps({
-                "status": 404, "message": "Not Found",
+                "status_code": 404, "message": "Not Found",
             }))
 
         with app.test_request_context("/fOo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data.decode(), dumps({
-                "status": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
+                "status_code": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
             }))
 
         with app.test_request_context("/fOo"):
@@ -436,7 +436,7 @@ class APITestCase(unittest.TestCase):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data.decode(), dumps({
-                "status": 404, "message": "You have requested this URI [/fOo] but did you mean /foo ?",
+                "status_code": 404, "message": "You have requested this URI [/fOo] but did you mean /foo ?",
             }))
 
         app.config['ERROR_404_HELP'] = False
@@ -446,7 +446,7 @@ class APITestCase(unittest.TestCase):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data.decode(), dumps({
-                "status": 404
+                "status_code": 404
             }))
 
     def test_media_types(self):
