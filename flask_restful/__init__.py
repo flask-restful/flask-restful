@@ -38,7 +38,6 @@ def abort(http_status_code, **kwargs):
 
 DEFAULT_REPRESENTATIONS = {'application/json': output_json}
 
-
 class Api(object):
     """
     The main entry point for the application.
@@ -65,8 +64,6 @@ class Api(object):
         is the blueprint (or blueprint registration) prefix, 'a' is the api
         prefix, and 'e' is the path component the endpoint is added with
     :type catch_all_404s: bool
-    :param errors: A dictionary to define a custom response for each
-        exception or error raised during a request
     :type errors: dict
 
     """
@@ -81,7 +78,6 @@ class Api(object):
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
         self.url_part_order = url_part_order
-        self.errors = errors or {}
         self.blueprint_setup = None
         self.endpoints = set()
         self.resources = []
@@ -271,16 +267,20 @@ class Api(object):
         """
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
-        if not hasattr(e, 'code') and current_app.propagate_exceptions:
+        if not hasattr(e, 'status_code') and current_app.propagate_exceptions:
             exc_type, exc_value, tb = sys.exc_info()
             if exc_value is e:
                 raise
             else:
                 raise e
 
-        code = getattr(e, 'code', 500)
-        data = getattr(e, 'data', error_data(code))
-
+        code = getattr(e, 'status_code', 500)
+        if hasattr(e, 'to_dict'):
+            data = getattr(e, 'to_dict')()
+        else:
+            data = error_data(code)
+            data.update({k:getattr(e,k) for k in ['message', 'extras'] if hasattr(e,k) and getattr(e,k)})
+  
         if code >= 500:
 
             # There's currently a bug in Python3 that disallows calling
@@ -308,13 +308,7 @@ class Api(object):
                                    ' or '.join((
                                        rules[match] for match in close_matches)
                                    ) + ' ?'
-
-        error_cls_name = type(e).__name__
-        if error_cls_name in self.errors:
-            custom_data = self.errors.get(error_cls_name, {})
-            code = custom_data.get('status', 500)
-            data.update(custom_data)
-
+       
         resp = self.make_response(data, code)
 
         if code == 401:
