@@ -10,7 +10,7 @@ def error_data(code):
     """Constructs a dictionary with status and message for returning in an
     error response"""
     error = {
-        'status': code,
+        'status_code': code,
         'message': http_status_message(code),
     }
     return error
