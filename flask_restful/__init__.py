@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import difflib
 from functools import wraps, partial
+from collections import namedtuple
 import re
 from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
@@ -511,6 +512,21 @@ class Resource(MethodView):
         return resp
 
 
+def _is_tuple(data):
+    return type(data) == tuple
+
+
+def _is_list(data):
+    return isinstance(data, list)
+
+
+def _is_dict(data):
+    return isinstance(data, dict)
+
+def _is_type(data):
+    return isinstance(data, type)
+
+
 def marshal(data, fields):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
@@ -529,14 +545,14 @@ def marshal(data, fields):
 
     """
     def make(cls):
-        if isinstance(cls, type):
+        if _is_type(cls):
             return cls()
         return cls
 
-    if isinstance(data, (list, tuple)):
+    if _is_list(data) or _is_tuple(data):
         return [marshal(d, fields) for d in data]
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
+    items = ((k, marshal(data, v) if _is_dict(v)
               else make(v).output(k, data))
              for k, v in fields.items())
     return OrderedDict(items)
@@ -566,7 +582,7 @@ class marshal_with(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             resp = f(*args, **kwargs)
-            if isinstance(resp, tuple):
+            if _is_tuple(resp):
                 data, code, headers = unpack(resp)
                 return marshal(data, self.fields), code, headers
             else:
@@ -592,7 +608,7 @@ class marshal_with_field(object):
         """
         :param field: a single field with which to marshal the output.
         """
-        if isinstance(field, type):
+        if _is_type(field):
             self.field = field()
         else:
             self.field = field
@@ -602,7 +618,7 @@ class marshal_with_field(object):
         def wrapper(*args, **kwargs):
             resp = f(*args, **kwargs)
 
-            if isinstance(resp, tuple):
+            if _is_tuple(resp):
                 data, code, headers = unpack(resp)
                 return self.field.format(data), code, headers
             return self.field.format(resp)
