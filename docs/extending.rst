@@ -198,27 +198,30 @@ to attach custom error handlers to an exception. ::
 
 Define Custom Error Messages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-You may want to return a specific message and/or status code when certain errors
-are encountered during a request. You can tell Flask-RESTful how you want to handle
-each error/exception so you won't have to fill your API code with try/except blocks. ::
+Flask-RESTful offers multiple options to customize your error response (HTTP status
+code, message, format, etc.). This is achieved by defining a custom exception class with
+at least a ``code`` and ``description`` attributes. ::
 
-    errors = {
-        'UserAlreadyExistsError': {
-            'message': "A user with that username already exists.",
-            'status': 409,
-        },
-        'ResourceDoesNotExist': {
-            'message': "A resource with that ID no longer exists.",
-            'status': 410,
-            'extra': "Any extra information you want.",
-        },
-    }
+    class RessourceDoesNotExist():
+        code = 404
+        description = "Resource does not exist."
 
-Including the `'status'` key will set the Response's status code. If not specified
-it will default to 500.
+In your request, ``raise RessourceDoesNotExist()`` will generate the following response:
+``{"status": 404, "message": "Resource does not exist"}``
 
-Once your `errors` dictionary is defined, simply pass it to the :class:`~flask.ext.restful.Api`
-constructor ::
+If you want to take it a step further and define your error response body format; simply
+define a base class defining a ``to_dict`` method. ::
 
-    app = Flask(__name__)
-    api = flask_restful.Api(app, errors=errors)
+    class ApiBaseError(Exception):
+        to_dict(self):
+            return {"status_code": self.code, "userMessage": self.description, internalMessage: self.__str__()}
+
+    class RessourceDoesNotExist(ApiBaseError):
+        code = 404
+        description = "Resource does not exist."
+
+In your request, ``raise RessourceDoesNotExist("foo")`` will then generate the following response:
+``{"status_code": 404, "userMessage": "Resource does not exist", "internalMessage": "foo"}``
+
+* Note 1: not defining a ``code`` attribute will default to status code 500.
+* Note 2: not defining a ``description`` attribute will default to associated HTTP status code message
