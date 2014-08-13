@@ -808,7 +808,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 418)
-            self.assertDictEqual(loads(resp.data.decode('utf8')), {"message": "api is foobar", "status": 418})
+            self.assertEqual(loads(resp.data.decode('utf8')), {"message": "api is foobar", "status": 418})
 
 if __name__ == '__main__':
     unittest.main()
