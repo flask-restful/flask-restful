@@ -5,6 +5,6 @@ python:
   - 3.3
   - 3.4
 install:
-    - pip install tests/requirements.txt
+    - pip install -r tests/requirements.txt
     - pip install -e .[paging]
 script: nosetests
