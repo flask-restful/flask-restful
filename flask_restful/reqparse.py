@@ -103,7 +103,7 @@ class Argument(object):
         except TypeError:
             try:
                 if self.type is decimal.Decimal:
-                    return self.type(str(value), self.name)
+                    return self.type(str(value))
                 else:
                     return self.type(value, self.name)
             except TypeError:
