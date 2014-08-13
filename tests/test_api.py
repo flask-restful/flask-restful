@@ -12,7 +12,7 @@ from flask.ext.restful.utils import http_status_message, error_data, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps, loads
+from flask.json import dumps, loads
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals, assert_true  # you need it for tests in form of continuations
 import six
