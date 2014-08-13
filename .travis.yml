@@ -5,8 +5,7 @@ python:
   - 2.7
   - 2.6
 install:
-  - pip install coveralls
-script:
-  - make install test-install
-  - make test
+  - pip install tests/requirements.txt
+  - pip install -e .[paging]
+script: nosetests
 after_success: coveralls
