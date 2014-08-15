@@ -76,13 +76,14 @@ class Raw(object):
     throw a MarshallingException in case of parsing problem.
     """
 
-    def __init__(self, default=None, attribute=None):
+    def __init__(self, default=None, attribute=None, lazy=None):
         self.attribute = attribute
         self.default = default
+        self.lazy = lazy
 
     def format(self, value):
-        """Formats a field's value. No-op by default - field classes that 
-        modify how the value of existing object keys should be presented should 
+        """Formats a field's value. No-op by default - field classes that
+        modify how the value of existing object keys should be presented should
         override this and apply the appropriate formatting.
 
         :param value: The value to format
@@ -96,17 +97,24 @@ class Raw(object):
         """
         return value
 
+    def _get_value(self, key, obj):
+        if self.attribute is None and self.lazy is None:
+            return get_value(key, obj)
+        elif self.attribute is not None:
+            return get_value(self.attribute, obj)
+        else:
+            return self.lazy(obj)
+
     def output(self, key, obj):
         """Pulls the value for the given key from the object, applies the
-        field's formatting and returns the result. If the key is not found 
-        in the object, returns the default value. Field classes that create 
-        values which do not require the existence of the key in the object 
+        field's formatting and returns the result. If the key is not found
+        in the object, returns the default value. Field classes that create
+        values which do not require the existence of the key in the object
         should override this and return the desired value.
-        
+
         :exception MarshallingException: In case of formatting problem
         """
-
-        value = get_value(key if self.attribute is None else self.attribute, obj)
+        value = self._get_value(key, obj)
 
         if value is None:
             return self.default
@@ -129,7 +137,7 @@ class Nested(Raw):
         super(Nested, self).__init__(**kwargs)
 
     def output(self, key, obj):
-        value = get_value(key if self.attribute is None else self.attribute, obj)
+        value = self._get_value(key, obj)
         if self.allow_null and value is None:
             return None
 
@@ -165,7 +173,7 @@ class List(Raw):
         ]
 
     def output(self, key, data):
-        value = get_value(key if self.attribute is None else self.attribute, data)
+        value = self._get_value(key, data)
         # we cannot really test for external dict behavior
         if is_indexable_but_not_string(value) and not isinstance(value, dict):
             return self.format(value)
@@ -194,8 +202,8 @@ class Integer(Raw):
         value, use this to retrieve a different attribute from the response
         than the publicly named value.
     """
-    def __init__(self, default=0, attribute=None):
-        super(Integer, self).__init__(default, attribute)
+    def __init__(self, default=0, **kwargs):
+        super(Integer, self).__init__(default=default, **kwargs)
 
     def format(self, value):
         try:
