@@ -74,6 +74,21 @@ list, you can specify a default value to return instead of ``None``. ::
     }
 
 
+Lazy Calculation
+----------------
+
+If you have some lazy-calculated attributes, you can set ``lazy`` parameter
+to field.
+
+    class Person(People):
+
+        def format_name(self, with_last_name=True):
+            return self.first_name + (' ' + self.last_name if with_last_name else '')
+
+    fields = {
+        'name': fields.String(lazy=lambda person: person.format_name(with_last_name=False))
+    }
+
 Custom Fields & Multiple Values
 -------------------------------
 
