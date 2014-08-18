@@ -76,10 +76,10 @@ class Raw(object):
     throw a MarshallingException in case of parsing problem.
     """
 
-    def __init__(self, default=None, attribute=None, lazy=None):
+    def __init__(self, default=None, attribute=None, func=None):
         self.attribute = attribute
         self.default = default
-        self.lazy = lazy
+        self.func = func
 
     def format(self, value):
         """Formats a field's value. No-op by default - field classes that
@@ -98,12 +98,12 @@ class Raw(object):
         return value
 
     def _get_value(self, key, obj):
-        if self.attribute is None and self.lazy is None:
+        if self.attribute is None and self.func is None:
             return get_value(key, obj)
         elif self.attribute is not None:
             return get_value(self.attribute, obj)
         else:
-            return self.lazy(obj)
+            return self.func(obj)
 
     def output(self, key, obj):
         """Pulls the value for the given key from the object, applies the

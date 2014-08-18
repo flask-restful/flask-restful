@@ -77,7 +77,7 @@ list, you can specify a default value to return instead of ``None``. ::
 Lazy Calculation
 ----------------
 
-If you have some lazy-calculated attributes, you can set ``lazy`` parameter
+If you have some lazy-calculated attributes, you can set ``func`` parameter
 to field.
 
     class Person(People):
@@ -86,7 +86,7 @@ to field.
             return self.first_name + (' ' + self.last_name if with_last_name else '')
 
     fields = {
-        'name': fields.String(lazy=lambda person: person.format_name(with_last_name=False))
+        'name': fields.String(func=lambda person: person.format_name(with_last_name=False))
     }
 
 Custom Fields & Multiple Values
