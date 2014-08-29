@@ -568,6 +568,7 @@ class marshal_with(object):
             resp = f(*args, **kwargs)
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
+                if code > 400: return data, code, headers
                 return marshal(data, self.fields), code, headers
             else:
                 return marshal(resp, self.fields)
