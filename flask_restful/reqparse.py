@@ -1,6 +1,7 @@
 from flask import request
 from werkzeug.datastructures import MultiDict, FileStorage
 import flask_restful
+import decimal
 import inspect
 import six
 
@@ -103,7 +104,10 @@ class Argument(object):
             return self.type(value, self.name, op)
         except TypeError:
             try:
-                return self.type(value, self.name)
+                if self.type is decimal.Decimal:
+                    return self.type(str(value), self.name)
+                else:
+                    return self.type(value, self.name)
             except TypeError:
                 return self.type(value)
 
@@ -234,7 +238,7 @@ class RequestParser(object):
     def copy(self):
         """ Creates a copy of this RequestParser with the same set of arguments """
         parser_copy = RequestParser(self.argument_class, self.namespace_class)
-        parser_copy.args = self.args
+        parser_copy.args = list(self.args)
         return parser_copy
 
     def replace_argument(self, name, *args, **kwargs):

@@ -84,10 +84,10 @@ You can try it like this: ::
     {"todo1": "Remember the milk"}
     $ curl http://localhost:5000/todo1
     {"todo1": "Remember the milk"}
-    $ curl http://localhost:5000/todo2 -d "data=Change my breakpads" -X PUT
-    {"todo2": "Change my breakpads"}
+    $ curl http://localhost:5000/todo2 -d "data=Change my brakepads" -X PUT
+    {"todo2": "Change my brakepads"}
     $ curl http://localhost:5000/todo2
-    {"todo2": "Change my breakpads"}
+    {"todo2": "Change my brakepads"}
 
 
 Or from python if you have the requests library installed::
@@ -97,10 +97,10 @@ Or from python if you have the requests library installed::
      {u'todo1': u'Remember the milk'}
      >>> get('http://localhost:5000/todo1').json()
      {u'todo1': u'Remember the milk'}
-     >>> put('http://localhost:5000/todo2', data={'data': 'Change my breakpads'}).json()
-     {u'todo2': u'Change my breakpads'}
+     >>> put('http://localhost:5000/todo2', data={'data': 'Change my brakepads'}).json()
+     {u'todo2': u'Change my brakepads'}
      >>> get('http://localhost:5000/todo2').json()
-     {u'todo2': u'Change my breakpads'}
+     {u'todo2': u'Change my brakepads'}
 
 Flask-RESTful understands multiple kinds of return values from view methods.
 Similar to Flask, you can return any iterable and it will be converted into a

@@ -7,6 +7,7 @@ from werkzeug.wrappers import Request
 from werkzeug.datastructures import FileStorage
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
+import decimal
 
 import json
 
@@ -520,6 +521,18 @@ class ReqParseTestCase(unittest.TestCase):
             except exceptions.BadRequest:
                 self.fail()
 
+    def test_type_decimal(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=decimal.Decimal, location="json")
+
+        with app.test_request_context('/bubble', method='post',
+                                      data=json.dumps({"foo": 1.0025}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], decimal.Decimal("1.0025"))
+
     def test_type_filestorage(self):
         app = Flask(__name__)
 
@@ -582,7 +595,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser_copy = parser.copy()
         parser_copy.add_argument('bar', type=str)
 
-        args = parser.parse_args(req)
+        args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], 101)
         self.assertEquals(args['bar'], u'baz')
 
@@ -593,7 +606,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser_copy = parser.copy()
         parser_copy.replace_argument('foo', type=str)
 
-        args = parser.parse_args(req)
+        args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], u'baz')
 
 
