@@ -280,6 +280,7 @@ class Api(object):
 
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
+        headers = {}
 
         if code >= 500:
 
@@ -309,13 +310,16 @@ class Api(object):
                                        rules[match] for match in close_matches)
                                    ) + ' ?'
 
+        if code == 405:
+            headers['Allow'] = e.valid_methods
+
         error_cls_name = type(e).__name__
         if error_cls_name in self.errors:
             custom_data = self.errors.get(error_cls_name, {})
             code = custom_data.get('status', 500)
             data.update(custom_data)
 
-        resp = self.make_response(data, code)
+        resp = self.make_response(data, code, headers)
 
         if code == 401:
             resp = self.unauthorized(resp)
