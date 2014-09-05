@@ -609,6 +609,16 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], u'baz')
 
+    def test_request_parser_remove_argument(self):
+        req = Request.from_values("/bubble?foo=baz")
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        parser_copy = parser.copy()
+        parser_copy.remove_argument('foo')
+
+        args = parser_copy.parse_args(req)
+        self.assertEquals(args, {})
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -248,3 +248,11 @@ class RequestParser(object):
                 self.args.append(new_arg)
                 break
         return self
+
+    def remove_argument(self, name):
+        """ Remove the argument matching the given name. """
+        for index, arg in enumerate(self.args[:]):
+            if name == arg.name:
+                del self.args[index]
+                break
+        return self
