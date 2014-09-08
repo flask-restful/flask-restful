@@ -148,6 +148,8 @@ class Argument(object):
                     if not isinstance(value, FileStorage):
                         if not self.case_sensitive:
                             value = value.lower()
+                            if hasattr(self.choices, "__iter__"):
+                                self.choices = [choice.lower() for choice in self.choices]
 
                         try:
                             value = self.convert(value, operator)
