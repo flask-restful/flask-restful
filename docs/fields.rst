@@ -61,6 +61,13 @@ attribute naming. To configure this mapping, use the ``attribute`` kwarg. ::
         'address': fields.String,
     }
 
+A lambda can also be specified as the ``attribute`` ::
+
+    fields = {
+        'name': fields.String(attribute=lambda x: x._private_name),
+        'address': fields.String,
+    }
+
 
 Default Values
 --------------
