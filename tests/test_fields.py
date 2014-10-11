@@ -128,6 +128,10 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.String(attribute="hey")
         self.assertEquals("3", field.output("foo", Foo()))
 
+    def test_string_with_lambda(self):
+        field = fields.String(attribute=lambda x: x.hey)
+        self.assertEquals("3", field.output("foo", Foo()))
+
     def test_url_invalid_object(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
