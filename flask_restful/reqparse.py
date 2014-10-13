@@ -58,6 +58,8 @@ class Argument(object):
             the message passed to a ValidationError raised by a type converter.
         :param bool case_sensitive: Whether the arguments in the request are
             case sensitive or not
+        :param bool store_missing: Whether the arguments default value should
+            be stored if the argument is missing from the request.
         """
 
         self.name = name
