@@ -5,7 +5,7 @@ from flask.ext.restful.fields import MarshallingException
 from flask.ext.restful.utils import OrderedDict
 from flask_restful import fields
 from datetime import datetime, timedelta, tzinfo
-from flask import Flask
+from flask import Flask, Blueprint
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals  # you need it for tests in form of continuations
 
@@ -169,6 +169,78 @@ class FieldsTestCase(unittest.TestCase):
 
         with app.test_request_context("/", base_url="http://localhost"):
             self.assertEquals("https://localhost/3", field.output("hey", Foo()))
+
+    def test_url_without_endpoint_invalid_object(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url()
+
+        with app.test_request_context("/hey"):
+            self.assertRaises(MarshallingException, lambda: field.output("hey", None))
+
+    def test_url_without_endpoint(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url()
+
+        with app.test_request_context("/hey"):
+            self.assertEquals("/3", field.output("hey", Foo()))
+
+    def test_url_without_endpoint_absolute(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url(absolute=True)
+
+        with app.test_request_context("/hey"):
+            self.assertEquals("http://localhost/3", field.output("hey", Foo()))
+
+    def test_url_without_endpoint_absolute_scheme(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url(absolute=True, scheme='https')
+
+        with app.test_request_context("/hey", base_url="http://localhost"):
+            self.assertEquals("https://localhost/3", field.output("hey", Foo()))
+
+    def test_url_with_blueprint_invalid_object(self):
+        app = Flask(__name__)
+        bp = Blueprint("foo", __name__, url_prefix="/foo")
+        bp.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        app.register_blueprint(bp)
+        field = fields.Url()
+
+        with app.test_request_context("/foo/hey"):
+            self.assertRaises(MarshallingException, lambda: field.output("hey", None))
+
+    def test_url_with_blueprint(self):
+        app = Flask(__name__)
+        bp = Blueprint("foo", __name__, url_prefix="/foo")
+        bp.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        app.register_blueprint(bp)
+        field = fields.Url()
+
+        with app.test_request_context("/foo/hey"):
+            self.assertEquals("/foo/3", field.output("hey", Foo()))
+
+    def test_url_with_blueprint_absolute(self):
+        app = Flask(__name__)
+        bp = Blueprint("foo", __name__, url_prefix="/foo")
+        bp.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        app.register_blueprint(bp)
+        field = fields.Url(absolute=True)
+
+        with app.test_request_context("/foo/hey"):
+            self.assertEquals("http://localhost/foo/3", field.output("hey", Foo()))
+
+    def test_url_with_blueprint_absolute_scheme(self):
+        app = Flask(__name__)
+        bp = Blueprint("foo", __name__, url_prefix="/foo")
+        bp.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        app.register_blueprint(bp)
+        field = fields.Url(absolute=True, scheme='https')
+
+        with app.test_request_context("/foo/hey", base_url="http://localhost"):
+            self.assertEquals("https://localhost/foo/3", field.output("hey", Foo()))
 
     def test_int(self):
         field = fields.Integer()
