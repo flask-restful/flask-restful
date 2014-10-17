@@ -7,7 +7,7 @@ except ImportError:
     from urllib.parse import urlparse, urlunparse
 
 from flask_restful import inputs, marshal
-from flask import url_for
+from flask import url_for, request
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
            "Integer", "Arbitrary", "Nested", "List", "Raw", "Boolean",
@@ -248,7 +248,7 @@ class Url(Raw):
     """
     A string representation of a Url
     """
-    def __init__(self, endpoint, absolute=False, scheme=None):
+    def __init__(self, endpoint=None, absolute=False, scheme=None):
         super(Url, self).__init__()
         self.endpoint = endpoint
         self.absolute = absolute
@@ -257,7 +257,8 @@ class Url(Raw):
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
-            o = urlparse(url_for(self.endpoint, _external=self.absolute, **data))
+            endpoint = self.endpoint if self.endpoint is not None else request.endpoint
+            o = urlparse(url_for(endpoint, _external=self.absolute, **data))
             if self.absolute:
                 scheme = self.scheme if self.scheme is not None else o.scheme
                 return urlunparse((scheme, o.netloc, o.path, "", "", ""))
