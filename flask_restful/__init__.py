@@ -340,8 +340,10 @@ class Api(object):
             Can be used to reference this route in :class:`fields.Url` fields
         :type endpoint: str
 
-        Additional keyword arguments not specified above will be passed as-is
-        to :meth:`flask.Flask.add_url_rule`.
+        Additional keyword arguments not specified above will be passed as-is to
+        the Resouce's __init__ method and all arguments that are applicable to
+        the :class:`~werkzeug.routing.Rule` object are passed to
+        :meth:`flask.Flask.add_url_rule`.
 
         Examples::
 
@@ -368,7 +370,7 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
-        resource_func = self.output(resource.as_view(endpoint))
+        resource_func = self.output(resource.as_view(endpoint, **kwargs))
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
@@ -392,8 +394,15 @@ class Api(object):
             else:
                 # If we've got no Blueprint, just build a url with no prefix
                 rule = self._complete_url(url, '')
+
+            # Since additional arguments forwared to the underlying Rule object
+            # and the __init__ does not swallow additional args create a new
+            # kwargs dictionary with only the values for the Rule object
+            werkzeug_args = ['defaults', 'subdomain', 'methods', 'build_only', 'strict_slashes', 'redirect_to', 'alias', 'host']
+            werkzeug_kwargs = { k: kwargs[k] for k in werkzeug_args if k in kwargs }
+
             # Add the url to the application or blueprint
-            app.add_url_rule(rule, view_func=resource_func, **kwargs)
+            app.add_url_rule(rule, view_func=resource_func, **werkzeug_kwargs)
 
     def output(self, resource):
         """Wraps a resource (as a flask view function), for cases where the
