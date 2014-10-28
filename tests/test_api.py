@@ -810,7 +810,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/')
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data, dumps(expected_result))
+        self.assertEquals(resp.data, dumps(test_data))
 
 if __name__ == '__main__':
     unittest.main()
