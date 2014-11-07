@@ -200,7 +200,12 @@ def int_range(low, high, value, argument='argument'):
 
 
 def boolean(value):
-    """Parse the string "true" or "false" as a boolean (case insensitive)"""
+    """Parse the string "true" or "false" as a boolean (case insensitive). if
+    the input is from the request JSON body, the type is already a native
+    python boolean, and will be passed through without further parsing."""
+    if type(value) == bool:
+        return value
+
     if not value:
         raise ValueError("boolean type must be non-null")
     value = value.lower()
