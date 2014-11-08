@@ -33,7 +33,7 @@ class Argument(object):
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True, store_missing=False):
+                 case_sensitive=True, store_missing=True):
         """
         :param name: Either a name or a list of option strings, e.g. foo or
                         -f, --foo.

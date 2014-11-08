@@ -422,16 +422,16 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument("foo")
 
         args = parser.parse_args(req)
-        self.assertFalse('foo' in args)
+        self.assertEquals(args['foo'], None)
 
     def test_parse_store_missing(self):
         req = Request.from_values("/bubble")
 
         parser = RequestParser()
-        parser.add_argument("foo", store_missing=True)
+        parser.add_argument("foo", store_missing=False)
 
         args = parser.parse_args(req)
-        self.assertEquals(args['foo'], None)
+        self.assertFalse('foo' in args)
 
     def test_parse_choices_correct(self):
         req = Request.from_values("/bubble?foo=bat")
