@@ -186,7 +186,7 @@ class ReqParseTestCase(unittest.TestCase):
         req.json = None
         req.view_args = {"foo": "bar"}
         parser = RequestParser()
-        parser.add_argument("foo", type=str)
+        parser.add_argument("foo", type=str, store_missing=True)
         args = parser.parse_args(req)
         self.assertEquals(args["foo"], None)
 
@@ -212,7 +212,7 @@ class ReqParseTestCase(unittest.TestCase):
         app = Flask(__name__)
 
         parser = RequestParser()
-        parser.add_argument("foo", location="json")
+        parser.add_argument("foo", location="json", store_missing=True)
 
         with app.test_request_context('/bubble', method="post"):
             args = parser.parse_args()
@@ -234,7 +234,8 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble?foo=bar")
 
         parser = RequestParser()
-        parser.add_argument("foo", ignore=True, type=int, action="append"),
+        parser.add_argument("foo", ignore=True, type=int, action="append",
+                            store_missing=True),
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], None)
@@ -243,7 +244,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble?")
 
         parser = RequestParser()
-        parser.add_argument("foo", action="append"),
+        parser.add_argument("foo", action="append", store_missing=True),
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], None)
@@ -301,7 +302,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_parse_foo_operators_ignore(self):
         parser = RequestParser()
-        parser.add_argument("foo", ignore=True)
+        parser.add_argument("foo", ignore=True, store_missing=True)
 
         args = parser.parse_args(Request.from_values("/bubble"))
         self.assertEquals(args['foo'], None)
@@ -380,7 +381,8 @@ class ReqParseTestCase(unittest.TestCase):
     def test_parse_default_append(self):
         req = Request.from_values("/bubble")
         parser = RequestParser()
-        parser.add_argument("foo", default="bar", action="append")
+        parser.add_argument("foo", default="bar", action="append",
+                            store_missing=True)
 
         args = parser.parse_args(req)
 
@@ -390,7 +392,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble")
 
         parser = RequestParser()
-        parser.add_argument("foo", default="bar")
+        parser.add_argument("foo", default="bar", store_missing=True)
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], "bar")
@@ -399,7 +401,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble")
 
         parser = RequestParser()
-        parser.add_argument("foo", default=lambda: "bar")
+        parser.add_argument("foo", default=lambda: "bar", store_missing=True)
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], "bar")
@@ -421,6 +423,15 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], None)
+
+    def test_parse_store_missing(self):
+        req = Request.from_values("/bubble")
+
+        parser = RequestParser()
+        parser.add_argument("foo", store_missing=False)
+
+        args = parser.parse_args(req)
+        self.assertFalse('foo' in args)
 
     def test_parse_choices_correct(self):
         req = Request.from_values("/bubble?foo=bat")
@@ -460,7 +471,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble?foo=bar")
 
         parser = RequestParser()
-        parser.add_argument("foo", type=int, ignore=True),
+        parser.add_argument("foo", type=int, ignore=True, store_missing=True),
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], None)

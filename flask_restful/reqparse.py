@@ -33,7 +33,7 @@ class Argument(object):
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True):
+                 case_sensitive=True, store_missing=True):
         """
         :param name: Either a name or a list of option strings, e.g. foo or
                         -f, --foo.
@@ -58,6 +58,8 @@ class Argument(object):
             the message passed to a ValidationError raised by a type converter.
         :param bool case_sensitive: Whether the arguments in the request are
             case sensitive or not
+        :param bool store_missing: Whether the arguments default value should
+            be stored if the argument is missing from the request.
         """
 
         self.name = name
@@ -72,6 +74,7 @@ class Argument(object):
         self.help = help
         self.case_sensitive = case_sensitive
         self.operators = operators
+        self.store_missing = store_missing
 
     def source(self, request):
         """Pulls values off the request in the provided location
@@ -128,6 +131,10 @@ class Argument(object):
 
         results = []
 
+        # Sentinels
+        _not_found = False
+        _found = True
+
         for operator in self.operators:
             name = self.name + operator.replace("=", "", 1)
             if name in source:
@@ -175,16 +182,16 @@ class Argument(object):
 
         if not results:
             if callable(self.default):
-                return self.default()
+                return self.default(), _not_found
             else:
-                return self.default
+                return self.default, _not_found
 
         if self.action == 'append':
-            return results
+            return results, _found
 
         if self.action == 'store' or len(results) == 1:
-            return results[0]
-        return results
+            return results[0], _found
+        return results, _found
 
 
 class RequestParser(object):
@@ -229,7 +236,9 @@ class RequestParser(object):
         namespace = self.namespace_class()
 
         for arg in self.args:
-            namespace[arg.dest or arg.name] = arg.parse(req)
+            value, found = arg.parse(req)
+            if found or arg.store_missing:
+                namespace[arg.dest or arg.name] = value
 
         return namespace
 
