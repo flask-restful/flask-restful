@@ -123,15 +123,19 @@ class Nested(Raw):
         with null keys, if a nested dictionary has all-null keys
     """
 
-    def __init__(self, nested, allow_null=False, **kwargs):
+    def __init__(self, nested, allow_null=False, allow_empty=False, **kwargs):
         self.nested = nested
         self.allow_null = allow_null
+        self.allow_empty = allow_empty
         super(Nested, self).__init__(**kwargs)
 
     def output(self, key, obj):
         value = get_value(key if self.attribute is None else self.attribute, obj)
-        if self.allow_null and value is None:
-            return None
+        if value is None:
+            if self.allow_null:
+                return None
+            elif self.allow_empty:
+                return {}
 
         return marshal(value, self.nested)
 
