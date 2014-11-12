@@ -346,15 +346,16 @@ def test_isointerval():
 
 
 def test_invalid_isointerval_error():
-    with assert_raises(ValueError) as cm:
+    try:
         inputs.iso8601interval('2013-01-01/blah')
-
-    error = cm.exception
-    assert_equal(
-        str(error),
-        "Invalid argument: 2013-01-01/blah. argument must be a valid ISO8601 "
-        "date/time interval.",
-    )
+    except ValueError as error:
+        assert_equal(
+            str(error),
+            "Invalid argument: 2013-01-01/blah. argument must be a valid ISO8601 "
+            "date/time interval.",
+        )
+        return
+    assert False, 'Should raise a ValueError'
 
 
 def test_bad_isointervals():

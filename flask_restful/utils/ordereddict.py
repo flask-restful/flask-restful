@@ -25,6 +25,7 @@ try:
 except ImportError:
     from collections import MutableMapping as DictMixin
 import six
+import sys
 
 
 class OrderedDict(dict, DictMixin):
@@ -100,9 +101,9 @@ class OrderedDict(dict, DictMixin):
     pop = DictMixin.pop
     values = DictMixin.values
     items = DictMixin.items
-    iterkeys = DictMixin.iterkeys
-    itervalues = DictMixin.itervalues
-    iteritems = DictMixin.iteritems
+    iterkeys = six.iterkeys
+    itervalues = six.itervalues
+    iteritems = six.iteritems if sys.version_info >= (2, 7) else DictMixin.iteritems
 
     def __repr__(self):
         if not self:

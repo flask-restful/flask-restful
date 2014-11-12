@@ -38,12 +38,12 @@ Fields
    :members:
 
 Inputs
------
+------
 
-.. module:: flask.ext.restful.inputs 
+.. module:: flask.ext.restful.inputs
 .. autofunction:: url
 .. autofunction:: date
 .. autofunction:: iso8601interval
-.. autofunction:: natural 
+.. autofunction:: natural
 .. autofunction:: boolean
 .. autofunction:: rfc822

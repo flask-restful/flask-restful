@@ -12,7 +12,7 @@ from flask.ext.restful.utils import http_status_message, error_data, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps, loads
+from flask.json import dumps, loads
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals, assert_true  # you need it for tests in form of continuations
 import six
@@ -779,7 +779,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data, '{"foo": 3.0}')
+        self.assertEquals(resp.data.decode('utf8'), '{"foo": 3.0}')
 
     def test_custom_error_message(self):
         errors = {
@@ -802,7 +802,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 418)
-            self.assertDictEqual(loads(resp.data), {"message": "api is foobar", "status": 418})
+            self.assertEqual(loads(resp.data.decode('utf8')), {"message": "api is foobar", "status": 418})
 
 if __name__ == '__main__':
     unittest.main()
