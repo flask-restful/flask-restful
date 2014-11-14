@@ -264,6 +264,10 @@ Save this example in api.py ::
         def post(self):
             args = parser.parse_args()
             todo_id = 'todo%d' % (len(TODOS) + 1)
+            i = 2
+            while todo_id in TODOS:
+                todo_id = 'todo%d' % (len(TODOS) + i)
+                i = i + 1
             TODOS[todo_id] = {'task': args['task']}
             return TODOS[todo_id], 201
 
