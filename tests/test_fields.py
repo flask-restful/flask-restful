@@ -318,9 +318,9 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals([OrderedDict([('a', 1)]), OrderedDict([('a', 2)]), OrderedDict([('a', 3)])],
                           field.output('list', obj))
 
-    def test_nested_empty(self):
+    def test_nested_with_default(self):
         obj = None
-        field = fields.Nested({'a': fields.Integer, 'b': fields.String}, allow_empty=True)
+        field = fields.Nested({'a': fields.Integer, 'b': fields.String}, default={})
         self.assertEquals({}, field.output('a', obj))
 
     def test_list_of_raw(self):
