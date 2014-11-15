@@ -107,9 +107,9 @@ Often you will make a different parser for each resource you write.
 The problem with this is if parsers have arguments in common. Instead of 
 rewriting arguments you can write a parent parser containing all the 
 shared arguments and then extend the parser with 
-:py:attr:`flask.RequestParser.copy`. You can also overwrite any argument
-in the parent with :py:attr:`flask.RequestParser.replace_argument`, or remove
-it completely with :py:attr:`flask.RequestParser.remove_argument`.
+:py:meth:`~reqparse.RequestParser.copy`. You can also overwrite any argument
+in the parent with :py:meth:`~reqparse.RequestParser.replace_argument`, or remove
+it completely with :py:meth:`~reqparse.RequestParser.remove_argument`.
 For example: ::
 
     from flask.ext.restful import RequestParser
