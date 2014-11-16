@@ -1,0 +1,5 @@
+[run]
+branch = true
+omit =
+    */venv/*
+    */tests/*
