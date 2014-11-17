@@ -375,9 +375,9 @@ class Api(object):
 
         Examples::
 
-            api.add_resource(HelloWorld, '/', '/hello')
-            api.add_resource(Foo, '/foo', endpoint="foo")
-            api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
+            api.add_resource('/', HelloWorld)
+            api.add_resource('/foo', Foo, endpoint="foo")
+            api.add_resource('/special/foo', FooSpecial, endpoint="foo")
 
         """
         if self.app is not None:
