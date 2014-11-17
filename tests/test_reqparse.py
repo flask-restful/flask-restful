@@ -467,6 +467,15 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals('bat', args.get('foo'))
 
+        # both choices and args are case_insensitive
+        req = Request.from_values("/bubble?foo=bat")
+
+        parser = RequestParser()
+        parser.add_argument("foo", choices=["BAT"], case_sensitive=False),
+
+        args = parser.parse_args(req)
+        self.assertEquals('bat', args.get('foo'))
+
     def test_parse_ignore(self):
         req = Request.from_values("/bubble?foo=bar")
 
