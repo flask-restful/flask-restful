@@ -380,7 +380,7 @@ class Api(object):
             api.add_resource('/special/foo', FooSpecial, endpoint="foo")
 
         """
-        self.add_resource(self, resource, url, **kwargs)
+        self.add_resource(resource, url, **kwargs)
 
     def resource(self, *urls, **kwargs):
         """Wraps a :class:`~flask.ext.restful.Resource` class, adding it to the
