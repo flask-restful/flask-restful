@@ -375,9 +375,9 @@ class Api(object):
 
         Examples::
 
-            api.add_resource('/', HelloWorld)
-            api.add_resource('/foo', Foo, endpoint="foo")
-            api.add_resource('/special/foo', FooSpecial, endpoint="foo")
+            api.map_resource('/', HelloWorld)
+            api.map_resource('/foo', Foo, endpoint="foo")
+            api.map_resource('/special/foo', FooSpecial, endpoint="foo")
 
         """
         self.add_resource(resource, url, **kwargs)
