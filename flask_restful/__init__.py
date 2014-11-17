@@ -355,6 +355,36 @@ class Api(object):
         else:
             self.resources.append((resource, urls, kwargs))
 
+    def map_resource(self, resource, url, **kwargs):
+        """Maps an API endpoint to a resource.
+
+        :param url: the url route to match to the given resource, standard
+                     flask routing rules apply.  Any url variables will be
+                     passed to the resource method as args.
+        :type url: str
+
+        :param resource: the class name of your resource
+        :type resource: :class:`Resource`
+
+        :param endpoint: endpoint name (defaults to :meth:`Resource.__name__.lower`
+            Can be used to reference this route in :class:`fields.Url` fields
+        :type endpoint: str
+
+        Additional keyword arguments not specified above will be passed as-is
+        to :meth:`flask.Flask.add_url_rule`.
+
+        Examples::
+
+            api.add_resource(HelloWorld, '/', '/hello')
+            api.add_resource(Foo, '/foo', endpoint="foo")
+            api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
+
+        """
+        if self.app is not None:
+            self._register_view(self.app, resource, url, **kwargs)
+        else:
+            self.resources.append((resource, [url], kwargs))
+
     def resource(self, *urls, **kwargs):
         """Wraps a :class:`~flask.ext.restful.Resource` class, adding it to the
         api. Parameters are the same as :meth:`~flask.ext.restful.Api.add_resource`.
