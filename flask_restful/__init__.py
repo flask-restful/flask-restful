@@ -355,7 +355,7 @@ class Api(object):
         else:
             self.resources.append((resource, urls, kwargs))
 
-    def map_resource(self, resource, url, **kwargs):
+    def map_resource(self, url, resource, **kwargs):
         """Maps an API endpoint to a resource.
 
         :param url: the url route to match to the given resource, standard
