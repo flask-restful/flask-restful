@@ -65,7 +65,7 @@ class APITestCase(unittest.TestCase):
     def test_handle_error_401_sends_challege_default_realm(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
-        exception = Mock()
+        exception = Mock(spec=[u'code', u'data'])
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -79,7 +79,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
         api = flask_restful.Api(app)
-        exception = Mock()
+        exception = Mock(spec=[u'code', u'data'])
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -303,7 +303,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
+        exception = Mock(spec=[u'code', u'data'])
         exception.code = 500
         exception.data = {'foo': 'bar'}
 
@@ -318,7 +318,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
+        exception = Mock(spec=[u'code', u'data'])
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -372,7 +372,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
+        exception = Mock(spec=[u'code', u'data'])
         exception.code = 400
         exception.data = {'foo': 'bar'}
 
@@ -394,7 +394,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
+        exception = Mock(spec=[u'code', u'data'])
         exception.code = 400
         exception.data = {'foo': 'bar'}
 
@@ -410,7 +410,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         view = flask_restful.Resource
 
-        exception = Mock()
+        exception = Mock(spec=[u'code', u'data'])
         exception.code = 404
         exception.data = {"status": 404, "message": "Not Found"}
         api.add_resource(view, '/foo', endpoint='bor')
@@ -781,28 +781,65 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(resp.status_code, 200)
         self.assertEquals(resp.data, '{"foo": 3.0}')
 
-    def test_custom_error_message(self):
-        errors = {
-            'FooError': {
-                'message': "api is foobar",
-                'status': 418,
-            }
-        }
-
-        class FooError(ValueError):
+    def test_custom_error_message_1(self):
+        class FooError():
             pass
 
         app = Flask(__name__)
-        api = flask_restful.Api(app, errors=errors)
+        api = flask_restful.Api(app)
 
         exception = FooError()
-        exception.code = 400
-        exception.data = {'message': 'FooError'}
+        
+        with app.test_request_context("/foo"):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 500)
+            self.assertDictEqual(loads(resp.data), {"message": "Internal Server Error", "status": 500})
 
+    def test_custom_error_message_2(self):
+        class FooError():
+            code = 418
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        exception = FooError()
+        
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 418)
-            self.assertDictEqual(loads(resp.data), {"message": "api is foobar", "status": 418})
+            self.assertDictEqual(loads(resp.data), {"message": "I'm a teapot", "status": 418})
+
+    def test_custom_error_message_3(self):
+        class FooError():
+            code = 418
+            description = "foo"
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        exception = FooError()
+        
+        with app.test_request_context("/foo"):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 418)
+            self.assertDictEqual(loads(resp.data), {"message": "foo", "status": 418})
+
+    def test_custom_error_message_4(self):
+        class FooError():
+            code = 418
+            description = "foo"
+            def to_dict(self):
+                return {"foo": "bar", "status": 418}
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        exception = FooError()
+        
+        with app.test_request_context("/foo"):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 418)
+            self.assertDictEqual(loads(resp.data), {"foo": "bar", "status": 418})
 
 if __name__ == '__main__':
     unittest.main()
