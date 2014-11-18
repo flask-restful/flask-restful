@@ -35,6 +35,14 @@ class HelloWorld(flask_restful.Resource):
     def get(self):
         return {}
 
+# Dummy resource to test init parameters
+class TestResouceParams(flask_restful.Resource):
+    def __init__(self, test_arg=None):
+        super(TestResouceParams, self).__init__()
+        self.__test_arg = test_arg
+
+    def get(self):
+        return self.__test_arg
 
 class APITestCase(unittest.TestCase):
 
@@ -803,6 +811,19 @@ class APITestCase(unittest.TestCase):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 418)
             self.assertDictEqual(loads(resp.data), {"message": "api is foobar", "status": 418})
+
+    def test_api_add_resource_parameters(self):
+        test_data = "TEST"
+
+        app = Flask(__name__)
+        api = flask_restful.Api()
+        api.add_resource(TestResouceParams, '/', endpoint="hello", test_arg=test_data)
+        api.init_app(app)
+
+        app = app.test_client()
+        resp = app.get('/')
+        self.assertEquals(resp.status_code, 200)
+        self.assertEquals(resp.data, dumps(test_data))
 
 if __name__ == '__main__':
     unittest.main()
