@@ -37,6 +37,10 @@ class HelloWorld(flask_restful.Resource):
 
 
 class APITestCase(unittest.TestCase):
+    def setUp(self):
+        # In python 3.2+ ItemsEqual named CountEqual
+        if not hasattr(self, 'assertItemsEqual'):
+            self.assertItemsEqual = self.assertCountEqual
 
     def test_http_code(self):
         self.assertEquals(http_status_message(200), 'OK')
