@@ -137,6 +137,14 @@ class Nested(Raw):
 
 
 class List(Raw):
+    """
+    Field for marshalling lists of other fields.
+
+    See :ref:`list-field` for more information.
+
+    :param cls_or_instance: The field type the list will contain.
+    """
+
     def __init__(self, cls_or_instance, **kwargs):
         super(List, self).__init__(**kwargs)
         error_msg = ("The type of the list elements must be a subclass of "
@@ -177,6 +185,11 @@ class List(Raw):
 
 
 class String(Raw):
+    """
+    Marshal a value as a string. Uses :py:class:`six.text_type` so values will
+    be converted to :py:class:`unicode` in python2 and :py:class:`str` in
+    python3.
+    """
     def format(self, value):
         try:
             return six.text_type(value)
@@ -207,6 +220,12 @@ class Integer(Raw):
 
 
 class Boolean(Raw):
+    """
+    Field for outputting a boolean value.
+
+    Empty collections such as ``""``, ``{}``, ``[]``, etc. will be converted to
+    ``False``.
+    """
     def format(self, value):
         return bool(value)
 
@@ -302,6 +321,9 @@ ZERO = MyDecimal()
 
 
 class Fixed(Raw):
+    """
+    A decimal number with a fixed precision.
+    """
     def __init__(self, decimals=5, **kwargs):
         super(Fixed, self).__init__(**kwargs)
         self.precision = MyDecimal('0.' + '0' * (decimals - 1) + '1')
@@ -312,4 +334,6 @@ class Fixed(Raw):
             raise MarshallingException('Invalid Fixed precision number.')
         return six.text_type(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
+
+"""Alias for :py:class:`~fields.Fixed`"""
 Price = Fixed
