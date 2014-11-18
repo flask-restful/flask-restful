@@ -48,7 +48,7 @@ class Argument(object):
         converted. If a type raises a ValidationError, the message in the
         error will be returned in the response. Defaults to :py:class:`unicode`
         in python2 and :py:class:`str` in python3.
-    :param location: The attributes of the :py:class:`flask.request` object
+    :param location: The attributes of the :py:class:`flask.Request` object
         to source the arguments from (ex: headers, args, etc.), can be an
         iterator.
     :param choices: A container of the allowable values for the argument.
