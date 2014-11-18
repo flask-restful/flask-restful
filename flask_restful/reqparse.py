@@ -17,6 +17,7 @@ class Namespace(dict):
         self[name] = value
 
 _friendly_location = {
+    u'json': u'the JSON body',
     u'form': u'the post body',
     u'args': u'the query string',
     u'values': u'the post body or the query string',
