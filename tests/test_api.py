@@ -693,6 +693,8 @@ class APITestCase(unittest.TestCase):
         resp = app.post('/ids/3')
         self.assertEquals(resp.status_code, 405)
         self.assertEquals(resp.content_type, api.default_mediatype)
+        self.assertItemsEqual(resp.headers.get_all('Allow'),
+                              ['HEAD', 'OPTIONS'] + HelloWorld.methods)
 
     def test_will_prettyprint_json_in_debug_mode(self):
         app = Flask(__name__)
