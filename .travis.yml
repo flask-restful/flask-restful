@@ -4,6 +4,8 @@ python:
   - "2.7"
   - "2.6"
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: 
+install:
     - "make install test-install"
+    - pip install coveralls
 script: "make test"
+after_success: coveralls

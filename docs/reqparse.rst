@@ -18,7 +18,7 @@ the :py:attr:`flask.Request.values` dict. One of type ``int``, and the other of
 type ``str`` ::
 
     from flask.ext.restful import reqparse
-    
+
     parser = reqparse.RequestParser()
     parser.add_argument('rate', type=int, help='Rate cannot be converted')
     parser.add_argument('name', type=str)
@@ -42,7 +42,7 @@ Required Arguments
 To require a value be passed for an argument, just add ``required=True`` to
 the call to :py:meth:`~reqparse.RequestParser.add_argument`. ::
 
-    parser.add_argument('name', type=str, required=True, 
+    parser.add_argument('name', type=str, required=True,
     help="Name cannot be blank!")
 
 Multiple Values & Lists
@@ -71,7 +71,7 @@ it's parsed, you can use the ``dest`` kwarg. ::
     parser.add_argument('name', type=str, dest='public_name')
 
     args = parser.parse_args()
-    args['public_name']   
+    args['public_name']
 
 
 Other Locations
@@ -104,11 +104,12 @@ Parser Inheritance
 ------------------
 
 Often you will make a different parser for each resource you write.
-The problem with this is if parsers have arguments in common. Instead of 
-rewriting arguments you can write a parent parser containing all the 
-shared arguments and then extend the parser with 
-:py:attr:`flask.RequestParser.copy`. You can also overwrite any argument
-in the parent with :py:attr:`flask.RequestParser.replace_argument`. 
+The problem with this is if parsers have arguments in common. Instead of
+rewriting arguments you can write a parent parser containing all the
+shared arguments and then extend the parser with
+:py:meth:`~reqparse.RequestParser.copy`. You can also overwrite any argument
+in the parent with :py:meth:`~reqparse.RequestParser.replace_argument`, or remove
+it completely with :py:meth:`~reqparse.RequestParser.remove_argument`.
 For example: ::
 
     from flask.ext.restful import RequestParser
@@ -124,4 +125,7 @@ For example: ::
     parser_copy.replace_argument('foo', type=str, required=True, location='json')
     # 'foo' is now a required str located in json, not an int as defined
     #  by original parser
+
+    parser_copy.remove_argument('foo')
+    # parser_copy no longer has 'foo' argument
 

@@ -25,7 +25,7 @@ on the :class:`~Api` object. ::
     api = restful.Api(app)
 
     @api.representation('application/json')
-    def json(data, code, headers=None):
+    def output_json(data, code, headers=None):
         resp = make_response(json.dumps(data), code)
         resp.headers.extend(headers or {})
         return resp

@@ -359,6 +359,26 @@ class Api(object):
         else:
             self.resources.append((resource, urls, kwargs))
 
+    def resource(self, *urls, **kwargs):
+        """Wraps a :class:`~flask.ext.restful.Resource` class, adding it to the
+        api. Parameters are the same as :meth:`~flask.ext.restful.Api.add_resource`.
+
+        Example::
+
+            app = Flask(__name__)
+            api = restful.Api(app)
+
+            @api.resource('/foo')
+            class Foo(Resource):
+                def get(self):
+                    return 'Hello, World!'
+
+        """
+        def decorator(cls):
+            self.add_resource(cls, *urls, **kwargs)
+            return cls
+        return decorator
+
     def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
