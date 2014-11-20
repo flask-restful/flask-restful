@@ -331,5 +331,28 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals([1, 2, 'a'], field.output('list', obj))
 
 
+    def test_int_func(self):
+        field = fields.Integer(func=lambda o: o.id)
+        self.assertEquals(1, field.output("id", Mock(id=1)))
+
+    def test_str_func(self):
+        def formatter(obj):
+            return '(%s)' % obj.attr
+        field = fields.String(func=formatter)
+        data = Mock(attr='attr')
+        self.assertEquals('(attr)', field.output('attr', data))
+
+    def test_list_func(self):
+        def func(obj):
+            return ['1', '2', '3']
+        field = fields.List(fields.Integer(), func=func)
+        self.assertEquals([1, 2, 3], field.output('key', {'key': 'whatever'}))
+
+    def test_nested_func(self):
+        def func(obj):
+            return obj['nested']
+        field = fields.Nested({'func': fields.Integer()}, func=func)
+        self.assertEquals({'func': 1}, field.output('nested', {'nested': {'func': '1'}}))
+
 if __name__ == '__main__':
     unittest.main()
