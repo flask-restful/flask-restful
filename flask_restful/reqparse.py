@@ -87,12 +87,14 @@ class Argument(object):
             if value is not None:
                 return value
         else:
+            values = MultiDict()
             for l in self.location:
                 value = getattr(request, l, None)
                 if callable(value):
                     value = value()
                 if value is not None:
-                    return value
+                    values.update(value)
+            return values
 
         return MultiDict()
 
