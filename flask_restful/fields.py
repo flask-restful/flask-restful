@@ -121,6 +121,10 @@ class Nested(Raw):
     :param dict nested: The dictionary to nest
     :param bool allow_null: Whether to return None instead of a dictionary
         with null keys, if a nested dictionary has all-null keys
+    :param kwargs: if 'default' keyword argument is present nested dictionary will be
+        marshaled as its value if nested dictionary is all-null keys (e.g. lets you
+        return an empty JSON object instead of null)
+    :keyword default
     """
 
     def __init__(self, nested, allow_null=False, **kwargs):
