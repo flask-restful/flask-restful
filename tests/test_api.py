@@ -785,7 +785,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data, '{"foo": 3.0}')
+        self.assertEquals(resp.data.decode('utf-8'), '{"foo": 3.0}')
 
     def test_custom_error_message(self):
         errors = {
@@ -808,7 +808,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 418)
-            self.assertDictEqual(loads(resp.data), {"message": "api is foobar", "status": 418})
+            self.assertDictEqual(loads(resp.data.decode('utf8')), {"message": "api is foobar", "status": 418})
 
 if __name__ == '__main__':
     unittest.main()
