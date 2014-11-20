@@ -608,6 +608,20 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], u'baz')
+        
+    def test_both_json_and_values_location(self):
+
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        parser.add_argument('baz', type=int)
+        with app.test_request_context('/bubble?foo=1', method="post",
+                                      data=json.dumps({"baz": 2}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], 1)
+            self.assertEquals(args['baz'], 2)
 
 
 if __name__ == '__main__':
