@@ -230,6 +230,22 @@ def rfc822(dt):
     return formatdate(timegm(dt.utctimetuple()))
 
 
+def iso8601(dt):
+    """Turn a datetime object into an ISO8601 formatted date.
+
+    Example::
+
+        inputs.iso8601(datetime(2012, 1, 1, 0, 0)) => "2012-01-01T00:00:00+00:00"
+
+    :param dt: The datetime to transform
+    :type dt: datetime
+    :return: A ISO 8601 formatted date string
+    """
+    return datetime.isoformat(
+        datetime.fromtimestamp(timegm(dt.utctimetuple()), tz=pytz.UTC)
+    )
+
+
 def datetime_from_rfc822(datetime_str):
     """Turns an RFC822 formatted date into a datetime object.
 
@@ -242,3 +258,19 @@ def datetime_from_rfc822(datetime_str):
     :return: A datetime
     """
     return datetime.fromtimestamp(mktime_tz(parsedate_tz(datetime_str)), pytz.utc)
+
+
+def datetime_from_iso8601(datetime_str):
+    """Turns an ISO8601 formatted date into a datetime object.
+
+    Example::
+
+        inputs.datetime_from_iso8601("2012-01-01T23:30:00+02:00")
+
+    :param datetime_str: The ISO8601-complying string to transform
+    :type datetime_str: str
+    :return: A datetime
+    """
+    return datetime.fromtimestamp(
+        timegm(aniso8601.parse_datetime(datetime_str).utctimetuple()), tz=pytz.UTC
+    )
