@@ -50,7 +50,7 @@ class Argument(object):
         in python2 and :py:class:`str` in python3.
     :param location: The attributes of the :py:class:`flask.Request` object
         to source the arguments from (ex: headers, args, etc.), can be an
-        iterator.
+        iterator. The last item listed takes precedence in the result set.
     :param choices: A container of the allowable values for the argument.
     :param help: A brief description of the argument, returned in the
         response when the argument is invalid. This takes precedence over
