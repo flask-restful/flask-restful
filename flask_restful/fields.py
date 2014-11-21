@@ -315,7 +315,7 @@ class DateTime(Raw):
                 return inputs.iso8601(value)
             else:
                 raise MarshallingException(
-                    'Unsupported date format {}'.format(self.dt_format)
+                    'Unsupported date format %s' % self.dt_format
                 )
         except AttributeError as ae:
             raise MarshallingException(ae)
