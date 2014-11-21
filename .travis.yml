@@ -8,5 +8,5 @@ install:
   - pip install coveralls
   - pip install -r tests/requirements.txt
   - pip install -e .[paging]
-script: nosetests
+script: nosetests --with-coverage --cover-package=flask_restful
 after_success: coveralls
