@@ -37,10 +37,6 @@ class HelloWorld(flask_restful.Resource):
 
 
 class APITestCase(unittest.TestCase):
-    def setUp(self):
-        # In python 3.2+ ItemsEqual named CountEqual
-        if not hasattr(self, 'assertItemsEqual'):
-            self.assertItemsEqual = self.assertCountEqual
 
     def test_http_code(self):
         self.assertEquals(http_status_message(200), 'OK')
@@ -697,8 +693,8 @@ class APITestCase(unittest.TestCase):
         resp = app.post('/ids/3')
         self.assertEquals(resp.status_code, 405)
         self.assertEquals(resp.content_type, api.default_mediatype)
-        self.assertItemsEqual(resp.headers.get_all('Allow'),
-                              ['HEAD', 'OPTIONS'] + HelloWorld.methods)
+        self.assertEquals(set(resp.headers.get_all('Allow')),
+                          set(['HEAD', 'OPTIONS'] + HelloWorld.methods))
 
     def test_will_prettyprint_json_in_debug_mode(self):
         app = Flask(__name__)
