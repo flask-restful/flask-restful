@@ -217,6 +217,7 @@ Save this example in api.py ::
 
     from flask import Flask
     from flask.ext.restful import reqparse, abort, Api, Resource
+    import re
 
     app = Flask(__name__)
     api = Api(app)
@@ -263,7 +264,10 @@ Save this example in api.py ::
 
         def post(self):
             args = parser.parse_args()
-            todo_id = 'todo%d' % (len(TODOS) + 1)
+            r = re.compile("([a-zA-Z]+)([0-9]+)")
+            m = r.match(max(TODOS.keys()))
+            temp_id = int(m.group(2)) + 1
+            todo_id = m.group(1) + str(temp_id)
             TODOS[todo_id] = {'task': args['task']}
             return TODOS[todo_id], 201
 
