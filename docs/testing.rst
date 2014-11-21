@@ -19,3 +19,8 @@ Use the nosetests convention of ``nosetests <filename>:ClassName.func_name`` to 
 
 Alternately, push changes to your fork on Github, and Travis will run the tests
 for your branch automatically.
+
+A Tox config file is also provided so you can test against multiple python
+versions locally (2.6, 2.7, 3.3, and 3.4) ::
+
+       $ tox
