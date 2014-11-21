@@ -4,7 +4,7 @@ from mock import Mock
 from flask.ext.restful.fields import MarshallingException
 from flask.ext.restful.utils.ordereddict import OrderedDict
 from flask_restful import fields
-from datetime import datetime
+from datetime import datetime, timedelta, tzinfo
 from flask import Flask
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals  # you need it for tests in form of continuations
@@ -18,6 +18,11 @@ class Foo(object):
 class Bar(object):
     def __marshallable__(self):
         return {"hey": 3}
+
+
+class TZ(tzinfo):
+    def utcoffset(self, dt):
+        return timedelta(hours=2)
 
 
 def check_field(expected, field, value):
@@ -231,10 +236,30 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.String()
         self.assertEquals(None, field.output("empty", {'empty': None}))
 
-    def test_date_field_with_offset(self):
+    def test_rfc822_date_field_without_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
         field = fields.DateTime()
         self.assertEquals("Mon, 22 Aug 2011 20:58:45 -0000", field.output("bar", obj))
+
+    def test_rfc822_date_field_with_offset(self):
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=TZ())}
+        field = fields.DateTime()
+        self.assertEquals("Mon, 22 Aug 2011 18:58:45 -0000", field.output("bar", obj))
+
+    def test_iso8601_date_field_without_offset(self):
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
+        field = fields.DateTime(dt_format='iso8601')
+        self.assertEquals("2011-08-22T20:58:45+00:00", field.output("bar", obj))
+
+    def test_iso8601_date_field_with_offset(self):
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=TZ())}
+        field = fields.DateTime(dt_format='iso8601')
+        self.assertEquals("2011-08-22T18:58:45+00:00", field.output("bar", obj))
+
+    def test_unsupported_datetime_format(self):
+        obj = object
+        field = fields.DateTime(dt_format='raw')
+        self.assertRaises(MarshallingException, field.output('foo', obj))
 
     def test_to_dict(self):
         obj = {"hey": 3}

@@ -297,11 +297,26 @@ class Arbitrary(Raw):
 
 
 class DateTime(Raw):
-    """Return a RFC822-formatted datetime string in UTC"""
+    """
+    Return a formatted datetime string in UTC. Supported formats are RFC 822
+    and ISO 8601.
+
+    :param: str dt_format: rfc822 or iso8601
+    """
+    def __init__(self, dt_format='rfc822', **kwargs):
+        super(DateTime, self).__init__(**kwargs)
+        self.dt_format = dt_format
 
     def format(self, value):
         try:
-            return inputs.rfc822(value)
+            if self.dt_format == 'rfc822':
+                return inputs.rfc822(value)
+            elif self.dt_format == 'iso8601':
+                return inputs.iso8601(value)
+            else:
+                raise MarshallingException(
+                    'Unsupported date format {}'.format(self.dt_format)
+                )
         except AttributeError as ae:
             raise MarshallingException(ae)
 
