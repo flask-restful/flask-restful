@@ -21,14 +21,15 @@ Basic Usage
 You can define a dict or OrderedDict of fields whose keys are names of
 attributes or keys on the object to render, and whose values are a class that
 will format & return the value for that field  This example has three fields,
-two are Strings and one is a DateTime (formatted as rfc822 date strings) ::
+two are Strings and one is a DateTime, formatted as RFC 822 date string (ISO 8601
+is supported as well) ::
 
     from flask.ext.restful import Resource, fields, marshal_with
 
     resource_fields = {
         'name': fields.String,
         'address': fields.String,
-        'date_updated': fields.DateTime,
+        'date_updated': fields.DateTime(dt_format='rfc822'),
     }
     
     class Todo(Resource):
