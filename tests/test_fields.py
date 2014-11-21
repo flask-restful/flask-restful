@@ -257,9 +257,9 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals("2011-08-22T18:58:45+00:00", field.output("bar", obj))
 
     def test_unsupported_datetime_format(self):
-        obj = object
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
         field = fields.DateTime(dt_format='raw')
-        self.assertRaises(MarshallingException, field.output('foo', obj))
+        self.assertRaises(MarshallingException, lambda: field.output('bar', obj))
 
     def test_to_dict(self):
         obj = {"hey": 3}
