@@ -7,7 +7,7 @@ except ImportError:
     from urllib.parse import urlparse, urlunparse
 
 from flask_restful import inputs, marshal
-from flask import url_for
+from flask import url_for, request
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
            "Integer", "Arbitrary", "Nested", "List", "Raw", "Boolean",
@@ -81,8 +81,8 @@ class Raw(object):
         self.default = default
 
     def format(self, value):
-        """Formats a field's value. No-op by default - field classes that 
-        modify how the value of existing object keys should be presented should 
+        """Formats a field's value. No-op by default - field classes that
+        modify how the value of existing object keys should be presented should
         override this and apply the appropriate formatting.
 
         :param value: The value to format
@@ -98,11 +98,11 @@ class Raw(object):
 
     def output(self, key, obj):
         """Pulls the value for the given key from the object, applies the
-        field's formatting and returns the result. If the key is not found 
-        in the object, returns the default value. Field classes that create 
-        values which do not require the existence of the key in the object 
+        field's formatting and returns the result. If the key is not found
+        in the object, returns the default value. Field classes that create
+        values which do not require the existence of the key in the object
         should override this and return the desired value.
-        
+
         :exception MarshallingException: In case of formatting problem
         """
 
@@ -255,7 +255,7 @@ class Url(Raw):
     """
     A string representation of a Url
     """
-    def __init__(self, endpoint, absolute=False, scheme=None):
+    def __init__(self, endpoint=None, absolute=False, scheme=None):
         super(Url, self).__init__()
         self.endpoint = endpoint
         self.absolute = absolute
@@ -264,7 +264,8 @@ class Url(Raw):
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
-            o = urlparse(url_for(self.endpoint, _external=self.absolute, **data))
+            endpoint = self.endpoint if self.endpoint is not None else request.endpoint
+            o = urlparse(url_for(endpoint, _external=self.absolute, **data))
             if self.absolute:
                 scheme = self.scheme if self.scheme is not None else o.scheme
                 return urlunparse((scheme, o.netloc, o.path, "", "", ""))
