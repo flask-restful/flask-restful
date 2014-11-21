@@ -2,7 +2,7 @@
 import unittest
 from mock import Mock, patch, NonCallableMock
 from flask import Flask
-from werkzeug import exceptions
+from werkzeug import exceptions, MultiDict
 from werkzeug.wrappers import Request
 from werkzeug.datastructures import FileStorage
 from flask_restful.reqparse import Argument, RequestParser, Namespace
@@ -145,10 +145,10 @@ class ReqParseTestCase(unittest.TestCase):
         req.args = {'foo': 'bar'}
         req.headers = {'baz': 'bat'}
         arg = Argument('foo', location=['args'])
-        self.assertEquals(arg.source(req), req.args)
+        self.assertEquals(arg.source(req), MultiDict(req.args))
 
         arg = Argument('foo', location=['headers'])
-        self.assertEquals(arg.source(req), req.headers)
+        self.assertEquals(arg.source(req), MultiDict(req.headers))
 
     def test_source_bad_location(self):
         req = Mock(['values'])
@@ -157,7 +157,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_source_default_location(self):
         req = Mock(['values'])
-        req._get_child_mock = lambda **kwargs: NonCallableMock(**kwargs)
+        req._get_child_mock = lambda **kwargs: MultiDict()
         arg = Argument('foo')
         self.assertEquals(arg.source(req), req.values)
 
@@ -548,7 +548,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument("foo", type=decimal.Decimal, location="json")
 
         with app.test_request_context('/bubble', method='post',
-                                      data=json.dumps({"foo": 1.0025}),
+                                      data=json.dumps({"foo": "1.0025"}),
                                       content_type='application/json'):
             args = parser.parse_args()
             self.assertEquals(args['foo'], decimal.Decimal("1.0025"))
@@ -628,6 +628,20 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], u'baz')
+        
+    def test_both_json_and_values_location(self):
+
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        parser.add_argument('baz', type=int)
+        with app.test_request_context('/bubble?foo=1', method="post",
+                                      data=json.dumps({"baz": 2}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], 1)
+            self.assertEquals(args['baz'], 2)
 
     def test_request_parser_remove_argument(self):
         req = Request.from_values("/bubble?foo=baz")

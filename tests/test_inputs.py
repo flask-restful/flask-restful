@@ -129,8 +129,14 @@ class TypesTestCase(unittest.TestCase):
     def test_boolean_false(self):
         assert_equal(inputs.boolean("False"), False)
 
+    def test_boolean_is_false_for_0(self):
+        assert_equal(inputs.boolean("0"), False)
+
     def test_boolean_true(self):
         assert_equal(inputs.boolean("true"), True)
+
+    def test_boolean_is_true_for_1(self):
+        assert_equal(inputs.boolean("1"), True)
 
     def test_boolean_upper_case(self):
         assert_equal(inputs.boolean("FaLSE"), False)
@@ -346,15 +352,16 @@ def test_isointerval():
 
 
 def test_invalid_isointerval_error():
-    with assert_raises(ValueError) as cm:
+    try:
         inputs.iso8601interval('2013-01-01/blah')
-
-    error = cm.exception
-    assert_equal(
-        str(error),
-        "Invalid argument: 2013-01-01/blah. argument must be a valid ISO8601 "
-        "date/time interval.",
-    )
+    except ValueError as error:
+        assert_equal(
+            str(error),
+            "Invalid argument: 2013-01-01/blah. argument must be a valid ISO8601 "
+            "date/time interval.",
+        )
+        return
+    assert False, 'Should raise a ValueError'
 
 
 def test_bad_isointervals():

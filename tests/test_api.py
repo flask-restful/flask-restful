@@ -693,6 +693,8 @@ class APITestCase(unittest.TestCase):
         resp = app.post('/ids/3')
         self.assertEquals(resp.status_code, 405)
         self.assertEquals(resp.content_type, api.default_mediatype)
+        self.assertEquals(set(resp.headers.get_all('Allow')),
+                          set(['HEAD', 'OPTIONS'] + HelloWorld.methods))
 
     def test_will_prettyprint_json_in_debug_mode(self):
         app = Flask(__name__)
@@ -779,7 +781,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data, '{"foo": 3.0}')
+        self.assertEquals(resp.data.decode('utf-8'), '{"foo": 3.0}')
 
     def test_custom_error_message(self):
         errors = {
@@ -802,7 +804,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 418)
-            self.assertDictEqual(loads(resp.data), {"message": "api is foobar", "status": 418})
+            self.assertEqual(loads(resp.data.decode('utf8')), {"message": "api is foobar", "status": 418})
 
 if __name__ == '__main__':
     unittest.main()
