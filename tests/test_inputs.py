@@ -25,27 +25,67 @@ class UTC(tzinfo):
         return ZERO
 
 
-def test_datetime_formatters():
+class CET(tzinfo):
+    """CET"""
+
+    def utcoffset(self, dt):
+        return HOUR
+
+    def tzname(self, dt):
+        return "CET"
+
+    def dst(self, dt):
+        return ZERO
+
+
+def test_rfc822_datetime_formatters():
     dates = [
         (datetime(2011, 1, 1), "Sat, 01 Jan 2011 00:00:00 -0000"),
         (datetime(2011, 1, 1, 23, 59, 59),
          "Sat, 01 Jan 2011 23:59:59 -0000"),
         (datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC()),
          "Sat, 01 Jan 2011 23:59:59 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=CET()),
+         "Sat, 01 Jan 2011 22:59:59 -0000")
     ]
     for date_obj, expected in dates:
         yield assert_equal, inputs.rfc822(date_obj), expected
 
 
-def test_reverse_datetime():
+def test_iso8601_datetime_formatters():
+    dates = [
+        (datetime(2011, 1, 1), "2011-01-01T00:00:00+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59),
+         "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC()),
+         "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=CET()),
+         "2011-01-01T22:59:59+00:00")
+    ]
+    for date_obj, expected in dates:
+        yield assert_equal, inputs.iso8601(date_obj), expected
+
+
+def test_reverse_rfc822_datetime():
     dates = [
         ("Sat, 01 Jan 2011 00:00:00 -0000", datetime(2011, 1, 1, tzinfo=UTC())),
         ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
-        ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
+        ("Sat, 01 Jan 2011 21:59:59 -0200", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
     ]
 
     for date_string, expected in dates:
         yield assert_equal, inputs.datetime_from_rfc822(date_string), expected
+
+
+def test_reverse_iso8601_datetime():
+    dates = [
+        ("2011-01-01T00:00:00+00:00", datetime(2011, 1, 1, tzinfo=UTC())),
+        ("2011-01-01T23:59:59+00:00", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
+        ("2011-01-01T23:59:59+02:00", datetime(2011, 1, 1, 21, 59, 59, tzinfo=UTC())),
+    ]
+
+    for date_string, expected in dates:
+        yield assert_equal, inputs.datetime_from_iso8601(date_string), expected
 
 
 def test_urls():
