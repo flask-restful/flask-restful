@@ -4,9 +4,6 @@ python:
   - 3.3
   - 2.7
   - 2.6
-install:
-  - pip install coveralls
-  - pip install -r tests/requirements.txt
-  - pip install -e .[paging]
-script: nosetests --with-coverage --cover-package=flask_restful
+install: pip install coveralls
+script: make ci
 after_success: coveralls
