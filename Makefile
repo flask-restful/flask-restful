@@ -2,6 +2,10 @@
 ifndef TRAVIS
 	PYTHON_MAJOR := 2
 	PYTHON_MINOR := 7
+	ENV := env
+else
+	# Use the virtualenv provided by Travis
+	ENV = $(VIRTUAL_ENV)
 endif
 
 # Project settings
@@ -27,7 +31,6 @@ else
 endif
 
 # virtualenv paths
-ENV := env
 ifneq ($(findstring win32, $(PLATFORM)), )
 	BIN := $(ENV)/Scripts
 	OPEN := cmd /c start
