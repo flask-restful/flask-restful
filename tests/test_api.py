@@ -13,6 +13,7 @@ import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
 from json import dumps, loads
+from collections import namedtuple
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals, assert_true  # you need it for tests in form of continuations
 import six
@@ -144,6 +145,16 @@ class APITestCase(unittest.TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = flask_restful.marshal((marshal_fields,), fields)
         self.assertEquals(output, [{'foo': 'bar'}])
+
+
+    def test_marshal_named_tuple(self):
+        class TestingTuple(namedtuple('TestingTuple', 'foo bat')):
+            pass
+        fields = OrderedDict({'foo': flask_restful.fields.Raw})
+        marshal_fields = TestingTuple('bar', 'baz')
+        output = flask_restful.marshal((marshal_fields,), fields)
+        self.assertEquals(output, [{'foo': 'bar'}])
+
 
     def test_marshal_nested(self):
         fields = OrderedDict([
