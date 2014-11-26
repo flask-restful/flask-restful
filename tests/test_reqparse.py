@@ -548,7 +548,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument("foo", type=decimal.Decimal, location="json")
 
         with app.test_request_context('/bubble', method='post',
-                                      data=json.dumps({"foo": 1.0025}),
+                                      data=json.dumps({"foo": "1.0025"}),
                                       content_type='application/json'):
             args = parser.parse_args()
             self.assertEquals(args['foo'], decimal.Decimal("1.0025"))

@@ -24,7 +24,9 @@ Api
 
 ReqParse
 --------
-.. automodule:: reqparse
+.. module:: reqparse
+
+.. autoclass:: RequestParser
    :members:
 
 .. autoclass:: Argument

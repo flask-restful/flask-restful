@@ -17,6 +17,7 @@ class Namespace(dict):
         self[name] = value
 
 _friendly_location = {
+    u'json': u'the JSON body',
     u'form': u'the post body',
     u'args': u'the query string',
     u'values': u'the post body or the query string',
@@ -30,38 +31,40 @@ text_type = lambda x: six.text_type(x)
 
 class Argument(object):
 
+    """
+    :param name: Either a name or a list of option strings, e.g. foo or
+        -f, --foo.
+    :param default: The value produced if the argument is absent from the
+        request.
+    :param dest: The name of the attribute to be added to the object
+        returned by :py:meth:`~reqparse.RequestParser.parse_args()`.
+    :param bool required: Whether or not the argument may be omitted (optionals
+        only).
+    :param action: The basic type of action to be taken when this argument
+        is encountered in the request. Valid options are "store" and "append".
+    :param ignore: Whether to ignore cases where the argument fails type
+        conversion
+    :param type: The type to which the request argument should be
+        converted. If a type raises a ValidationError, the message in the
+        error will be returned in the response. Defaults to :py:class:`unicode`
+        in python2 and :py:class:`str` in python3.
+    :param location: The attributes of the :py:class:`flask.Request` object
+        to source the arguments from (ex: headers, args, etc.), can be an
+        iterator. The last item listed takes precedence in the result set.
+    :param choices: A container of the allowable values for the argument.
+    :param help: A brief description of the argument, returned in the
+        response when the argument is invalid. This takes precedence over
+        the message passed to a ValidationError raised by a type converter.
+    :param bool case_sensitive: Whether the arguments in the request are
+        case sensitive or not
+    :param bool store_missing: Whether the arguments default value should
+        be stored if the argument is missing from the request.
+    """
+
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True, store_missing=True):
-        """
-        :param name: Either a name or a list of option strings, e.g. foo or
-                        -f, --foo.
-        :param default: The value produced if the argument is absent from the
-            request.
-        :param dest: The name of the attribute to be added to the object
-            returned by parse_args(req).
-        :param bool required: Whether or not the argument may be omitted (optionals
-            only).
-        :param action: The basic type of action to be taken when this argument
-            is encountered in the request.
-        :param ignore: Whether to ignore cases where the argument fails type
-            conversion
-        :param type: The type to which the request argument should be
-            converted. If a type raises a ValidationError, the message in the
-            error will be returned in the response.
-        :param location: Where to source the arguments from the Flask request
-            (ex: headers, args, etc.), can be an iterator
-        :param choices: A container of the allowable values for the argument.
-        :param help: A brief description of the argument, returned in the
-            response when the argument is invalid. This takes precedence over
-            the message passed to a ValidationError raised by a type converter.
-        :param bool case_sensitive: Whether the arguments in the request are
-            case sensitive or not
-        :param bool store_missing: Whether the arguments default value should
-            be stored if the argument is missing from the request.
-        """
-
         self.name = name
         self.default = default
         self.dest = dest
