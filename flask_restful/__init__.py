@@ -542,7 +542,7 @@ def marshal(data, fields, envelope=None):
     :param data: the actual object(s) from which the fields are taken from
     :param fields: a dict of whose keys will make up the final serialized
                    response output
-    :param envelope: optional key that will be used to envelope the serialized
+    :param envelope: optional key that will be used to envelop the serialized
                      response
 
 
@@ -600,7 +600,7 @@ class marshal_with(object):
         """
         :param fields: a dict of whose keys will make up the final
                        serialized response output
-        :param envelope: optional key that will be used to envelope the serialized
+        :param envelope: optional key that will be used to envelop the serialized
                          response
         """
         self.fields = fields
