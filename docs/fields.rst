@@ -33,7 +33,7 @@ is supported as well) ::
     }
     
     class Todo(Resource):
-        @marshal_with(resource_fields, envelope='resource')
+        @marshal_with(resource_fields, default={}, envelope='resource')
         def get(self, **kwargs):
             return db_get_todo()  # Some function that queries the db
 
@@ -42,7 +42,9 @@ This example assumes that you have a custom database object (``todo``) that
 has attributes ``name``, ``address``, and ``date_updated``.  Any additional
 attributes on the object are considered private and won't be rendered in the
 output. An optional ``envelope`` keyword argument is specified to wrap the
-resulting output.
+resulting output. ``default`` keyword argument allows specifying the value that
+the data will serialized into if the data in None (by default it is the dictionary
+with all null keys).
 
 The decorator ``marshal_with`` is what actually takes your data object and applies the
 field filtering.  The marshalling can work on single objects, dicts, or
