@@ -105,6 +105,12 @@ class APITestCase(unittest.TestCase):
         output = flask_restful.marshal(marshal_dict, fields)
         self.assertEquals(output, {'foo': 'bar'})
 
+    def test_marshal_with_envelope(self):
+        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
+        marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
+        output = flask_restful.marshal(marshal_dict, fields, envelope='hey')
+        self.assertEquals(output, {'hey': {'foo': 'bar'}})
+
     def test_marshal_decorator(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
 
@@ -113,6 +119,15 @@ class APITestCase(unittest.TestCase):
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         self.assertEquals(try_me(), {'foo': 'bar'})
 
+    def test_marshal_decorator_with_envelope(self):
+        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
+
+        @flask_restful.marshal_with(fields, envelope='hey')
+        def try_me():
+            return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
+
+        self.assertEquals(try_me(), {'hey': {'foo': 'bar'}})
+
     def test_marshal_decorator_tuple(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
 
@@ -120,6 +135,15 @@ class APITestCase(unittest.TestCase):
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
         self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
+
+    def test_marshal_decorator_tuple_with_envelope(self):
+        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
+
+        @flask_restful.marshal_with(fields, envelope='hey')
+        def try_me():
+            return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
+
+        self.assertEquals(try_me(), ({'hey': {'foo': 'bar'}}, 200, {'X-test': 123}))
 
     def test_marshal_field_decorator(self):
         field = flask_restful.fields.Raw
@@ -148,6 +172,12 @@ class APITestCase(unittest.TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = flask_restful.marshal((marshal_fields,), fields)
         self.assertEquals(output, [{'foo': 'bar'}])
+
+    def test_marshal_tuple_with_envelope(self):
+        fields = OrderedDict({'foo': flask_restful.fields.Raw})
+        marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
+        output = flask_restful.marshal((marshal_fields,), fields, envelope='hey')
+        self.assertEquals(output, {'hey': [{'foo': 'bar'}]})
 
     def test_marshal_nested(self):
         fields = OrderedDict([
