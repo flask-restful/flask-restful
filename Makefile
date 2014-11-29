@@ -106,7 +106,7 @@ $(DEPENDS_DEV): Makefile tests/requirements.txt
 # Documentation ##############################################################
 
 .PHONY: doc
-doc: .depends-ci
+doc: .depends-dev
 	cd docs; $(MAKE) html
 
 .PHONY: read
@@ -192,7 +192,7 @@ register: doc
 	$(PYTHON) setup.py register
 
 .PHONY: dist
-dist: check doc test tests
+dist: doc test
 	$(PYTHON) setup.py sdist
 	$(PYTHON) setup.py bdist_wheel
 
