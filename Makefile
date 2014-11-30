@@ -139,7 +139,7 @@ fix: .depends-dev
 # Testing ####################################################################
 
 .PHONY: test
-test: .depends-test
+test: .depends-test .clean-test
 	$(NOSE) tests --with-coverage --cover-package=$(PACKAGE)
 
 test-all: test-py26 test-py27 test-py33 test-py34
@@ -160,37 +160,22 @@ htmlcov: test
 # Cleanup ####################################################################
 
 .PHONY: clean
-clean: .clean-dist .clean-test .clean-doc .clean-build
-	rm -rf $(ALL)
-
-.PHONY: clean-env
-clean-env: clean
-	rm -rf $(ENV)
-
-.PHONY: clean-all
-clean-all: clean clean-env .clean-cache
-
-.PHONY: .clean-build
-.clean-build:
+clean: .clean-test
 	find $(PACKAGE) -name '*.pyc' -delete
 	find $(PACKAGE) -name '__pycache__' -delete
-	rm -rf $(EGG_INFO)
-
-.PHONY: .clean-doc
-.clean-doc:
+	rm -rf dist build
 	rm -rf docs/_build
+	rm -rf $(EGG_INFO)
+	rm -rf $(ALL)
+
+.PHONY: clean-all
+clean-all: clean
+	rm -rf $(PIP_CACHE_DIR)
+	rm -rf $(ENV)
 
 .PHONY: .clean-test
 .clean-test:
-	rm -rf .coverage
-
-.PHONY: .clean-dist
-.clean-dist:
-	rm -rf dist build
-
-.PHONY: .clean-cache
-.clean-cache:
-	rm -rf $(PIP_CACHE_DIR)
+	rm -rf .coverage htmlcov
 
 # Release ####################################################################
 
