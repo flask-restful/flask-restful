@@ -58,8 +58,9 @@ PIP_CACHE_DIR := .cache
 PIP_CACHE := --download-cache $(PIP_CACHE_DIR)
 
 # Flags for PHONY targets
-DEPENDS_CI := $(ENV)/.depends-ci
+DEPENDS_TEST := $(ENV)/.depends-test
 DEPENDS_DEV := $(ENV)/.depends-dev
+DEPENDS_DOC := $(ENV)/.depends-doc
 ALL := $(ENV)/.all
 
 # Main Targets ###############################################################
@@ -77,36 +78,38 @@ ci: test
 # Development Installation ###################################################
 
 .PHONY: env
-env: .virtualenv $(EGG_INFO)
-$(EGG_INFO): Makefile setup.py
-	$(PIP) install -e .[paging,docs]
-	touch $(EGG_INFO)  # flag to indicate package is installed
+env: $(PIP)
 
-.PHONY: .virtualenv
-.virtualenv: $(PIP)
 $(PIP):
 	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
+	$(PIP) install wheel
 
 .PHONY: depends
-depends: .depends-ci .depends-dev
+depends: .depends-test .depends-dev .depends-doc
 
-.PHONY: .depends-ci
-.depends-ci: env Makefile $(DEPENDS_CI)
-$(DEPENDS_CI): Makefile
-	$(PIP) install $(PIP_CACHE) --upgrade flake8 pep257 nose coverage
-	$(PIP) install $(PIP_CACHE) --upgrade -r tests/requirements.txt
-	touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
+.PHONY: .depends-test
+.depends-test: env Makefile $(DEPENDS_TEST)
+$(DEPENDS_TEST): Makefile tests/requirements.txt
+	$(PIP) install -e .[paging]
+	$(PIP) install -r tests/requirements.txt
+	touch $(DEPENDS_TEST)  # flag to indicate dependencies are installed
 
 .PHONY: .depends-dev
 .depends-dev: env Makefile $(DEPENDS_DEV)
-$(DEPENDS_DEV): Makefile tests/requirements.txt
-	$(PIP) install $(PIP_CACHE) --upgrade pep8radius pygments wheel
+$(DEPENDS_DEV): Makefile
+	$(PIP) install $(PIP_CACHE) flake8 pep257 pep8radius
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
+
+.PHONY: .depends-doc
+.depends-doc: env Makefile setup.py
+$(DEPENDS_DOC): Makefile setup.py
+	$(PIP) install -e .[docs]
+	touch $(DEPENDS_DOC)  # flag to indicate dependencies are installed
 
 # Documentation ##############################################################
 
 .PHONY: doc
-doc: .depends-dev
+doc: .depends-doc
 	cd docs; $(MAKE) html
 
 .PHONY: read
@@ -118,16 +121,18 @@ read: doc
 .PHONY: check
 check: flake8 pep257
 
+PEP8_IGNORED := E501
+
 .PHONY: pep8
-pep8: .depends-ci
-	$(PEP8) $(PACKAGE) --ignore=E501
+pep8: .depends-dev
+	$(PEP8) $(PACKAGE) tests --ignore=$(PEP8_IGNORED)
 
 .PHONY: flake8
-flake8: .depends-ci
-	$(FLAKE8) $(PACKAGE) --ignore=E501
+flake8: .depends-dev
+	$(FLAKE8) $(PACKAGE) tests --ignore=$(PEP8_IGNORED)
 
 .PHONY: pep257
-pep257: .depends-ci
+pep257: .depends-dev
 	$(PEP257) $(PACKAGE)
 
 .PHONY: fix
@@ -137,7 +142,7 @@ fix: .depends-dev
 # Testing ####################################################################
 
 .PHONY: test
-test: .depends-ci
+test: .depends-test
 	$(NOSE) tests --with-coverage --cover-package=$(PACKAGE)
 
 .PHONY: htmlcov
