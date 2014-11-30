@@ -1,8 +1,12 @@
 # Python settings
 ifndef TRAVIS
-	PYTHON_MAJOR := 2
-	PYTHON_MINOR := 7
-	ENV := env
+	ifndef PYTHON_MAJOR
+		PYTHON_MAJOR := 2
+	endif
+	ifndef PYTHON_MINOR
+		PYTHON_MINOR := 7
+	endif
+	ENV := env/py$(PYTHON_MAJOR)$(PYTHON_MINOR)
 else
 	# Use the virtualenv provided by Travis
 	ENV = $(VIRTUAL_ENV)
