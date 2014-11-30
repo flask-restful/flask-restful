@@ -62,15 +62,11 @@ PIP_CACHE := --download-cache $(PIP_CACHE_DIR)
 DEPENDS_TEST := $(ENV)/.depends-test
 DEPENDS_DEV := $(ENV)/.depends-dev
 DEPENDS_DOC := $(ENV)/.depends-doc
-ALL := $(ENV)/.all
 
 # Main Targets ###############################################################
 
 .PHONY: all
-all: depends doc $(ALL)
-$(ALL): $(SOURCES)
-	$(MAKE) check
-	touch $(ALL)  # flag to indicate all setup steps were successful
+all: test
 
 # Targets to run on Travis
 .PHONY: ci
@@ -166,7 +162,6 @@ clean: .clean-test
 	rm -rf dist build
 	rm -rf docs/_build
 	rm -rf $(EGG_INFO)
-	rm -rf $(ALL)
 
 .PHONY: clean-all
 clean-all: clean
