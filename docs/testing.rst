@@ -7,9 +7,15 @@ A ``Makefile`` is included to take care of setting up a virtualenv for running t
 
     $ make test
 
+To change the Python version used to run the tests (default is Python 2.7), change the ``PYTHON_MAJOR`` and ``PYTHON_MINOR`` variables at the top of the ``Makefile``.
+
+You can run on all supported versions with::
+
+    $ make test-all
+
 Individual tests can be run using using a command with the format::
 
-    nosetests <filename>:ClassName.func_name.
+    nosetests <filename>:ClassName.func_name
 
 Example::
 
