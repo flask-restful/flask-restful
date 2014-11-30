@@ -149,6 +149,16 @@ fix: .depends-dev
 test: .depends-test
 	$(NOSE) tests --with-coverage --cover-package=$(PACKAGE)
 
+test-all: test-py26 test-py27 test-py33 test-py34
+test-py26:
+	PYTHON_MAJOR=2 PYTHON_MINOR=6 $(MAKE) test
+test-py27:
+	PYTHON_MAJOR=2 PYTHON_MINOR=7 $(MAKE) test
+test-py33:
+	PYTHON_MAJOR=3 PYTHON_MINOR=3 $(MAKE) test
+test-py34:
+	PYTHON_MAJOR=3 PYTHON_MINOR=4 $(MAKE) test
+
 .PHONY: htmlcov
 htmlcov: test
 	$(COVERAGE) html
