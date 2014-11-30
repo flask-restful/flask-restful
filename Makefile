@@ -24,8 +24,6 @@ ifneq ($(findstring win32, $(PLATFORM)), )
 	SYS_PYTHON_DIR := C:\\Python$(PYTHON_MAJOR)$(PYTHON_MINOR)
 	SYS_PYTHON := $(SYS_PYTHON_DIR)\\python.exe
 	SYS_VIRTUALENV := $(SYS_PYTHON_DIR)\\Scripts\\virtualenv.exe
-	# https://bugs.launchpad.net/virtualenv/+bug/449537
-	export TCL_LIBRARY=$(SYS_PYTHON_DIR)\\tcl\\tcl8.5
 else
 	SYS_PYTHON := python$(PYTHON_MAJOR)
 	ifdef PYTHON_MINOR
@@ -50,7 +48,6 @@ endif
 # virtualenv executables
 PYTHON := $(BIN)/python
 PIP := $(BIN)/pip
-PEP8 := $(BIN)/pep8
 FLAKE8 := $(BIN)/flake8
 PEP8RADIUS := $(BIN)/pep8radius
 PEP257 := $(BIN)/pep257
@@ -126,10 +123,6 @@ read: doc
 check: flake8 pep257
 
 PEP8_IGNORED := E501
-
-.PHONY: pep8
-pep8: .depends-dev
-	$(PEP8) $(PACKAGE) tests --ignore=$(PEP8_IGNORED)
 
 .PHONY: flake8
 flake8: .depends-dev
@@ -216,31 +209,6 @@ dist: doc test
 	$(PYTHON) setup.py bdist_wheel
 
 .PHONY: upload
-upload: .git-no-changes doc register
+upload: doc register
 	$(PYTHON) setup.py sdist upload
 	$(PYTHON) setup.py bdist_wheel upload
-
-.PHONY: .git-no-changes
-.git-no-changes:
-	@if git diff --name-only --exit-code;         \
-	then                                          \
-		echo Git working copy is clean...;        \
-	else                                          \
-		echo ERROR: Git working copy is dirty!;   \
-		echo Commit your changes and try again.;  \
-		exit -1;                                  \
-	fi;
-
-# System Installation ########################################################
-
-.PHONY: develop
-develop:
-	$(SYS_PYTHON) setup.py develop
-
-.PHONY: install
-install:
-	$(SYS_PYTHON) setup.py install
-
-.PHONY: download
-download:
-	pip install $(PROJECT)
