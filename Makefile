@@ -166,7 +166,7 @@ clean-all: clean clean-env .clean-cache
 
 .PHONY: .clean-doc
 .clean-doc:
-	rm -rf README.rst apidocs docs/*.html docs/*.png
+	rm -rf docs/_build
 
 .PHONY: .clean-test
 .clean-test:
