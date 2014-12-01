@@ -86,6 +86,7 @@ class Api(object):
         self.endpoints = set()
         self.resources = []
         self.app = None
+        self.blueprint = None
 
         if app is not None:
             self.app = app
@@ -106,7 +107,6 @@ class Api(object):
             api.init_app(app)
 
         """
-        self.blueprint = None
         # If app is a blueprint, defer the initialization
         try:
             app.record(self._deferred_blueprint_init)

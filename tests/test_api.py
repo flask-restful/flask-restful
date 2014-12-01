@@ -836,5 +836,14 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.status_code, 418)
             self.assertEqual(loads(resp.data.decode('utf8')), {"message": "api is foobar", "status": 418})
 
+    def test_calling_owns_endpoint_before_api_init(self):
+        api = flask_restful.Api()
+
+        try:
+            api.owns_endpoint('endpoint')
+        except AttributeError, ae:
+            self.fail(ae.message)
+
+
 if __name__ == '__main__':
     unittest.main()
