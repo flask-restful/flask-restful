@@ -611,13 +611,27 @@ class ReqParseTestCase(unittest.TestCase):
     def test_request_parser_copy(self):
         req = Request.from_values("/bubble?foo=101&bar=baz")
         parser = RequestParser()
-        parser.add_argument('foo', type=int)
+        parser.add_argument('foo', type=int, required=True)
         parser_copy = parser.copy()
         parser_copy.add_argument('bar', type=str)
 
         args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], 101)
         self.assertEquals(args['bar'], u'baz')
+
+        parser_copy.args[0].required = False
+        parser_copy.args[0].default = 101
+        self.assertEquals(len(parser.args), 1)
+        self.assertEquals(parser.args[0].required, True)
+        self.assertEquals(parser.args[0].default, None)
+        self.assertEquals(parser_copy.args[0].required, False)
+        self.assertEquals(parser_copy.args[0].default, 101)
+
+        req = Request.from_values("/bubble?bar=baz")
+        args_copy = parser_copy.parse_args(req)
+        self.assertEquals(args_copy['foo'], 101)
+        self.assertEquals(args_copy['bar'], u'baz')
+        self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
 
     def test_request_parser_replace_argument(self):
         req = Request.from_values("/bubble?foo=baz")
@@ -628,7 +642,7 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], u'baz')
-        
+
     def test_both_json_and_values_location(self):
 
         app = Flask(__name__)

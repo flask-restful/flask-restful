@@ -1,3 +1,4 @@
+from copy import deepcopy
 from flask import request
 from werkzeug.datastructures import MultiDict, FileStorage
 import flask_restful
@@ -252,7 +253,7 @@ class RequestParser(object):
     def copy(self):
         """ Creates a copy of this RequestParser with the same set of arguments """
         parser_copy = RequestParser(self.argument_class, self.namespace_class)
-        parser_copy.args = list(self.args)
+        parser_copy.args = deepcopy(self.args)
         return parser_copy
 
     def replace_argument(self, name, *args, **kwargs):
