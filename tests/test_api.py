@@ -841,7 +841,7 @@ class APITestCase(unittest.TestCase):
 
         try:
             api.owns_endpoint('endpoint')
-        except AttributeError, ae:
+        except AttributeError as ae:
             self.fail(ae.message)
 
 
