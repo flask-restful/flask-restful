@@ -611,27 +611,22 @@ class ReqParseTestCase(unittest.TestCase):
     def test_request_parser_copy(self):
         req = Request.from_values("/bubble?foo=101&bar=baz")
         parser = RequestParser()
-        parser.add_argument('foo', type=int, required=True)
+        foo_arg = Argument('foo', type=int)
+        parser.args.append(foo_arg)
         parser_copy = parser.copy()
-        parser_copy.add_argument('bar', type=str)
+
+        # Deepcopy should create a clone of the argument object instead of
+        # copying a reference to the new args list
+        self.assertFalse(foo_arg in parser_copy.args)
+
+        # Args added to new parser should not be added to the original
+        bar_arg = Argument('bar')
+        parser_copy.args.append(bar_arg)
+        self.assertFalse(bar_arg in parser.args)
 
         args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], 101)
         self.assertEquals(args['bar'], u'baz')
-
-        parser_copy.args[0].required = False
-        parser_copy.args[0].default = 101
-        self.assertEquals(len(parser.args), 1)
-        self.assertEquals(parser.args[0].required, True)
-        self.assertEquals(parser.args[0].default, None)
-        self.assertEquals(parser_copy.args[0].required, False)
-        self.assertEquals(parser_copy.args[0].default, 101)
-
-        req = Request.from_values("/bubble?bar=baz")
-        args_copy = parser_copy.parse_args(req)
-        self.assertEquals(args_copy['foo'], 101)
-        self.assertEquals(args_copy['bar'], u'baz')
-        self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
 
     def test_request_parser_replace_argument(self):
         req = Request.from_values("/bubble?foo=baz")
