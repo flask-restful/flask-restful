@@ -18,14 +18,14 @@ Out of the box, Flask-RESTful is only configured to support JSON. We made this
 decision to give API maintainers full control of over API format support, so a
 year down the road you don’t have to support people using the CSV
 representation of your API you didn’t even know existed. To add additional
-mediatypes to your api, you’ll need to declare your supported representations
+mediatypes to your API, you’ll need to declare your supported representations
 on the :class:`~Api` object. ::
 
     app = Flask(__name__)
     api = restful.Api(app)
 
     @api.representation('application/json')
-    def json(data, code, headers=None):
+    def output_json(data, code, headers=None):
         resp = make_response(json.dumps(data), code)
         resp.headers.extend(headers or {})
         return resp
@@ -70,7 +70,8 @@ your own input types lets you extend request parsing with ease.  ::
 
         return value
 
-The request parser will also give you access to the name of the argument for cases where you want to reference the name in the error message ::
+The request parser will also give you access to the name of the argument for cases
+where you want to reference the name in the error message. ::
 
     def odd_number(value, name):
         if value % 2 == 0:
@@ -78,7 +79,7 @@ The request parser will also give you access to the name of the argument for cas
 
         return value
 
-You can also convert public parameter values to internal representations ::
+You can also convert public parameter values to internal representations: ::
 
     # maps the strings to their internal integer representation
     # 'init' => 0
@@ -90,7 +91,7 @@ You can also convert public parameter values to internal representations ::
         return statuses.index(value)
 
 
-Then you can use these custom input type in your RequestParser ::
+Then you can use these custom input type in your RequestParser: ::
 
     parser = reqparse.RequestParser()
     parser.add_argument('OddNumber', type=odd_number)
@@ -102,7 +103,7 @@ Response Formats
 ----------------
 
 To support other representations (like xml, csv, html) you can use the
-:meth:`~Api.representation` decorator.  You need to have a reference to your api ::
+:meth:`~Api.representation` decorator.  You need to have a reference to your API. ::
 
     api = restful.Api(app)
 
@@ -144,7 +145,7 @@ Resource Method Decorators
 There is a property on the :meth:`~flask.ext.restful.Resource` called
 method_decorators.  You can subclass the Resource and add your own decorators
 that will be added to all ``method`` functions in resource.  For instance, if
-you want to build custom authentication into every request ::
+you want to build custom authentication into every request. ::
 
     def authenticate(func):
         @wraps(func)
@@ -178,7 +179,7 @@ Flask-RESTful will call the :meth:`~flask.ext.restful.Api.handle_error`
 function on any 400 or 500 error that happens on a Flask-RESTful route, and
 leave other routes alone. You may want your app to return an error message with
 the correct media type on 404 Not Found errors; in which case, use the
-`catch_all_404s` parameter of the :class:`~flask.ext.restful.Api` constructor ::
+`catch_all_404s` parameter of the :class:`~flask.ext.restful.Api` constructor. ::
 
     app = Flask(__name__)
     api = flask_restful.Api(app, catch_all_404s=True)
@@ -218,7 +219,7 @@ Including the `'status'` key will set the Response's status code. If not specifi
 it will default to 500.
 
 Once your `errors` dictionary is defined, simply pass it to the :class:`~flask.ext.restful.Api`
-constructor ::
+constructor. ::
 
     app = Flask(__name__)
     api = flask_restful.Api(app, errors=errors)

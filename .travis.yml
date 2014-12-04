@@ -1,9 +1,12 @@
 language: python
 python:
-  - "3.3"
-  - "2.7"
-  - "2.6"
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: 
-    - "make install test-install"
-script: "make test"
+  - 3.4
+  - 3.3
+  - 2.7
+  - 2.6
+install:
+  - pip install coveralls
+  - pip install -r tests/requirements.txt
+  - pip install -e .[paging]
+script: nosetests --with-coverage --cover-package=flask_restful
+after_success: coveralls

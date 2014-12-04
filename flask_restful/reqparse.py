@@ -1,3 +1,4 @@
+from copy import deepcopy
 from flask import request
 from werkzeug.datastructures import MultiDict, FileStorage
 import flask_restful
@@ -17,6 +18,7 @@ class Namespace(dict):
         self[name] = value
 
 _friendly_location = {
+    u'json': u'the JSON body',
     u'form': u'the post body',
     u'args': u'the query string',
     u'values': u'the post body or the query string',
@@ -30,36 +32,40 @@ text_type = lambda x: six.text_type(x)
 
 class Argument(object):
 
+    """
+    :param name: Either a name or a list of option strings, e.g. foo or
+        -f, --foo.
+    :param default: The value produced if the argument is absent from the
+        request.
+    :param dest: The name of the attribute to be added to the object
+        returned by :py:meth:`~reqparse.RequestParser.parse_args()`.
+    :param bool required: Whether or not the argument may be omitted (optionals
+        only).
+    :param action: The basic type of action to be taken when this argument
+        is encountered in the request. Valid options are "store" and "append".
+    :param ignore: Whether to ignore cases where the argument fails type
+        conversion
+    :param type: The type to which the request argument should be
+        converted. If a type raises a ValidationError, the message in the
+        error will be returned in the response. Defaults to :py:class:`unicode`
+        in python2 and :py:class:`str` in python3.
+    :param location: The attributes of the :py:class:`flask.Request` object
+        to source the arguments from (ex: headers, args, etc.), can be an
+        iterator. The last item listed takes precedence in the result set.
+    :param choices: A container of the allowable values for the argument.
+    :param help: A brief description of the argument, returned in the
+        response when the argument is invalid. This takes precedence over
+        the message passed to a ValidationError raised by a type converter.
+    :param bool case_sensitive: Whether the arguments in the request are
+        case sensitive or not
+    :param bool store_missing: Whether the arguments default value should
+        be stored if the argument is missing from the request.
+    """
+
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True):
-        """
-        :param name: Either a name or a list of option strings, e.g. foo or
-                        -f, --foo.
-        :param default: The value produced if the argument is absent from the
-            request.
-        :param dest: The name of the attribute to be added to the object
-            returned by parse_args(req).
-        :param bool required: Whether or not the argument may be omitted (optionals
-            only).
-        :param action: The basic type of action to be taken when this argument
-            is encountered in the request.
-        :param ignore: Whether to ignore cases where the argument fails type
-            conversion
-        :param type: The type to which the request argument should be
-            converted. If a type raises a ValidationError, the message in the
-            error will be returned in the response.
-        :param location: Where to source the arguments from the Flask request
-            (ex: headers, args, etc.), can be an iterator
-        :param choices: A container of the allowable values for the argument.
-        :param help: A brief description of the argument, returned in the
-            response when the argument is invalid. This takes precedence over
-            the message passed to a ValidationError raised by a type converter.
-        :param bool case_sensitive: Whether the arguments in the request are
-            case sensitive or not
-        """
-
+                 case_sensitive=True, store_missing=True):
         self.name = name
         self.default = default
         self.dest = dest
@@ -72,6 +78,7 @@ class Argument(object):
         self.help = help
         self.case_sensitive = case_sensitive
         self.operators = operators
+        self.store_missing = store_missing
 
     def source(self, request):
         """Pulls values off the request in the provided location
@@ -84,12 +91,14 @@ class Argument(object):
             if value is not None:
                 return value
         else:
+            values = MultiDict()
             for l in self.location:
                 value = getattr(request, l, None)
                 if callable(value):
                     value = value()
                 if value is not None:
-                    return value
+                    values.update(value)
+            return values
 
         return MultiDict()
 
@@ -128,6 +137,10 @@ class Argument(object):
 
         results = []
 
+        # Sentinels
+        _not_found = False
+        _found = True
+
         for operator in self.operators:
             name = self.name + operator.replace("=", "", 1)
             if name in source:
@@ -141,6 +154,8 @@ class Argument(object):
                     if not isinstance(value, FileStorage):
                         if not self.case_sensitive:
                             value = value.lower()
+                            if hasattr(self.choices, "__iter__"):
+                                self.choices = [choice.lower() for choice in self.choices]
 
                         try:
                             value = self.convert(value, operator)
@@ -175,16 +190,16 @@ class Argument(object):
 
         if not results:
             if callable(self.default):
-                return self.default()
+                return self.default(), _not_found
             else:
-                return self.default
+                return self.default, _not_found
 
         if self.action == 'append':
-            return results
+            return results, _found
 
         if self.action == 'store' or len(results) == 1:
-            return results[0]
-        return results
+            return results[0], _found
+        return results, _found
 
 
 class RequestParser(object):
@@ -229,14 +244,16 @@ class RequestParser(object):
         namespace = self.namespace_class()
 
         for arg in self.args:
-            namespace[arg.dest or arg.name] = arg.parse(req)
+            value, found = arg.parse(req)
+            if found or arg.store_missing:
+                namespace[arg.dest or arg.name] = value
 
         return namespace
 
     def copy(self):
         """ Creates a copy of this RequestParser with the same set of arguments """
         parser_copy = RequestParser(self.argument_class, self.namespace_class)
-        parser_copy.args = list(self.args)
+        parser_copy.args = deepcopy(self.args)
         return parser_copy
 
     def replace_argument(self, name, *args, **kwargs):
@@ -246,5 +263,13 @@ class RequestParser(object):
             if new_arg.name == arg.name:
                 del self.args[index]
                 self.args.append(new_arg)
+                break
+        return self
+
+    def remove_argument(self, name):
+        """ Remove the argument matching the given name. """
+        for index, arg in enumerate(self.args[:]):
+            if name == arg.name:
+                del self.args[index]
                 break
         return self

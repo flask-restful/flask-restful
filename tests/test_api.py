@@ -101,6 +101,12 @@ class APITestCase(unittest.TestCase):
         output = flask_restful.marshal(marshal_dict, fields)
         self.assertEquals(output, {'foo': 'bar'})
 
+    def test_marshal_with_envelope(self):
+        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
+        marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
+        output = flask_restful.marshal(marshal_dict, fields, envelope='hey')
+        self.assertEquals(output, {'hey': {'foo': 'bar'}})
+
     def test_marshal_decorator(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
 
@@ -109,6 +115,15 @@ class APITestCase(unittest.TestCase):
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         self.assertEquals(try_me(), {'foo': 'bar'})
 
+    def test_marshal_decorator_with_envelope(self):
+        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
+
+        @flask_restful.marshal_with(fields, envelope='hey')
+        def try_me():
+            return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
+
+        self.assertEquals(try_me(), {'hey': {'foo': 'bar'}})
+
     def test_marshal_decorator_tuple(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
 
@@ -116,6 +131,15 @@ class APITestCase(unittest.TestCase):
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
         self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
+
+    def test_marshal_decorator_tuple_with_envelope(self):
+        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
+
+        @flask_restful.marshal_with(fields, envelope='hey')
+        def try_me():
+            return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
+
+        self.assertEquals(try_me(), ({'hey': {'foo': 'bar'}}, 200, {'X-test': 123}))
 
     def test_marshal_field_decorator(self):
         field = flask_restful.fields.Raw
@@ -144,6 +168,12 @@ class APITestCase(unittest.TestCase):
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         output = flask_restful.marshal((marshal_fields,), fields)
         self.assertEquals(output, [{'foo': 'bar'}])
+
+    def test_marshal_tuple_with_envelope(self):
+        fields = OrderedDict({'foo': flask_restful.fields.Raw})
+        marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
+        output = flask_restful.marshal((marshal_fields,), fields, envelope='hey')
+        self.assertEquals(output, {'hey': [{'foo': 'bar'}]})
 
     def test_marshal_nested(self):
         fields = OrderedDict([
@@ -545,6 +575,19 @@ class APITestCase(unittest.TestCase):
         app.add_url_rule.assert_called_with('/foo',
                                             view_func=api.output())
 
+    def test_resource_decorator(self):
+        app = Mock(flask.Flask)
+        app.view_functions = {}
+        api = flask_restful.Api(app)
+        api.output = Mock()
+
+        @api.resource('/foo', endpoint='bar')
+        class Foo(flask_restful.Resource):
+            pass
+
+        app.add_url_rule.assert_called_with('/foo',
+                                            view_func=api.output())
+
     def test_add_resource_kwargs(self):
         app = Mock(flask.Flask)
         app.view_functions = {}
@@ -680,6 +723,8 @@ class APITestCase(unittest.TestCase):
         resp = app.post('/ids/3')
         self.assertEquals(resp.status_code, 405)
         self.assertEquals(resp.content_type, api.default_mediatype)
+        self.assertEquals(set(resp.headers.get_all('Allow')),
+                          set(['HEAD', 'OPTIONS'] + HelloWorld.methods))
 
     def test_will_prettyprint_json_in_debug_mode(self):
         app = Flask(__name__)
@@ -766,7 +811,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data, '{"foo": 3.0}')
+        self.assertEquals(resp.data.decode('utf-8'), '{"foo": 3.0}')
 
     def test_custom_error_message(self):
         errors = {
@@ -789,7 +834,16 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 418)
-            self.assertDictEqual(loads(resp.data), {"message": "api is foobar", "status": 418})
+            self.assertEqual(loads(resp.data.decode('utf8')), {"message": "api is foobar", "status": 418})
+
+    def test_calling_owns_endpoint_before_api_init(self):
+        api = flask_restful.Api()
+
+        try:
+            api.owns_endpoint('endpoint')
+        except AttributeError as ae:
+            self.fail(ae.message)
+
 
 if __name__ == '__main__':
     unittest.main()

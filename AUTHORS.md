@@ -4,49 +4,69 @@ Authors
 A huge thanks to all of our contributors:
 
 
-- Andrew Dunham 
-- Antonio Herraiz 
-- Artur Rodrigues 
-- Bennett, Bryan 
-- David Baumgold 
-- David Boucha 
-- David Crawford 
-- Dimitris Theodorou 
-- Doug Black 
-- Frank Stratton 
-- Frank Stratton ☺ 
-- Garret Raziel 
-- Gilles Dartiguelongue 
-- Giorgio Salluzzo 
-- Guillaume BINET 
-- Jacob Magnusson 
-- Joakim Ekberg 
-- Johannes 
-- JuneHyeon Bae 
-- Kamil Gałuszka 
-- Kevin Burke 
-- Kevin Deldycke 
-- Kyle Conroy 
-- Lance Ingle 
-- Lars Holm Nielsen 
-- Miguel Grinberg 
-- Mihai Tomescu 
-- Pavel Tyslyatsky 
-- Petrus J.v.Rensburg 
-- Piotr Husiatyński 
-- Robert Warner 
-- Ryan Horn 
-- Sam Kimbrel 
-- Victor Neo 
-- Yaniv Aknin 
-- bret barker 
-- kelvinhammond 
-- lyschoening 
-- mniebla 
-- muchosalsa 
-- nixdata 
-- papaeye 
-- saml 
-- siavashg 
-- silasray 
-- y-p 
+- Alex Gaynor
+- Andrew Dunham
+- Andriy Yurchuk
+- Antonio Herraiz
+- Artur Rodrigues
+- Axel Haustant
+- Belousow Makc
+- Bennett, Bryan
+- Bret Barker
+- Bulat Bochkariov
+- Cameron Brandon White
+- Dan Quirk
+- David Arnold
+- David Baumgold
+- David Boucha
+- David Crawford
+- Dimitris Theodorou
+- Doug Black
+- Evan Dale Aromin
+- Frank Stratton
+- Frank Stratton ☺
+- Garret Raziel
+- Gary Belvin
+- Gilles Dartiguelongue
+- Giorgio Salluzzo
+- Guillaume BINET
+- Jacob Magnusson
+- James Booth
+- Joakim Ekberg
+- Johannes
+- Josh Friend
+- Joshua C. Randall
+- JuneHyeon Bae
+- Kamil Gałuszka
+- Kelvin Hammond
+- Kevin Burke
+- Kevin Deldycke
+- Kevin Funk
+- Kyle Conroy
+- Lance Ingle
+- Lars Holm Nielsen
+- Lars Schöning
+- Mario Niebla
+- Matt Wright
+- Max Peterson
+- Miguel Grinberg
+- Mihai Tomescu
+- Pavel Tyslyatsky
+- Petrus J.v.Rensburg
+- Philippe Ndiaye
+- Piotr Husiatyński
+- Prasanna Swaminathan
+- Robert Warner
+- Ryan Horn
+- Sam Kimbrel
+- Sasha Baranov
+- Silas Ray
+- Sven-Hendrik Haase
+- Victor Neo
+- WooParadog
+- Xiadong Zhu
+- Yaniv Aknin
+- nixdata
+- papaeye
+- pingz
+- saml

@@ -24,7 +24,9 @@ Api
 
 ReqParse
 --------
-.. automodule:: reqparse
+.. module:: reqparse
+
+.. autoclass:: RequestParser
    :members:
 
 .. autoclass:: Argument
@@ -36,6 +38,7 @@ Fields
 ------
 .. automodule:: fields
    :members:
+   :undoc-members:
 
 Inputs
 -----
