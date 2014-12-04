@@ -479,6 +479,22 @@ class APITestCase(unittest.TestCase):
                 "status": 404
             }))
 
+    def test_error_router_falls_back_to_original(self):
+        """Verify that if an exception occurs in the Flask-RESTful error handler,
+        the error_router will call the original flask error handler instead.
+        """
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        app.handle_exception = Mock()
+        api.handle_error = Mock(side_effect=Exception())
+        api._has_fr_route = Mock(return_value=True)
+        exception = Mock()
+
+        with app.test_request_context('/foo'):
+            api.error_router(exception, app.handle_exception)
+
+        self.assertTrue(app.handle_exception.called_with(exception))
+
     def test_media_types(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
