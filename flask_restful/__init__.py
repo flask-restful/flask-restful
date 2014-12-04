@@ -250,6 +250,9 @@ class Api(object):
         endpoint or not. If it happened in a flask-restful endpoint, our
         handler will be dispatched. If it happened in an unrelated view, the
         app's original error handler will be dispatched.
+        In the event that the error occurred in a flask-restful endpoint but
+        the local handler can't resolve the situation, the router will fall
+        back onto the original_handler as last resort.
 
         :param original_handler: the original Flask error handler for the app
         :type original_handler: function
@@ -258,7 +261,10 @@ class Api(object):
 
         """
         if self._has_fr_route():
-            return self.handle_error(e)
+            try:
+                return self.handle_error(e)
+            except Exception:
+                pass  # Fall through to original handler
         return original_handler(e)
 
     def handle_error(self, e):
