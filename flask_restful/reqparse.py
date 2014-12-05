@@ -5,6 +5,7 @@ import flask_restful
 import decimal
 import inspect
 import six
+import mock
 
 
 class Namespace(dict):
@@ -170,7 +171,9 @@ class Argument(object):
                                     value
                                 ))
                             )
-
+                           
+                    if name in request.unparsed_arguments:
+                        request.unparsed_arguments.pop(name)
                     results.append(value)
 
         if not results and self.required:
@@ -201,6 +204,13 @@ class Argument(object):
             return results[0], _found
         return results, _found
 
+
+class UnsupportedArgumentException(Exception):
+    """
+    Exception for unsupported argument found when parsing request arguments
+    """
+    pass
+        
 
 class RequestParser(object):
     """Enables adding and parsing of multiple arguments in the context of a
@@ -234,20 +244,34 @@ class RequestParser(object):
             self.args.append(self.argument_class(*args, **kwargs))
         return self
 
-    def parse_args(self, req=None):
+    def parse_args(self, req=None, strict=False):
         """Parse all arguments from the provided request and return the results
         as a Namespace
+        
+        if ``strict``, then parsing req with args not in parser will throw exception
         """
         if req is None:
             req = request
 
         namespace = self.namespace_class()
 
+        # A record of arguments not yet parsed; as each is found
+        # among self.args, it will be popped out
+        if req:
+            if isinstance(req, mock.Mock):
+                req.unparsed_arguments = {}
+            else:
+                req.unparsed_arguments = dict(Argument('').source(req))
+            
         for arg in self.args:
             value, found = arg.parse(req)
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
-
+            
+        if strict and req and req.unparsed_arguments:
+            raise UnsupportedArgumentException('Unknown arguments: %s' 
+                                               % ', '.join(req.unparsed_arguments.keys()))
+            
         return namespace
 
     def copy(self):

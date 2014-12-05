@@ -5,7 +5,7 @@ from flask import Flask
 from werkzeug import exceptions, MultiDict
 from werkzeug.wrappers import Request
 from werkzeug.datastructures import FileStorage
-from flask_restful.reqparse import Argument, RequestParser, Namespace
+from flask_restful.reqparse import Argument, RequestParser, Namespace, UnsupportedArgumentException
 import six
 import decimal
 
@@ -661,6 +661,14 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser_copy.parse_args(req)
         self.assertEquals(args, {})
+
+    def test_strict_parsing(self):
+        req = Request.from_values("/bubble?foo=baz")
+        parser = RequestParser()
+        args = parser.parse_args(req)
+        self.assertEquals(args, {})
+        with self.assertRaises(UnsupportedArgumentException):
+            args = parser.parse_args(req, strict=True)
 
 
 if __name__ == '__main__':
