@@ -172,7 +172,7 @@ class Argument(object):
                                     value
                                 ))
                             )
-                           
+
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
                     results.append(value)
@@ -241,7 +241,7 @@ class RequestParser(object):
     def parse_args(self, req=None, strict=False):
         """Parse all arguments from the provided request and return the results
         as a Namespace
-        
+
         if ``strict``, then parsing req with args not in parser will throw exception
         """
         if req is None:
@@ -256,16 +256,16 @@ class RequestParser(object):
                 req.unparsed_arguments = {}
             else:
                 req.unparsed_arguments = dict(Argument('').source(req))
-            
+
         for arg in self.args:
             value, found = arg.parse(req)
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
-            
+
         if strict and req and req.unparsed_arguments:
-            raise exceptions.BadRequest('Unknown arguments: %s' 
+            raise exceptions.BadRequest('Unknown arguments: %s'
                                         % ', '.join(req.unparsed_arguments.keys()))
-            
+
         return namespace
 
     def copy(self):

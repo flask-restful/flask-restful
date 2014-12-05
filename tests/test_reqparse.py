@@ -667,7 +667,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser = RequestParser()
         args = parser.parse_args(req)
         self.assertEquals(args, {})
-        
+
     def test_strict_parsing_on(self):
         req = Request.from_values("/bubble?foo=baz")
         parser = RequestParser()
@@ -680,7 +680,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument('foo', type=int)
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], 1)
-        
+
     def test_strict_parsing_on_partial_hit(self):
         req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
         parser = RequestParser()
