@@ -1,6 +1,7 @@
 from copy import deepcopy
 from flask import request
 from werkzeug.datastructures import MultiDict, FileStorage
+from werkzeug import exceptions
 import flask_restful
 import decimal
 import inspect
@@ -205,13 +206,6 @@ class Argument(object):
         return results, _found
 
 
-class UnsupportedArgumentException(Exception):
-    """
-    Exception for unsupported argument found when parsing request arguments
-    """
-    pass
-        
-
 class RequestParser(object):
     """Enables adding and parsing of multiple arguments in the context of a
     single request. Ex::
@@ -269,8 +263,8 @@ class RequestParser(object):
                 namespace[arg.dest or arg.name] = value
             
         if strict and req and req.unparsed_arguments:
-            raise UnsupportedArgumentException('Unknown arguments: %s' 
-                                               % ', '.join(req.unparsed_arguments.keys()))
+            raise exceptions.BadRequest('Unknown arguments: %s' 
+                                        % ', '.join(req.unparsed_arguments.keys()))
             
         return namespace
 

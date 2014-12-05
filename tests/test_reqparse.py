@@ -5,7 +5,7 @@ from flask import Flask
 from werkzeug import exceptions, MultiDict
 from werkzeug.wrappers import Request
 from werkzeug.datastructures import FileStorage
-from flask_restful.reqparse import Argument, RequestParser, Namespace, UnsupportedArgumentException
+from flask_restful.reqparse import Argument, RequestParser, Namespace 
 import six
 import decimal
 
@@ -662,13 +662,32 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser_copy.parse_args(req)
         self.assertEquals(args, {})
 
-    def test_strict_parsing(self):
+    def test_strict_parsing_off(self):
         req = Request.from_values("/bubble?foo=baz")
         parser = RequestParser()
         args = parser.parse_args(req)
         self.assertEquals(args, {})
-        with self.assertRaises(UnsupportedArgumentException):
+        
+    def test_strict_parsing_on(self):
+        req = Request.from_values("/bubble?foo=baz")
+        parser = RequestParser()
+        with self.assertRaises(exceptions.BadRequest):
             args = parser.parse_args(req, strict=True)
+
+    def test_strict_parsing_off_partial_hit(self):
+        req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], 1)
+        
+    def test_strict_parsing_on_partial_hit(self):
+        req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        with self.assertRaises(exceptions.BadRequest):
+            args = parser.parse_args(req, strict=True)
+
 
 
 if __name__ == '__main__':
