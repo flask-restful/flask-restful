@@ -5,7 +5,7 @@ from flask import Flask
 from werkzeug import exceptions, MultiDict
 from werkzeug.wrappers import Request
 from werkzeug.datastructures import FileStorage
-from flask_restful.reqparse import Argument, RequestParser, Namespace 
+from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
 import decimal
 
