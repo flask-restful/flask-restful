@@ -170,7 +170,11 @@ a 400 Bad Request and a response highlighting the error. ::
 The :py:class:`inputs` module provides a number of included common conversion
 functions such as :py:meth:`inputs.date` and :py:meth:`inputs.url`.
 
+Calling ``parse_args`` with ``strict=True`` ensures that an error is thrown if
+the request includes arguments your parser does not define.
 
+    args = parser.parse_args(strict=True)
+    
 Data Formatting
 ---------------
 
