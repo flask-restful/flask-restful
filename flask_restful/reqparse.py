@@ -6,7 +6,6 @@ import flask_restful
 import decimal
 import inspect
 import six
-import mock
 
 
 class Namespace(dict):
@@ -251,18 +250,14 @@ class RequestParser(object):
 
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
-        if req:
-            if isinstance(req, mock.Mock):
-                req.unparsed_arguments = {}
-            else:
-                req.unparsed_arguments = dict(Argument('').source(req))
+        req.unparsed_arguments = dict(Argument('').source(req))
 
         for arg in self.args:
             value, found = arg.parse(req)
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
 
-        if strict and req and req.unparsed_arguments:
+        if strict and req.unparsed_arguments:
             raise exceptions.BadRequest('Unknown arguments: %s'
                                         % ', '.join(req.unparsed_arguments.keys()))
 
