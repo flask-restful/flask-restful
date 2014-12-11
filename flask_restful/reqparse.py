@@ -241,7 +241,7 @@ class RequestParser(object):
         """Parse all arguments from the provided request and return the results
         as a Namespace
 
-        if ``strict``, then parsing req with args not in parser will throw exception
+        :param strict: if req includes args not in parser, throw 400 BadRequest exception
         """
         if req is None:
             req = request
