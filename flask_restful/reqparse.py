@@ -1,6 +1,7 @@
 from copy import deepcopy
 from flask import request
 from werkzeug.datastructures import MultiDict, FileStorage
+from werkzeug import exceptions
 import flask_restful
 import decimal
 import inspect
@@ -171,6 +172,8 @@ class Argument(object):
                                 ))
                             )
 
+                    if name in request.unparsed_arguments:
+                        request.unparsed_arguments.pop(name)
                     results.append(value)
 
         if not results and self.required:
@@ -234,19 +237,29 @@ class RequestParser(object):
             self.args.append(self.argument_class(*args, **kwargs))
         return self
 
-    def parse_args(self, req=None):
+    def parse_args(self, req=None, strict=False):
         """Parse all arguments from the provided request and return the results
         as a Namespace
+
+        :param strict: if req includes args not in parser, throw 400 BadRequest exception
         """
         if req is None:
             req = request
 
         namespace = self.namespace_class()
 
+        # A record of arguments not yet parsed; as each is found
+        # among self.args, it will be popped out
+        req.unparsed_arguments = dict(Argument('').source(req))
+
         for arg in self.args:
             value, found = arg.parse(req)
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
+
+        if strict and req.unparsed_arguments:
+            raise exceptions.BadRequest('Unknown arguments: %s'
+                                        % ', '.join(req.unparsed_arguments.keys()))
 
         return namespace
 

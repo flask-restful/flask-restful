@@ -174,7 +174,7 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(True, arg.case_sensitive)
 
     def test_viewargs(self):
-        req = Mock()
+        req = Request.from_values()
         req.view_args = {"foo": "bar"}
         parser = RequestParser()
         parser.add_argument("foo", location=["view_args"], type=str)
@@ -502,8 +502,9 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertRaises(KeyError, lambda: namespace['eggs'])
 
     def test_namespace_configurability(self):
-        self.assertTrue(isinstance(RequestParser().parse_args(), Namespace))
-        self.assertTrue(type(RequestParser(namespace_class=dict).parse_args()) is dict)
+        req = Request.from_values()
+        self.assertTrue(isinstance(RequestParser().parse_args(req), Namespace))
+        self.assertTrue(type(RequestParser(namespace_class=dict).parse_args(req)) is dict)
 
     def test_none_argument(self):
 
@@ -661,6 +662,30 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser_copy.parse_args(req)
         self.assertEquals(args, {})
+
+    def test_strict_parsing_off(self):
+        req = Request.from_values("/bubble?foo=baz")
+        parser = RequestParser()
+        args = parser.parse_args(req)
+        self.assertEquals(args, {})
+
+    def test_strict_parsing_on(self):
+        req = Request.from_values("/bubble?foo=baz")
+        parser = RequestParser()
+        self.assertRaises(exceptions.BadRequest, parser.parse_args, req, strict=True)
+
+    def test_strict_parsing_off_partial_hit(self):
+        req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], 1)
+
+    def test_strict_parsing_on_partial_hit(self):
+        req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
+        parser = RequestParser()
+        parser.add_argument('foo', type=int)
+        self.assertRaises(exceptions.BadRequest, parser.parse_args, req, strict=True)
 
 
 if __name__ == '__main__':
