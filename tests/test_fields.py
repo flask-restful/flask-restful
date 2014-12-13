@@ -2,16 +2,13 @@ from decimal import Decimal
 import unittest
 from mock import Mock
 from flask.ext.restful.fields import MarshallingException
+from flask.ext.restful.utils import OrderedDict
 from flask_restful import fields
 from datetime import datetime, timedelta, tzinfo
 from flask import Flask
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals  # you need it for tests in form of continuations
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 
 class Foo(object):
     def __init__(self):
