@@ -99,7 +99,7 @@ $(DEPENDS_DEV): Makefile
 	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
 
 .PHONY: .depends-doc
-.depends-doc: env Makefile setup.py
+.depends-doc: env Makefile setup.py $(DEPENDS_DOC)
 $(DEPENDS_DOC): Makefile setup.py
 	$(PIP) install -e .[docs]
 	touch $(DEPENDS_DOC)  # flag to indicate dependencies are installed
