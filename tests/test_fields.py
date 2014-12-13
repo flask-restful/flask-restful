@@ -11,7 +11,7 @@ from nose.tools import assert_equals  # you need it for tests in form of continu
 try:
     from collections import OrderedDict
 except ImportError:
-    from flask.ext.restful.utils.ordereddict import OrderedDict
+    from ordereddict import OrderedDict
 
 class Foo(object):
     def __init__(self):

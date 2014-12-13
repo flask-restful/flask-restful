@@ -19,7 +19,7 @@ try:
     #noinspection PyUnresolvedReferences
     from collections import OrderedDict
 except ImportError:
-    from .utils.ordereddict import OrderedDict
+    from ordereddict import OrderedDict
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
