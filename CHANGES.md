@@ -3,6 +3,18 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3.1
+-------------
+
+Released December 13, 2014
+
+- Addd `strict` option to `parse_args()` ([#358](https://github.com/flask-restful/flask-restful/pull/358))
+- Addd an option to envelop marshaled objects ([#349](https://github.com/flask-restful/flask-restful/pull/349))
+- Fixes initialization of `Api.blueprint` attribute ([#263](https://github.com/flask-restful/flask-restful/pull/263))
+- Makes `Api.error_router` fall back to Flask handlers ([#296](https://github.com/flask-restful/flask-restful/pull/296)/[#356](https://github.com/flask-restful/flask-restful/pull/356))
+- Makes docs more viewable on mobile devices ([#347](https://github.com/flask-restful/flask-restful/issues/347))
+- Wheel distribution is now universal ([#363](https://github.com/flask-restful/flask-restful/issues/363))
+
 Version 0.3.0
 --------------
 
