@@ -53,6 +53,7 @@ PEP8RADIUS := $(BIN)/pep8radius
 PEP257 := $(BIN)/pep257
 NOSE := $(BIN)/nosetests
 COVERAGE := $(BIN)/coverage
+ACTIVATE := $(BIN)/activate
 
 # Remove if you don't want pip to cache downloads
 PIP_CACHE_DIR := .cache
@@ -107,7 +108,7 @@ $(DEPENDS_DOC): Makefile setup.py
 
 .PHONY: doc
 doc: .depends-doc
-	cd docs; $(MAKE) html
+	. $(ACTIVATE); cd docs; $(MAKE) html
 
 .PHONY: read
 read: doc
