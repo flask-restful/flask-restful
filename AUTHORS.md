@@ -15,6 +15,7 @@ A huge thanks to all of our contributors:
 - Bret Barker
 - Bulat Bochkariov
 - Cameron Brandon White
+- Catherine Devlin
 - Dan Quirk
 - David Arnold
 - David Baumgold
@@ -32,6 +33,7 @@ A huge thanks to all of our contributors:
 - Guillaume BINET
 - Jacob Magnusson
 - James Booth
+- James Oguraa
 - Joakim Ekberg
 - Johannes
 - Josh Friend
@@ -60,6 +62,7 @@ A huge thanks to all of our contributors:
 - Ryan Horn
 - Sam Kimbrel
 - Sasha Baranov
+- Saul Diez-Guerra
 - Silas Ray
 - Sven-Hendrik Haase
 - Victor Neo
