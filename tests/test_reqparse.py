@@ -653,6 +653,16 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'], 1)
             self.assertEquals(args['baz'], 2)
 
+    def test_not_json_location_and_content_type_json(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument('foo', location='args')
+
+        with app.test_request_context('/bubble', method='get',
+                                      content_type='application/json'):
+            parser.parse_args() # Should not raise a 400: BadRequest
+
     def test_request_parser_remove_argument(self):
         req = Request.from_values("/bubble?foo=baz")
         parser = RequestParser()
