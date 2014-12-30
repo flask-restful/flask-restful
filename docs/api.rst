@@ -45,6 +45,7 @@ Inputs
 
 .. module:: flask.ext.restful.inputs
 .. autofunction:: url
+.. autoclass:: regex
 .. autofunction:: date
 .. autofunction:: iso8601interval
 .. autofunction:: natural

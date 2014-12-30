@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, tzinfo
 import unittest
+import re
 
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equal, assert_raises  # you need it for tests in form of continuations
@@ -161,6 +162,39 @@ def check_url_error_message(value):
     except ValueError as e:
         assert_equal(six.text_type(e),
                      (u"{0} is not a valid URL. Did you mean: http://{0}".format(value)))
+
+
+def test_regex_bad_input():
+    cases = (
+        'abc',
+        '123abc',
+        'abc123',
+        '',
+    )
+
+    num_only = inputs.regex(r'^[0-9]+$')
+
+    for value in cases:
+        yield assert_raises, ValueError, lambda: num_only(value)
+
+
+def test_regex_good_input():
+    cases = (
+        '123',
+        '1234567890',
+        '00000',
+    )
+
+    num_only = inputs.regex(r'^[0-9]+$')
+
+    for value in cases:
+        yield assert_equal, num_only(value), value
+
+
+def test_regex_bad_pattern():
+    """Regex error raised immediately when regex input parser is created."""
+    assert_raises(re.error, inputs.regex, '[')
+
 
 
 class TypesTestCase(unittest.TestCase):
