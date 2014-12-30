@@ -1,4 +1,5 @@
 from decimal import Decimal
+import pytz
 import unittest
 from mock import Mock
 from flask.ext.restful.fields import MarshallingException
@@ -49,6 +50,34 @@ def test_boolean():
     ]
     for value, expected in values:
         yield check_field, expected, fields.Boolean(), value
+
+
+def test_rfc822_datetime_formatters():
+    dates = [
+        (datetime(2011, 1, 1), "Sat, 01 Jan 2011 00:00:00 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59),
+         "Sat, 01 Jan 2011 23:59:59 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+         "Sat, 01 Jan 2011 23:59:59 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+         "Sat, 01 Jan 2011 22:59:59 -0000")
+    ]
+    for date_obj, expected in dates:
+        yield assert_equals, fields._rfc822(date_obj), expected
+
+
+def test_iso8601_datetime_formatters():
+    dates = [
+        (datetime(2011, 1, 1), "2011-01-01T00:00:00+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59),
+         "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+         "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+         "2011-01-01T22:59:59+00:00")
+    ]
+    for date_obj, expected in dates:
+        yield assert_equals, fields._iso8601(date_obj), expected
 
 
 class FieldsTestCase(unittest.TestCase):

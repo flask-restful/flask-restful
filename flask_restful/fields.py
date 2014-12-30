@@ -1,4 +1,8 @@
+from datetime import datetime
+from calendar import timegm
+import pytz
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
+from email.utils import formatdate
 import six
 try:
     from urlparse import urlparse, urlunparse
@@ -6,7 +10,7 @@ except ImportError:
     # python3
     from urllib.parse import urlparse, urlunparse
 
-from flask_restful import inputs, marshal
+from flask_restful import marshal
 from flask import url_for
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
@@ -81,8 +85,8 @@ class Raw(object):
         self.default = default
 
     def format(self, value):
-        """Formats a field's value. No-op by default - field classes that 
-        modify how the value of existing object keys should be presented should 
+        """Formats a field's value. No-op by default - field classes that
+        modify how the value of existing object keys should be presented should
         override this and apply the appropriate formatting.
 
         :param value: The value to format
@@ -98,11 +102,11 @@ class Raw(object):
 
     def output(self, key, obj):
         """Pulls the value for the given key from the object, applies the
-        field's formatting and returns the result. If the key is not found 
-        in the object, returns the default value. Field classes that create 
-        values which do not require the existence of the key in the object 
+        field's formatting and returns the result. If the key is not found
+        in the object, returns the default value. Field classes that create
+        values which do not require the existence of the key in the object
         should override this and return the desired value.
-        
+
         :exception MarshallingException: In case of formatting problem
         """
 
@@ -320,7 +324,8 @@ class DateTime(Raw):
     Return a formatted datetime string in UTC. Supported formats are RFC 822
     and ISO 8601.
 
-    :param: str dt_format: rfc822 or iso8601
+    :param dt_format: ``'rfc822'`` or ``'iso8601'``
+    :type dt_format: str
     """
     def __init__(self, dt_format='rfc822', **kwargs):
         super(DateTime, self).__init__(**kwargs)
@@ -329,9 +334,9 @@ class DateTime(Raw):
     def format(self, value):
         try:
             if self.dt_format == 'rfc822':
-                return inputs.rfc822(value)
+                return _rfc822(value)
             elif self.dt_format == 'iso8601':
-                return inputs.iso8601(value)
+                return _iso8601(value)
             else:
                 raise MarshallingException(
                     'Unsupported date format %s' % self.dt_format
@@ -359,3 +364,33 @@ class Fixed(Raw):
 
 """Alias for :py:class:`~fields.Fixed`"""
 Price = Fixed
+
+
+def _rfc822(dt):
+    """Turn a datetime object into a formatted date.
+
+    Example::
+
+        fields._rfc822(datetime(2011, 1, 1)) => "Sat, 01 Jan 2011 00:00:00 -0000"
+
+    :param dt: The datetime to transform
+    :type dt: datetime
+    :return: A RFC 822 formatted date string
+    """
+    return formatdate(timegm(dt.utctimetuple()))
+
+
+def _iso8601(dt):
+    """Turn a datetime object into an ISO8601 formatted date.
+
+    Example::
+
+        fields._iso8601(datetime(2012, 1, 1, 0, 0)) => "2012-01-01T00:00:00+00:00"
+
+    :param dt: The datetime to transform
+    :type dt: datetime
+    :return: A ISO 8601 formatted date string
+    """
+    return datetime.isoformat(
+        datetime.fromtimestamp(timegm(dt.utctimetuple()), tz=pytz.UTC)
+    )
