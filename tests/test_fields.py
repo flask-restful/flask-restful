@@ -21,11 +21,6 @@ class Bar(object):
         return {"hey": 3}
 
 
-class TZ(tzinfo):
-    def utcoffset(self, dt):
-        return timedelta(hours=2)
-
-
 def check_field(expected, field, value):
     assert_equals(expected, field.output('a', {'a': value}))
 
@@ -271,9 +266,9 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals("Mon, 22 Aug 2011 20:58:45 -0000", field.output("bar", obj))
 
     def test_rfc822_date_field_with_offset(self):
-        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=TZ())}
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
         field = fields.DateTime()
-        self.assertEquals("Mon, 22 Aug 2011 18:58:45 -0000", field.output("bar", obj))
+        self.assertEquals("Mon, 22 Aug 2011 19:58:45 -0000", field.output("bar", obj))
 
     def test_iso8601_date_field_without_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
@@ -281,9 +276,9 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals("2011-08-22T20:58:45+00:00", field.output("bar", obj))
 
     def test_iso8601_date_field_with_offset(self):
-        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=TZ())}
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
         field = fields.DateTime(dt_format='iso8601')
-        self.assertEquals("2011-08-22T18:58:45+00:00", field.output("bar", obj))
+        self.assertEquals("2011-08-22T19:58:45+00:00", field.output("bar", obj))
 
     def test_unsupported_datetime_format(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
