@@ -242,6 +242,4 @@ def datetime_from_iso8601(datetime_str):
     :type datetime_str: str
     :return: A datetime
     """
-    return datetime.fromtimestamp(
-        timegm(aniso8601.parse_datetime(datetime_str).utctimetuple()), tz=pytz.UTC
-    )
+    return aniso8601.parse_datetime(datetime_str)
