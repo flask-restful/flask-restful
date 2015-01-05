@@ -653,6 +653,46 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'], 1)
             self.assertEquals(args['baz'], 2)
 
+    def test_empty_json_list(self):
+        """Verify that arguments whose value is an empty json list are
+        not omitted from result set
+        """
+        app = Flask(__name__)
+
+        def to_list(value):
+            if not type(value) == list:
+                raise ValueError('expected list')
+            return value
+
+        parser = RequestParser()
+        parser.add_argument('list', type=to_list)
+
+        with app.test_request_context('/test', method="post",
+                                      data=json.dumps({"list": []}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['list'], [])
+
+    def test_empty_json_lobject(self):
+        """Verify that arguments whose value is an empty json object are
+        not omitted from result set
+        """
+        app = Flask(__name__)
+
+        def json_obj(value):
+            if not type(value) == dict:
+                raise ValueError('expected object')
+            return value
+
+        parser = RequestParser()
+        parser.add_argument('obj', type=json_obj)
+
+        with app.test_request_context('/test', method="post",
+                                      data=json.dumps({"obj": {}}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['obj'], {})
+
     def test_not_json_location_and_content_type_json(self):
         app = Flask(__name__)
 
