@@ -1,6 +1,7 @@
 from datetime import datetime
 from calendar import timegm
 import pytz
+from inspect import isfunction
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
 from email.utils import formatdate
 import six
@@ -10,8 +11,8 @@ except ImportError:
     # python3
     from urllib.parse import urlparse, urlunparse
 
-from flask_restful import marshal
-from flask import url_for
+from flask_restful import inputs, marshal
+from flask import url_for, request
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
            "Integer", "Arbitrary", "Nested", "List", "Raw", "Boolean",
@@ -37,6 +38,8 @@ def get_value(key, obj, default=None):
     """Helper for pulling a keyed value off various types of objects"""
     if type(key) == int:
         return _get_value_for_key(key, obj, default)
+    elif isfunction(key):
+        return key(obj)
     else:
         return _get_value_for_keys(key.split('.'), obj, default)
 
@@ -218,8 +221,8 @@ class Integer(Raw):
         value, use this to retrieve a different attribute from the response
         than the publicly named value.
     """
-    def __init__(self, default=0, attribute=None):
-        super(Integer, self).__init__(default, attribute)
+    def __init__(self, default=0, **kwargs):
+        super(Integer, self).__init__(default=default, **kwargs)
 
     def format(self, value):
         try:
@@ -278,7 +281,7 @@ class Url(Raw):
     """
     A string representation of a Url
     """
-    def __init__(self, endpoint, absolute=False, scheme=None):
+    def __init__(self, endpoint=None, absolute=False, scheme=None):
         super(Url, self).__init__()
         self.endpoint = endpoint
         self.absolute = absolute
@@ -287,7 +290,8 @@ class Url(Raw):
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
-            o = urlparse(url_for(self.endpoint, _external=self.absolute, **data))
+            endpoint = self.endpoint if self.endpoint is not None else request.endpoint
+            o = urlparse(url_for(endpoint, _external=self.absolute, **data))
             if self.absolute:
                 scheme = self.scheme if self.scheme is not None else o.scheme
                 return urlunparse((scheme, o.netloc, o.path, "", "", ""))

@@ -174,7 +174,7 @@ Calling ``parse_args`` with ``strict=True`` ensures that an error is thrown if
 the request includes arguments your parser does not define.
 
     args = parser.parse_args(strict=True)
-    
+
 Data Formatting
 ---------------
 
@@ -267,7 +267,8 @@ Save this example in api.py ::
 
         def post(self):
             args = parser.parse_args()
-            todo_id = 'todo%d' % (len(TODOS) + 1)
+            todo_id = int(max(TODOS.keys()).lstrip('todo')) + 1
+            todo_id = 'todo%i' % todo_id
             TODOS[todo_id] = {'task': args['task']}
             return TODOS[todo_id], 201
 
@@ -275,7 +276,7 @@ Save this example in api.py ::
     ## Actually setup the Api resource routing here
     ##
     api.add_resource(TodoList, '/todos')
-    api.add_resource(Todo, '/todos/<string:todo_id>')
+    api.add_resource(Todo, '/todos/<todo_id>')
 
 
     if __name__ == '__main__':

@@ -250,7 +250,7 @@ class RequestParser(object):
 
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
-        req.unparsed_arguments = dict(Argument('').source(req))
+        req.unparsed_arguments = dict(Argument('').source(req)) if strict else {}
 
         for arg in self.args:
             value, found = arg.parse(req)

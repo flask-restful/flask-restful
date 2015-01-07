@@ -9,7 +9,6 @@ Flask-RESTful's request parsing interface is modeled after the ``argparse``
 interface.  It's designed to provide simple and uniform access to any
 variable on the :py:class:`flask.request` object in Flask.
 
-
 Basic Arguments
 ---------------
 
@@ -34,7 +33,6 @@ request that are not part of the RequestParser will be ignored.
 
 Also note: Arguments declared in your request parser but not set in
 the request itself will default to ``None``.
-
 
 Required Arguments
 ------------------
@@ -73,16 +71,14 @@ it's parsed, you can use the ``dest`` kwarg. ::
     args = parser.parse_args()
     args['public_name']
 
-
-Other Locations
----------------
+Argument Locations
+------------------
 
 By default, the :py:class:`~reqparse.RequestParser` tries to parse values
-from :py:attr:`flask.Request.values`. This dict will contain both querystring
-arguments and POST/PUT body arguments.
+from :py:attr:`flask.Request.values`, and :py:attr:`flask.Request.json`.
 
-:py:meth:`~reqparse.RequestParser.add_argument` lets you specify
-alternate locations to pull the values from. Any variable on the
+Use the ``location`` argument to :py:meth:`~reqparse.RequestParser.add_argument`
+to specify alternate locations to pull the values from. Any variable on the
 :py:class:`flask.Request` can be used. For example: ::
 
     # Look only in the POST body
@@ -99,6 +95,15 @@ alternate locations to pull the values from. Any variable on the
 
     # From file uploads
     parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
+
+Multiple Locations
+------------------
+
+Multiple argument locations can be specified by passing a list to ``location``::
+
+    parser.add_argument('text', location=['headers', 'values'])
+
+The last location listed takes precedence in the result set.
 
 Parser Inheritance
 ------------------
@@ -128,4 +133,3 @@ For example: ::
 
     parser_copy.remove_argument('foo')
     # parser_copy no longer has 'foo' argument
-

@@ -13,7 +13,7 @@ END_OF_DAY = time(23, 59, 59, 999999, tzinfo=pytz.UTC)
 # https://code.djangoproject.com/browser/django/trunk/django/core/validators.py
 # basic auth added by frank
 
-regex = re.compile(
+url_regex = re.compile(
     r'^(?:http|ftp)s?://'  # http:// or https://
     r'(?:[^:@]+?:[^:@]*?@|)'  # basic auth
     r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
@@ -32,12 +32,38 @@ def url(value):
     :returns: The URL if valid.
     :raises: ValueError
     """
-    if not regex.search(value):
+    if not url_regex.search(value):
         message = u"{0} is not a valid URL".format(value)
-        if regex.search('http://' + value):
+        if url_regex.search('http://' + value):
             message += u". Did you mean: http://{0}".format(value)
         raise ValueError(message)
     return value
+
+
+class regex(object):
+    """Validate a string based on a regular expression.
+
+    Example::
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('example', type=inputs.regex('^[0-9]+$'))
+
+    Input to the ``example`` argument will be rejected if it contains anything
+    but numbers.
+
+    :param pattern: The regular expression the input must match
+    :type pattern: str
+    """
+
+    def __init__(self, pattern):
+        self.pattern = pattern
+        self.re = re.compile(pattern)
+
+    def __call__(self, value):
+        if not self.re.search(value):
+            message = 'Value does not match pattern: "{}"'.format(self.pattern)
+            raise ValueError(message)
+        return value
 
 
 def _normalize_interval(start, end, value):
