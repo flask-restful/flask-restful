@@ -279,8 +279,14 @@ class Api(object):
             else:
                 raise e
 
-        code = getattr(e, 'code', 500)
-        data = getattr(e, 'data', error_data(code))
+        if isinstance(e, HTTPException):
+            code = e.code
+            data = getattr(e, 'data', error_data(code))
+
+        else:
+            code = 500
+            data = error_data(code)
+
         headers = {}
 
         if code >= 500:

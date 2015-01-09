@@ -74,7 +74,7 @@ class APITestCase(unittest.TestCase):
     def test_handle_error_401_sends_challege_default_realm(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -88,7 +88,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
         api = flask_restful.Api(app)
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -342,7 +342,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
         exception.code = 500
         exception.data = {'foo': 'bar'}
 
@@ -353,11 +353,24 @@ class APITestCase(unittest.TestCase):
                 'foo': 'bar',
             }))
 
-    def test_handle_auth(self):
+    def test_handle_error_with_code(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
         exception = Mock()
+        exception.code = "JSONResponseError"
+        exception.data = {'foo': 'bar'}
+
+        with app.test_request_context("/foo"):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 500)
+            self.assertEquals(resp.data.decode(), dumps({"status": 500, "message": "Internal Server Error"}))
+
+    def test_handle_auth(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        exception = Mock(spec=HTTPException)
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -411,7 +424,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
         exception.code = 400
         exception.data = {'foo': 'bar'}
 
@@ -433,7 +446,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
         exception.code = 400
         exception.data = {'foo': 'bar'}
 
@@ -449,7 +462,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         view = flask_restful.Resource
 
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
         exception.code = 404
         exception.data = {"status": 404, "message": "Not Found"}
         api.add_resource(view, '/foo', endpoint='bor')
@@ -497,7 +510,7 @@ class APITestCase(unittest.TestCase):
         app.handle_exception = Mock()
         api.handle_error = Mock(side_effect=Exception())
         api._has_fr_route = Mock(return_value=True)
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
 
         with app.test_request_context('/foo'):
             api.error_router(exception, app.handle_exception)
