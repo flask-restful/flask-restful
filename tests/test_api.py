@@ -1,21 +1,30 @@
 import unittest
+
+from json import dumps, loads
+
+import flask
 from flask import Flask, redirect, views
+from flask.ext.restful.utils import http_status_message, error_data, unpack
 from flask.signals import got_request_exception, signals_available
+
 try:
     from mock import Mock, patch
 except:
     # python3
     from unittest.mock import Mock, patch
-import flask
+
+from nose.tools import assert_equals, assert_true  # you need it for tests in form of continuations
+
+#noinspection PyUnresolvedReferences
+import six
+
 import werkzeug
-from flask.ext.restful.utils import http_status_message, error_data, unpack
+from werkzeug.exceptions import HTTPException
+
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps, loads
-#noinspection PyUnresolvedReferences
-from nose.tools import assert_equals, assert_true  # you need it for tests in form of continuations
-import six
+
 
 
 def check_unpack(expected, value):
