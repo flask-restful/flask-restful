@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from mock import Mock, patch, NonCallableMock
+from mock import Mock, patch
 from flask import Flask
 from werkzeug import exceptions, MultiDict
 from werkzeug.wrappers import Request
@@ -19,18 +19,17 @@ class ReqParseTestCase(unittest.TestCase):
 
     @patch('flask_restful.abort')
     def test_help(self, abort):
-        from werkzeug.datastructures import MultiDict
         parser = RequestParser()
         parser.add_argument('foo', choices=['one', 'two'], help='Bad choice')
         req = Mock(['values'])
         req.values = MultiDict([('foo', 'three')])
         parser.parse_args(req)
-        abort.assert_called_with(400, message='Bad choice')
+        expected = '[foo]: (Bad choice) three is not a valid choice'
+        abort.assert_called_with(400, message=expected)
 
     @patch('flask_restful.abort', side_effect=exceptions.BadRequest('Bad Request'))
     def test_no_help(self, abort):
         def bad_choice():
-            from werkzeug.datastructures import MultiDict
             parser = RequestParser()
             parser.add_argument('foo', choices=['one', 'two'])
             req = Mock(['values'])
@@ -363,7 +362,7 @@ class ReqParseTestCase(unittest.TestCase):
         except exceptions.BadRequest as e:
             message = e.data['message']
 
-        self.assertEquals(message, (u'Missing required parameter foo in the '
+        self.assertEquals(message, (u'[foo]: Missing required parameter foo in the '
                                     'post body or the query string'))
 
         parser = RequestParser()
@@ -374,7 +373,7 @@ class ReqParseTestCase(unittest.TestCase):
         except exceptions.BadRequest as e:
             message = e.data['message']
 
-        self.assertEquals(message, (u"Missing required parameter bar in the "
+        self.assertEquals(message, (u"[bar]: Missing required parameter bar in the "
                                     "post body or the query string or the "
                                     "request's cookies"))
 
@@ -661,7 +660,7 @@ class ReqParseTestCase(unittest.TestCase):
 
         with app.test_request_context('/bubble', method='get',
                                       content_type='application/json'):
-            parser.parse_args() # Should not raise a 400: BadRequest
+            parser.parse_args()  # Should not raise a 400: BadRequest
 
     def test_request_parser_remove_argument(self):
         req = Request.from_values("/bubble?foo=baz")

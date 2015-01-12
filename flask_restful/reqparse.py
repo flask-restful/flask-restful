@@ -55,7 +55,7 @@ class Argument(object):
         iterator. The last item listed takes precedence in the result set.
     :param choices: A container of the allowable values for the argument.
     :param help: A brief description of the argument, returned in the
-        response when the argument is invalid. This takes precedence over
+        response when the argument is invalid with the name of the argument and
         the message passed to a ValidationError raised by a type converter.
     :param bool case_sensitive: Whether the arguments in the request are
         case sensitive or not
@@ -125,7 +125,8 @@ class Argument(object):
 
         :param error: the error that was raised
         """
-        msg = self.help if self.help is not None else str(error)
+        help_str = '(%s) ' % self.help if self.help else ''
+        msg = '[%s]: %s%s' % (self.name, help_str, str(error))
         flask_restful.abort(400, message=msg)
 
     def parse(self, request):
