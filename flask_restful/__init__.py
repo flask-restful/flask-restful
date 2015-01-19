@@ -326,7 +326,7 @@ class Api(object):
             # make_response uses a representation we support as the
             # default mediatype (so that make_response doesn't throw
             # another NotAcceptable error).
-            supported_mediatypes = self.representations.keys()
+            supported_mediatypes = list(self.representations.keys())
             fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else "text/plain"
             resp = self.make_response(
                 data,
