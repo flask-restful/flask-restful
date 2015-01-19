@@ -9,18 +9,13 @@ from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
-from flask.ext.restful.utils import error_data, unpack
+from flask.ext.restful.utils import error_data, unpack, OrderedDict
 from flask.ext.restful.representations.json import output_json
 import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
 
-try:
-    #noinspection PyUnresolvedReferences
-    from collections import OrderedDict
-except ImportError:
-    from .utils.ordereddict import OrderedDict
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
@@ -87,6 +82,7 @@ class Api(object):
         self.endpoints = set()
         self.resources = []
         self.app = None
+        self.blueprint = None
 
         if app is not None:
             self.app = app
@@ -107,7 +103,6 @@ class Api(object):
             api.init_app(app)
 
         """
-        self.blueprint = None
         # If app is a blueprint, defer the initialization
         try:
             app.record(self._deferred_blueprint_init)
@@ -251,6 +246,9 @@ class Api(object):
         endpoint or not. If it happened in a flask-restful endpoint, our
         handler will be dispatched. If it happened in an unrelated view, the
         app's original error handler will be dispatched.
+        In the event that the error occurred in a flask-restful endpoint but
+        the local handler can't resolve the situation, the router will fall
+        back onto the original_handler as last resort.
 
         :param original_handler: the original Flask error handler for the app
         :type original_handler: function
@@ -259,7 +257,10 @@ class Api(object):
 
         """
         if self._has_fr_route():
-            return self.handle_error(e)
+            try:
+                return self.handle_error(e)
+            except Exception:
+                pass  # Fall through to original handler
         return original_handler(e)
 
     def handle_error(self, e):
@@ -281,6 +282,7 @@ class Api(object):
 
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
+        headers = {}
 
         if code >= 500:
 
@@ -310,6 +312,9 @@ class Api(object):
                                        rules[match] for match in close_matches)
                                    ) + ' ?'
 
+        if code == 405:
+            headers['Allow'] = e.valid_methods
+
         error_cls_name = type(e).__name__
         if error_cls_name in self.errors:
             custom_data = self.errors.get(error_cls_name, {})
@@ -325,10 +330,11 @@ class Api(object):
             resp = self.make_response(
                 data,
                 code,
+                headers,
                 fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else None
             )
         else:
-            resp = self.make_response(data, code)
+            resp = self.make_response(data, code, headers)
 
         if code == 401:
             resp = self.unauthorized(resp)
@@ -367,6 +373,26 @@ class Api(object):
             self._register_view(self.app, resource, *urls, **kwargs)
         else:
             self.resources.append((resource, urls, kwargs))
+
+    def resource(self, *urls, **kwargs):
+        """Wraps a :class:`~flask.ext.restful.Resource` class, adding it to the
+        api. Parameters are the same as :meth:`~flask.ext.restful.Api.add_resource`.
+
+        Example::
+
+            app = Flask(__name__)
+            api = restful.Api(app)
+
+            @api.resource('/foo')
+            class Foo(Resource):
+                def get(self):
+                    return 'Hello, World!'
+
+        """
+        def decorator(cls):
+            self.add_resource(cls, *urls, **kwargs)
+            return cls
+        return decorator
 
     def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
@@ -532,13 +558,15 @@ class Resource(MethodView):
         return resp
 
 
-def marshal(data, fields):
+def marshal(data, fields, envelope=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
     :param data: the actual object(s) from which the fields are taken from
     :param fields: a dict of whose keys will make up the final serialized
                    response output
+    :param envelope: optional key that will be used to envelop the serialized
+                     response
 
 
     >>> from flask.ext.restful import fields, marshal
@@ -548,19 +576,24 @@ def marshal(data, fields):
     >>> marshal(data, mfields)
     OrderedDict([('a', 100)])
 
+    >>> marshal(data, mfields, envelope='data')
+    OrderedDict([('data', OrderedDict([('a', 100)]))])
+
     """
+
     def make(cls):
         if isinstance(cls, type):
             return cls()
         return cls
 
     if isinstance(data, (list, tuple)):
-        return [marshal(d, fields) for d in data]
+        return (OrderedDict([(envelope, [marshal(d, fields) for d in data])])
+                if envelope else [marshal(d, fields) for d in data])
 
     items = ((k, marshal(data, v) if isinstance(v, dict)
               else make(v).output(k, data))
              for k, v in fields.items())
-    return OrderedDict(items)
+    return OrderedDict([(envelope, OrderedDict(items))]) if envelope else OrderedDict(items)
 
 
 class marshal_with(object):
@@ -576,12 +609,25 @@ class marshal_with(object):
     >>> get()
     OrderedDict([('a', 100)])
 
+    >>> @marshal_with(mfields, envelope='data')
+    ... def get():
+    ...     return { 'a': 100, 'b': 'foo' }
+    ...
+    ...
+    >>> get()
+    OrderedDict([('data', OrderedDict([('a', 100)]))])
+
     see :meth:`flask.ext.restful.marshal`
     """
-    def __init__(self, fields):
-        """:param fields: a dict of whose keys will make up the final
-                          serialized response output"""
+    def __init__(self, fields, envelope=None):
+        """
+        :param fields: a dict of whose keys will make up the final
+                       serialized response output
+        :param envelope: optional key that will be used to envelop the serialized
+                         response
+        """
         self.fields = fields
+        self.envelope = envelope
 
     def __call__(self, f):
         @wraps(f)
@@ -589,9 +635,9 @@ class marshal_with(object):
             resp = f(*args, **kwargs)
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return marshal(data, self.fields), code, headers
+                return marshal(data, self.fields, self.envelope), code, headers
             else:
-                return marshal(resp, self.fields)
+                return marshal(resp, self.fields, self.envelope)
         return wrapper
 
 

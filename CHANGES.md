@@ -3,6 +3,36 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3.1
+-------------
+
+Released December 13, 2014
+
+- Addd `strict` option to `parse_args()` ([#358](https://github.com/flask-restful/flask-restful/pull/358))
+- Addd an option to envelop marshaled objects ([#349](https://github.com/flask-restful/flask-restful/pull/349))
+- Fixes initialization of `Api.blueprint` attribute ([#263](https://github.com/flask-restful/flask-restful/pull/263))
+- Makes `Api.error_router` fall back to Flask handlers ([#296](https://github.com/flask-restful/flask-restful/pull/296)/[#356](https://github.com/flask-restful/flask-restful/pull/356))
+- Makes docs more viewable on mobile devices ([#347](https://github.com/flask-restful/flask-restful/issues/347))
+- Wheel distribution is now universal ([#363](https://github.com/flask-restful/flask-restful/issues/363))
+
+Version 0.3.0
+--------------
+
+Released November 22, 2014
+
+- Adds `@api.resource` decorator ([#311](https://github.com/flask-restful/flask-restful/pull/311))
+- Adds custom error handling ([#225](https://github.com/flask-restful/flask-restful/pull/225))
+- Adds `RequestParser` inheritance ([#249](https://github.com/flask-restful/flask-restful/pull/249))
+- Adds 1/0 as valid values for `inputs.boolean` ([#341](https://github.com/flask-restful/flask-restful/pull/341))
+- Improved `datetime` serialization and deserialization ([#345](https://github.com/flask-restful/flask-restful/pull/345))
+- `init_app` now follows Flask extension guidelines ([#130](https://github.com/flask-restful/flask-restful/pull/130))
+- `types` module renamed to `inputs` ([#243](https://github.com/flask-restful/flask-restful/pull/243))
+- Fixes `inputs.boolean` inability to parse values from JSON ([#314](https://github.com/flask-restful/flask-restful/pull/314))
+- Fixes `RequestParser` inability to use arguments from multiple sources at once ([#261](https://github.com/flask-restful/flask-restful/pull/261))
+- Fixes missing `Allow` header when HTTP 405 is returned ([#294](https://github.com/flask-restful/flask-restful/pull/294))
+- Doc fixes and updates.
+
+
 Version 0.2.12
 --------------
 
@@ -18,7 +48,7 @@ Version 0.2.11
 Released January 17, 2014
 
 - Fixes the List field when marshalling a list of dictionaries. ([#165](https://github.com/twilio/flask-restful/issues/165))
-- Adds Boolean and Price types to fields.__all__ ([#180](https://github.com/twilio/flask-restful/issues/180))
+- Adds Boolean and Price types to fields.\_\_all\_\_ ([#180](https://github.com/twilio/flask-restful/issues/180))
 - Adds support for serializing a set object with a List field. ([#175](https://github.com/twilio/flask-restful/pull/175))
 - Fixes support for using callables as reqparser type arguments ([#167](https://github.com/twilio/flask-restful/pull/167))
 - Add configuration variable to control smart-errors behavior on 404 responses. ([#181](https://github.com/twilio/flask-restful/issues/181))

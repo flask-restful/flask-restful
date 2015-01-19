@@ -24,7 +24,9 @@ Api
 
 ReqParse
 --------
-.. automodule:: reqparse
+.. module:: reqparse
+
+.. autoclass:: RequestParser
    :members:
 
 .. autoclass:: Argument
@@ -36,14 +38,16 @@ Fields
 ------
 .. automodule:: fields
    :members:
+   :undoc-members:
 
-Types
------
+Inputs
+------
 
-.. module:: flask.ext.restful.types 
+.. module:: flask.ext.restful.inputs
 .. autofunction:: url
+.. autoclass:: regex
 .. autofunction:: date
 .. autofunction:: iso8601interval
-.. autofunction:: natural 
+.. autofunction:: natural
 .. autofunction:: boolean
 .. autofunction:: rfc822

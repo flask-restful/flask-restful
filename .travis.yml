@@ -1,9 +1,14 @@
 language: python
 python:
-  - "3.3"
-  - "2.7"
-  - "2.6"
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: 
-    - "make install test-install"
-script: "make test"
+  - 3.4
+  - 3.3
+  - 2.7
+  - 2.6
+install: pip install coveralls
+script: make ci
+after_success: coveralls
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change

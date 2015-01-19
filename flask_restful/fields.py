@@ -1,3 +1,4 @@
+from inspect import isfunction
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
 import six
 try:
@@ -6,8 +7,8 @@ except ImportError:
     # python3
     from urllib.parse import urlparse, urlunparse
 
-from flask_restful import types, marshal
-from flask import url_for
+from flask_restful import inputs, marshal
+from flask import url_for, request
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
            "Integer", "Arbitrary", "Nested", "List", "Raw", "Boolean",
@@ -33,6 +34,8 @@ def get_value(key, obj, default=None):
     """Helper for pulling a keyed value off various types of objects"""
     if type(key) == int:
         return _get_value_for_key(key, obj, default)
+    elif isfunction(key):
+        return key(obj)
     else:
         return _get_value_for_keys(key.split('.'), obj, default)
 
@@ -81,7 +84,8 @@ class Raw(object):
         self.default = default
 
     def format(self, value):
-        """Formats a field's value. No-op by default, concrete fields should
+        """Formats a field's value. No-op by default - field classes that
+        modify how the value of existing object keys should be presented should
         override this and apply the appropriate formatting.
 
         :param value: The value to format
@@ -97,7 +101,11 @@ class Raw(object):
 
     def output(self, key, obj):
         """Pulls the value for the given key from the object, applies the
-        field's formatting and returns the result.
+        field's formatting and returns the result. If the key is not found
+        in the object, returns the default value. Field classes that create
+        values which do not require the existence of the key in the object
+        should override this and return the desired value.
+
         :exception MarshallingException: In case of formatting problem
         """
 
@@ -116,6 +124,10 @@ class Nested(Raw):
     :param dict nested: The dictionary to nest
     :param bool allow_null: Whether to return None instead of a dictionary
         with null keys, if a nested dictionary has all-null keys
+    :param kwargs: if ``default`` keyword argument is present, a nested dictionary
+        will be marshaled as its value if nested dictionary is all-null keys
+        (e.g. lets you return an empty JSON object instead of null)
+    :keyword default
     """
 
     def __init__(self, nested, allow_null=False, **kwargs):
@@ -125,13 +137,24 @@ class Nested(Raw):
 
     def output(self, key, obj):
         value = get_value(key if self.attribute is None else self.attribute, obj)
-        if self.allow_null and value is None:
-            return None
+        if value is None:
+            if self.allow_null:
+                return None
+            elif self.default is not None:
+                return self.default
 
         return marshal(value, self.nested)
 
 
 class List(Raw):
+    """
+    Field for marshalling lists of other fields.
+
+    See :ref:`list-field` for more information.
+
+    :param cls_or_instance: The field type the list will contain.
+    """
+
     def __init__(self, cls_or_instance, **kwargs):
         super(List, self).__init__(**kwargs)
         error_msg = ("The type of the list elements must be a subclass of "
@@ -172,6 +195,11 @@ class List(Raw):
 
 
 class String(Raw):
+    """
+    Marshal a value as a string. Uses :py:class:`six.text_type` so values will
+    be converted to :py:class:`unicode` in python2 and :py:class:`str` in
+    python3.
+    """
     def format(self, value):
         try:
             return six.text_type(value)
@@ -189,8 +217,8 @@ class Integer(Raw):
         value, use this to retrieve a different attribute from the response
         than the publicly named value.
     """
-    def __init__(self, default=0, attribute=None):
-        super(Integer, self).__init__(default, attribute)
+    def __init__(self, default=0, **kwargs):
+        super(Integer, self).__init__(default=default, **kwargs)
 
     def format(self, value):
         try:
@@ -202,12 +230,38 @@ class Integer(Raw):
 
 
 class Boolean(Raw):
+    """
+    Field for outputting a boolean value.
+
+    Empty collections such as ``""``, ``{}``, ``[]``, etc. will be converted to
+    ``False``.
+    """
     def format(self, value):
         return bool(value)
 
 
 class FormattedString(Raw):
+    """
+    FormattedString is used to interpolate other values from
+    the response into this field. The syntax for the source string is
+    the same as the string `format` method from the python stdlib.
+
+    Ex::
+
+        fields = {
+            'name': fields.String,
+            'greeting': fields.FormattedString("Hello {name}")
+        }
+        data = {
+            'name': 'Doug',
+        }
+        marshal(data, fields)
+    """
     def __init__(self, src_str):
+        """
+        :param string src_str: the string to format with the other
+        values from the response.
+        """
         super(FormattedString, self).__init__()
         self.src_str = six.text_type(src_str)
 
@@ -223,7 +277,7 @@ class Url(Raw):
     """
     A string representation of a Url
     """
-    def __init__(self, endpoint, absolute=False, scheme=None):
+    def __init__(self, endpoint=None, absolute=False, scheme=None):
         super(Url, self).__init__()
         self.endpoint = endpoint
         self.absolute = absolute
@@ -232,7 +286,8 @@ class Url(Raw):
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
-            o = urlparse(url_for(self.endpoint, _external=self.absolute, **data))
+            endpoint = self.endpoint if self.endpoint is not None else request.endpoint
+            o = urlparse(url_for(endpoint, _external=self.absolute, **data))
             if self.absolute:
                 scheme = self.scheme if self.scheme is not None else o.scheme
                 return urlunparse((scheme, o.netloc, o.path, "", "", ""))
@@ -265,11 +320,26 @@ class Arbitrary(Raw):
 
 
 class DateTime(Raw):
-    """Return a RFC822-formatted datetime string in UTC"""
+    """
+    Return a formatted datetime string in UTC. Supported formats are RFC 822
+    and ISO 8601.
+
+    :param: str dt_format: rfc822 or iso8601
+    """
+    def __init__(self, dt_format='rfc822', **kwargs):
+        super(DateTime, self).__init__(**kwargs)
+        self.dt_format = dt_format
 
     def format(self, value):
         try:
-            return types.rfc822(value)
+            if self.dt_format == 'rfc822':
+                return inputs.rfc822(value)
+            elif self.dt_format == 'iso8601':
+                return inputs.iso8601(value)
+            else:
+                raise MarshallingException(
+                    'Unsupported date format %s' % self.dt_format
+                )
         except AttributeError as ae:
             raise MarshallingException(ae)
 
@@ -277,6 +347,9 @@ ZERO = MyDecimal()
 
 
 class Fixed(Raw):
+    """
+    A decimal number with a fixed precision.
+    """
     def __init__(self, decimals=5, **kwargs):
         super(Fixed, self).__init__(**kwargs)
         self.precision = MyDecimal('0.' + '0' * (decimals - 1) + '1')
@@ -287,4 +360,6 @@ class Fixed(Raw):
             raise MarshallingException('Invalid Fixed precision number.')
         return six.text_type(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
+
+"""Alias for :py:class:`~fields.Fixed`"""
 Price = Fixed

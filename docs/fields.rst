@@ -20,19 +20,20 @@ Basic Usage
 -----------
 You can define a dict or OrderedDict of fields whose keys are names of
 attributes or keys on the object to render, and whose values are a class that
-will format & return the value for that field  This example has three fields,
-two are Strings and one is a DateTime (formatted as rfc822 date strings) ::
+will format & return the value for that field.  This example has three fields,
+two are Strings and one is a DateTime, formatted as RFC 822 date string (ISO 8601
+is supported as well) ::
 
     from flask.ext.restful import Resource, fields, marshal_with
 
     resource_fields = {
         'name': fields.String,
         'address': fields.String,
-        'date_updated': fields.DateTime,
+        'date_updated': fields.DateTime(dt_format='rfc822'),
     }
     
     class Todo(Resource):
-        @marshal_with(resource_fields)
+        @marshal_with(resource_fields, envelope='resource')
         def get(self, **kwargs):
             return db_get_todo()  # Some function that queries the db
 
@@ -40,7 +41,8 @@ two are Strings and one is a DateTime (formatted as rfc822 date strings) ::
 This example assumes that you have a custom database object (``todo``) that
 has attributes ``name``, ``address``, and ``date_updated``.  Any additional
 attributes on the object are considered private and won't be rendered in the
-output.
+output. An optional ``envelope`` keyword argument is specified to wrap the
+resulting output.
 
 The decorator ``marshal_with`` is what actually takes your data object and applies the
 field filtering.  The marshalling can work on single objects, dicts, or
@@ -58,6 +60,13 @@ attribute naming. To configure this mapping, use the ``attribute`` kwarg. ::
 
     fields = {
         'name': fields.String(attribute='private_name'),
+        'address': fields.String,
+    }
+
+A lambda can also be specified as the ``attribute`` ::
+
+    fields = {
+        'name': fields.String(attribute=lambda x: x._private_name),
         'address': fields.String,
     }
 
@@ -154,6 +163,8 @@ You can have a flat structure that marshal_with will transform to a nested struc
 Note: the address field doesn't actually exist on the data object, but any of
 the sub-fields can access attributes directly of the object as if they were
 not nested.
+
+.. _list-field:
 
 List Field
 ----------
