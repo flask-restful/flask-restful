@@ -4,9 +4,10 @@ from functools import wraps, partial
 import re
 from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
+from flask import make_response as original_flask_make_response
 from flask.views import MethodView
 from flask.signals import got_request_exception
-from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
 from flask.ext.restful.utils import error_data, unpack, OrderedDict
@@ -279,7 +280,6 @@ class Api(object):
                 raise
             else:
                 raise e
-
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
         headers = {}
@@ -327,11 +327,12 @@ class Api(object):
             # default mediatype (so that make_response doesn't throw
             # another NotAcceptable error).
             supported_mediatypes = self.representations.keys()
+            fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else "text/plain"
             resp = self.make_response(
                 data,
                 code,
                 headers,
-                fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else None
+                fallback_mediatype = fallback_mediatype
             )
         else:
             resp = self.make_response(data, code, headers)
@@ -473,6 +474,12 @@ class Api(object):
             resp = self.representations[mediatype](data, *args, **kwargs)
             resp.headers['Content-Type'] = mediatype
             return resp
+        elif mediatype == 'text/plain':
+            resp = original_flask_make_response(str(data), *args, **kwargs)
+            resp.headers['Content-Type'] = 'text/plain'
+            return resp
+        else:
+            raise InternalServerError()
 
     def mediatypes(self):
         """Returns a list of requested mediatypes sent in the Accept header"""
