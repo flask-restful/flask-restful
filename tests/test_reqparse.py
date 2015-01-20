@@ -572,8 +572,8 @@ class ReqParseTestCase(unittest.TestCase):
     def test_filestorage_custom_type(self):
         def _custom_type(f):
             return FileStorage(stream=f.stream,
-                               filename="{}aaaa".format(f.filename),
-                               name="{}aaaa".format(f.name))
+                               filename="{0}aaaa".format(f.filename),
+                               name="{0}aaaa".format(f.name))
 
         app = Flask(__name__)
 
