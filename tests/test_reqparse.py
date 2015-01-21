@@ -569,6 +569,28 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'].filename, 'baz.txt')
             self.assertEquals(args['foo'].read(), fdata)
 
+    def test_filestorage_custom_type(self):
+        def _custom_type(f):
+            return FileStorage(stream=f.stream,
+                               filename="{0}aaaa".format(f.filename),
+                               name="{0}aaaa".format(f.name))
+
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=_custom_type, location='files')
+
+        fdata = six.b('foo bar baz qux')
+        with app.test_request_context('/bubble', method='POST',
+                                      data={'foo': (six.BytesIO(fdata), 'baz.txt')}):
+            args = parser.parse_args()
+
+            self.assertEquals(args['foo'].name, 'fooaaaa')
+            self.assertEquals(args['foo'].filename, 'baz.txtaaaa')
+            self.assertEquals(args['foo'].read(), fdata)
+
+
+
     def test_passing_arguments_object(self):
         req = Request.from_values("/bubble?foo=bar")
         parser = RequestParser()
