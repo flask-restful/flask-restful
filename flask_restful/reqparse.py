@@ -108,6 +108,11 @@ class Argument(object):
         if value is None and inspect.isclass(self.type) and issubclass(self.type, six.string_types):
             return None
 
+        # and check if we're expecting a filestorage and haven't overridden `type`
+        # (required because the below instantiation isn't valid for FileStorage)
+        elif isinstance(value, FileStorage) and self.type == FileStorage:
+            return value
+
         try:
             return self.type(value, self.name, op)
         except TypeError:
@@ -153,25 +158,26 @@ class Argument(object):
                     values = [source.get(name)]
 
                 for value in values:
-                    if not isinstance(value, FileStorage):
-                        if not self.case_sensitive:
-                            value = value.lower()
-                            if hasattr(self.choices, "__iter__"):
-                                self.choices = [choice.lower() for choice in self.choices]
+                    if hasattr(value, "lower") and not self.case_sensitive:
+                        value = value.lower()
 
-                        try:
-                            value = self.convert(value, operator)
-                        except Exception as error:
-                            if self.ignore:
-                                continue
-                            self.handle_validation_error(error)
+                        if hasattr(self.choices, "__iter__"):
+                            self.choices = [choice.lower()
+                                            for choice in self.choices]
 
-                        if self.choices and value not in self.choices:
-                            self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value
-                                ))
-                            )
+                    try:
+                        value = self.convert(value, operator)
+                    except Exception as error:
+                        if self.ignore:
+                            continue
+                        self.handle_validation_error(error)
+
+                    if self.choices and value not in self.choices:
+                        self.handle_validation_error(
+                            ValueError(u"{0} is not a valid choice".format(
+                                value
+                            ))
+                        )
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)

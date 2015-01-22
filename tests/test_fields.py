@@ -1,4 +1,5 @@
 from decimal import Decimal
+import pytz
 import unittest
 from mock import Mock
 from flask.ext.restful.fields import MarshallingException
@@ -18,11 +19,6 @@ class Foo(object):
 class Bar(object):
     def __marshallable__(self):
         return {"hey": 3}
-
-
-class TZ(tzinfo):
-    def utcoffset(self, dt):
-        return timedelta(hours=2)
 
 
 def check_field(expected, field, value):
@@ -49,6 +45,34 @@ def test_boolean():
     ]
     for value, expected in values:
         yield check_field, expected, fields.Boolean(), value
+
+
+def test_rfc822_datetime_formatters():
+    dates = [
+        (datetime(2011, 1, 1), "Sat, 01 Jan 2011 00:00:00 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59),
+         "Sat, 01 Jan 2011 23:59:59 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+         "Sat, 01 Jan 2011 23:59:59 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+         "Sat, 01 Jan 2011 22:59:59 -0000")
+    ]
+    for date_obj, expected in dates:
+        yield assert_equals, fields._rfc822(date_obj), expected
+
+
+def test_iso8601_datetime_formatters():
+    dates = [
+        (datetime(2011, 1, 1), "2011-01-01T00:00:00+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59),
+         "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+         "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+         "2011-01-01T22:59:59+00:00")
+    ]
+    for date_obj, expected in dates:
+        yield assert_equals, fields._iso8601(date_obj), expected
 
 
 class FieldsTestCase(unittest.TestCase):
@@ -318,9 +342,9 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals("Mon, 22 Aug 2011 20:58:45 -0000", field.output("bar", obj))
 
     def test_rfc822_date_field_with_offset(self):
-        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=TZ())}
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
         field = fields.DateTime()
-        self.assertEquals("Mon, 22 Aug 2011 18:58:45 -0000", field.output("bar", obj))
+        self.assertEquals("Mon, 22 Aug 2011 19:58:45 -0000", field.output("bar", obj))
 
     def test_iso8601_date_field_without_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
@@ -328,9 +352,9 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals("2011-08-22T20:58:45+00:00", field.output("bar", obj))
 
     def test_iso8601_date_field_with_offset(self):
-        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=TZ())}
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
         field = fields.DateTime(dt_format='iso8601')
-        self.assertEquals("2011-08-22T18:58:45+00:00", field.output("bar", obj))
+        self.assertEquals("2011-08-22T19:58:45+00:00", field.output("bar", obj))
 
     def test_unsupported_datetime_format(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
