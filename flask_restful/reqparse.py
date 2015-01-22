@@ -104,8 +104,8 @@ class Argument(object):
         return MultiDict()
 
     def convert(self, value, op):
-        # check if we're expecting a string and the value is `None`
-        if value is None and inspect.isclass(self.type) and issubclass(self.type, six.string_types):
+        # Don't cast None
+        if value is None:
             return None
 
         # and check if we're expecting a filestorage and haven't overridden `type`
