@@ -179,15 +179,13 @@ class Argument(object):
 
         if not results and self.required:
             if isinstance(self.location, six.string_types):
-                error_msg = u"Missing required parameter {0} in {1}".format(
-                    self.name,
+                error_msg = u"Missing required parameter in {0}".format(
                     _friendly_location.get(self.location, self.location)
                 )
             else:
                 friendly_locations = [_friendly_location.get(loc, loc)
                                       for loc in self.location]
-                error_msg = u"Missing required parameter {0} in {1}".format(
-                    self.name,
+                error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
             self.handle_validation_error(ValueError(error_msg))

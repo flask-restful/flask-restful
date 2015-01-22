@@ -362,7 +362,7 @@ class ReqParseTestCase(unittest.TestCase):
         except exceptions.BadRequest as e:
             message = e.data['message']
 
-        self.assertEquals(message, (u'[foo]: Missing required parameter foo in the '
+        self.assertEquals(message, (u'[foo]: Missing required parameter in the '
                                     'post body or the query string'))
 
         parser = RequestParser()
@@ -373,7 +373,7 @@ class ReqParseTestCase(unittest.TestCase):
         except exceptions.BadRequest as e:
             message = e.data['message']
 
-        self.assertEquals(message, (u"[bar]: Missing required parameter bar in the "
+        self.assertEquals(message, (u"[bar]: Missing required parameter in the "
                                     "post body or the query string or the "
                                     "request's cookies"))
 
