@@ -660,12 +660,22 @@ class marshal_with_field(object):
     >>> get()
     [1, 2, 3]
 
+    >>> @marshal_with_field(fields.List(fields.Integer), envelope='ints')
+    ... def get():
+    ...     return ['1', 2, 3.0]
+    ...
+    >>> get()
+    {'ints': [1, 2, 3]}
+
     see :meth:`flask.ext.restful.marshal_with`
     """
-    def __init__(self, field):
+    def __init__(self, field, envelope=None):
         """
         :param field: a single field with which to marshal the output.
+        :param envelope: optional key that will be used to envelop the serialized
+                         response
         """
+        self.envelope = envelope
         if isinstance(field, type):
             self.field = field()
         else:
@@ -678,7 +688,13 @@ class marshal_with_field(object):
 
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return self.field.format(data), code, headers
-            return self.field.format(resp)
+                result = self.field.format(data), code, headers
+            else:
+                result = self.field.format(resp)
+
+            if self.envelope:
+                result = {self.envelope: result}
+
+            return result
 
         return wrapper
