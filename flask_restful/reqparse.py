@@ -55,7 +55,7 @@ class Argument(object):
         iterator. The last item listed takes precedence in the result set.
     :param choices: A container of the allowable values for the argument.
     :param help: A brief description of the argument, returned in the
-        response when the argument is invalid. This takes precedence over
+        response when the argument is invalid with the name of the argument and
         the message passed to a ValidationError raised by a type converter.
     :param bool case_sensitive: Whether the arguments in the request are
         case sensitive or not
@@ -130,7 +130,8 @@ class Argument(object):
 
         :param error: the error that was raised
         """
-        msg = self.help if self.help is not None else str(error)
+        help_str = '(%s) ' % self.help if self.help else ''
+        msg = '[%s]: %s%s' % (self.name, help_str, str(error))
         flask_restful.abort(400, message=msg)
 
     def parse(self, request):
@@ -184,15 +185,13 @@ class Argument(object):
 
         if not results and self.required:
             if isinstance(self.location, six.string_types):
-                error_msg = u"Missing required parameter {0} in {1}".format(
-                    self.name,
+                error_msg = u"Missing required parameter in {0}".format(
                     _friendly_location.get(self.location, self.location)
                 )
             else:
                 friendly_locations = [_friendly_location.get(loc, loc)
                                       for loc in self.location]
-                error_msg = u"Missing required parameter {0} in {1}".format(
-                    self.name,
+                error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
             self.handle_validation_error(ValueError(error_msg))
