@@ -157,6 +157,14 @@ class APITestCase(unittest.TestCase):
             return 'foo', 200, {'X-test': 123}
         self.assertEquals(('foo', 200, {'X-test': 123}), try_me())
 
+    def test_marshal_field_decorator_with_envelope(self):
+        field = flask_restful.fields.Raw
+
+        @flask_restful.marshal_with_field(field, envelope='env')
+        def try_me():
+            return 'foo'
+        self.assertEquals(try_me(), {'env': 'foo'})
+
     def test_marshal_field(self):
         fields = OrderedDict({'foo': flask_restful.fields.Raw()})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
