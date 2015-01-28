@@ -2,9 +2,10 @@ from datetime import timedelta
 from flask import make_response, request, current_app
 from functools import update_wrapper
 
+
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
-                automatic_options=True):
+                automatic_options=True, credentials=False):
     """
     http://flask.pocoo.org/snippets/56/
     """
@@ -38,6 +39,8 @@ def crossdomain(origin=None, methods=None, headers=None,
             h['Access-Control-Allow-Origin'] = origin
             h['Access-Control-Allow-Methods'] = get_methods()
             h['Access-Control-Max-Age'] = str(max_age)
+            if credentials:
+                h['Access-Control-Allow-Credentials'] = 'true'
             if headers is not None:
                 h['Access-Control-Allow-Headers'] = headers
             return resp

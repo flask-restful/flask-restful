@@ -4,24 +4,21 @@ from functools import wraps, partial
 import re
 from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
+from flask import make_response as original_flask_make_response
 from flask.views import MethodView
 from flask.signals import got_request_exception
-from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
-from flask.ext.restful.utils import error_data, unpack
+from flask.ext.restful.utils import error_data, unpack, OrderedDict
 from flask.ext.restful.representations.json import output_json
 import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
+import operator
 
-try:
-    #noinspection PyUnresolvedReferences
-    from collections import OrderedDict
-except ImportError:
-    from .utils.ordereddict import OrderedDict
 
-__all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'abort')
+__all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
 
 def abort(http_status_code, **kwargs):
@@ -65,12 +62,15 @@ class Api(object):
         is the blueprint (or blueprint registration) prefix, 'a' is the api
         prefix, and 'e' is the path component the endpoint is added with
     :type catch_all_404s: bool
+    :param errors: A dictionary to define a custom response for each
+        exception or error raised during a request
+    :type errors: dict
 
     """
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False, url_part_order='bae'):
+                 catch_all_404s=False, url_part_order='bae', errors=None):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
@@ -78,10 +78,12 @@ class Api(object):
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
         self.url_part_order = url_part_order
+        self.errors = errors or {}
         self.blueprint_setup = None
         self.endpoints = set()
         self.resources = []
         self.app = None
+        self.blueprint = None
 
         if app is not None:
             self.app = app
@@ -98,11 +100,10 @@ class Api(object):
         Examples::
 
             api = Api()
-            api.init_app(app)
             api.add_resource(...)
+            api.init_app(app)
 
         """
-        self.blueprint = None
         # If app is a blueprint, defer the initialization
         try:
             app.record(self._deferred_blueprint_init)
@@ -120,10 +121,11 @@ class Api(object):
         :param registration_prefix: The part of the url contributed by the
             blueprint.  Generally speaking, BlueprintSetupState.url_prefix
         """
-
-        parts = {'b' : registration_prefix,
-                 'a' : self.prefix,
-                 'e' : url_part}
+        parts = {
+            'b': registration_prefix,
+            'a': self.prefix,
+            'e': url_part
+        }
         return ''.join(parts[key] for key in self.url_part_order if parts[key])
 
     @staticmethod
@@ -230,7 +232,6 @@ class Api(object):
             # Werkzeug throws other kinds of exceptions, such as Redirect
             pass
 
-
     def _has_fr_route(self):
         """Encapsulating the rules for whether the request was to a Flask endpoint"""
         # 404's, 405's, which might not have a url_rule
@@ -246,6 +247,9 @@ class Api(object):
         endpoint or not. If it happened in a flask-restful endpoint, our
         handler will be dispatched. If it happened in an unrelated view, the
         app's original error handler will be dispatched.
+        In the event that the error occurred in a flask-restful endpoint but
+        the local handler can't resolve the situation, the router will fall
+        back onto the original_handler as last resort.
 
         :param original_handler: the original Flask error handler for the app
         :type original_handler: function
@@ -254,7 +258,10 @@ class Api(object):
 
         """
         if self._has_fr_route():
-            return self.handle_error(e)
+            try:
+                return self.handle_error(e)
+            except Exception:
+                pass  # Fall through to original handler
         return original_handler(e)
 
     def handle_error(self, e):
@@ -273,9 +280,9 @@ class Api(object):
                 raise
             else:
                 raise e
-
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
+        headers = {}
 
         if code >= 500:
 
@@ -300,15 +307,38 @@ class Api(object):
                     data["message"] = ""
 
                 data['message'] += 'You have requested this URI [' + request.path + \
-                        '] but did you mean ' + \
-                        ' or '.join((rules[match]
-                                     for match in close_matches)) + ' ?'
+                                   '] but did you mean ' + \
+                                   ' or '.join((
+                                       rules[match] for match in close_matches)
+                                   ) + ' ?'
 
-        resp = self.make_response(data, code)
+        if code == 405:
+            headers['Allow'] = e.valid_methods
+
+        error_cls_name = type(e).__name__
+        if error_cls_name in self.errors:
+            custom_data = self.errors.get(error_cls_name, {})
+            code = custom_data.get('status', 500)
+            data.update(custom_data)
+
+        if code == 406 and self.default_mediatype is None:
+            # if we are handling NotAcceptable (406), make sure that
+            # make_response uses a representation we support as the
+            # default mediatype (so that make_response doesn't throw
+            # another NotAcceptable error).
+            supported_mediatypes = list(self.representations.keys())
+            fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else "text/plain"
+            resp = self.make_response(
+                data,
+                code,
+                headers,
+                fallback_mediatype = fallback_mediatype
+            )
+        else:
+            resp = self.make_response(data, code, headers)
 
         if code == 401:
             resp = self.unauthorized(resp)
-
         return resp
 
     def mediatypes_method(self):
@@ -345,6 +375,25 @@ class Api(object):
         else:
             self.resources.append((resource, urls, kwargs))
 
+    def resource(self, *urls, **kwargs):
+        """Wraps a :class:`~flask.ext.restful.Resource` class, adding it to the
+        api. Parameters are the same as :meth:`~flask.ext.restful.Api.add_resource`.
+
+        Example::
+
+            app = Flask(__name__)
+            api = restful.Api(app)
+
+            @api.resource('/foo')
+            class Foo(Resource):
+                def get(self):
+                    return 'Hello, World!'
+
+        """
+        def decorator(cls):
+            self.add_resource(cls, *urls, **kwargs)
+            return cls
+        return decorator
 
     def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
@@ -365,7 +414,6 @@ class Api(object):
             methods = resource_func.methods
             resource_func = decorator(resource_func)
             resource_func.methods = methods
-
 
         for url in urls:
             # If this Api has a blueprint
@@ -411,20 +459,34 @@ class Api(object):
     def make_response(self, data, *args, **kwargs):
         """Looks up the representation transformer for the requested media
         type, invoking the transformer to create a response object. This
-        defaults to (application/json) if no transformer is found for the
-        requested mediatype.
+        defaults to default_mediatype if no transformer is found for the
+        requested mediatype. If default_mediatype is None, a 406 Not 
+        Acceptable response will be sent as per RFC 2616 section 14.1
 
         :param data: Python object containing response data to be transformed
         """
-        for mediatype in self.mediatypes() + [self.default_mediatype]:
-            if mediatype in self.representations:
-                resp = self.representations[mediatype](data, *args, **kwargs)
-                resp.headers['Content-Type'] = mediatype
-                return resp
+        default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
+        mediatype = request.accept_mimetypes.best_match(
+            self.representations, 
+            default=default_mediatype,
+        )
+        if mediatype is None:
+            raise NotAcceptable()
+        if mediatype in self.representations:
+            resp = self.representations[mediatype](data, *args, **kwargs)
+            resp.headers['Content-Type'] = mediatype
+            return resp
+        elif mediatype == 'text/plain':
+            resp = original_flask_make_response(str(data), *args, **kwargs)
+            resp.headers['Content-Type'] = 'text/plain'
+            return resp
+        else:
+            raise InternalServerError()
 
     def mediatypes(self):
         """Returns a list of requested mediatypes sent in the Accept header"""
-        return [h for h, q in request.accept_mimetypes]
+        return [h for h, q in sorted(request.accept_mimetypes,
+                                     key=operator.itemgetter(1), reverse=True)]
 
     def representation(self, mediatype):
         """Allows additional representation transformers to be declared for the
@@ -495,23 +557,25 @@ class Resource(MethodView):
         representations = self.representations or {}
 
         #noinspection PyUnresolvedReferences
-        for mediatype in self.mediatypes():
-            if mediatype in representations:
-                data, code, headers = unpack(resp)
-                resp = representations[mediatype](data, code, headers)
-                resp.headers['Content-Type'] = mediatype
-                return resp
+        mediatype = request.accept_mimetypes.best_match(representations, default=None)
+        if mediatype in representations:
+            data, code, headers = unpack(resp)
+            resp = representations[mediatype](data, code, headers)
+            resp.headers['Content-Type'] = mediatype
+            return resp
 
         return resp
 
 
-def marshal(data, fields):
+def marshal(data, fields, envelope=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
+    :param data: the actual object(s) from which the fields are taken from
     :param fields: a dict of whose keys will make up the final serialized
                    response output
-    :param data: the actual object(s) from which the fields are taken from
+    :param envelope: optional key that will be used to envelop the serialized
+                     response
 
 
     >>> from flask.ext.restful import fields, marshal
@@ -521,19 +585,24 @@ def marshal(data, fields):
     >>> marshal(data, mfields)
     OrderedDict([('a', 100)])
 
+    >>> marshal(data, mfields, envelope='data')
+    OrderedDict([('data', OrderedDict([('a', 100)]))])
+
     """
+
     def make(cls):
         if isinstance(cls, type):
             return cls()
         return cls
 
     if isinstance(data, (list, tuple)):
-        return [marshal(d, fields) for d in data]
+        return (OrderedDict([(envelope, [marshal(d, fields) for d in data])])
+                if envelope else [marshal(d, fields) for d in data])
 
     items = ((k, marshal(data, v) if isinstance(v, dict)
-                                  else make(v).output(k, data))
-                                  for k, v in fields.items())
-    return OrderedDict(items)
+              else make(v).output(k, data))
+             for k, v in fields.items())
+    return OrderedDict([(envelope, OrderedDict(items))]) if envelope else OrderedDict(items)
 
 
 class marshal_with(object):
@@ -549,12 +618,25 @@ class marshal_with(object):
     >>> get()
     OrderedDict([('a', 100)])
 
+    >>> @marshal_with(mfields, envelope='data')
+    ... def get():
+    ...     return { 'a': 100, 'b': 'foo' }
+    ...
+    ...
+    >>> get()
+    OrderedDict([('data', OrderedDict([('a', 100)]))])
+
     see :meth:`flask.ext.restful.marshal`
     """
-    def __init__(self, fields):
-        """:param fields: a dict of whose keys will make up the final
-                          serialized response output"""
+    def __init__(self, fields, envelope=None):
+        """
+        :param fields: a dict of whose keys will make up the final
+                       serialized response output
+        :param envelope: optional key that will be used to envelop the serialized
+                         response
+        """
         self.fields = fields
+        self.envelope = envelope
 
     def __call__(self, f):
         @wraps(f)
@@ -562,7 +644,43 @@ class marshal_with(object):
             resp = f(*args, **kwargs)
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return marshal(data, self.fields), code, headers
+                return marshal(data, self.fields, self.envelope), code, headers
             else:
-                return marshal(resp, self.fields)
+                return marshal(resp, self.fields, self.envelope)
+        return wrapper
+
+
+class marshal_with_field(object):
+    """
+    A decorator that formats the return values of your methods with a single field.
+
+    >>> from flask.ext.restful import marshal_with_field, fields
+    >>> @marshal_with_field(fields.List(fields.Integer))
+    ... def get():
+    ...     return ['1', 2, 3.0]
+    ...
+    >>> get()
+    [1, 2, 3]
+
+    see :meth:`flask.ext.restful.marshal_with`
+    """
+    def __init__(self, field):
+        """
+        :param field: a single field with which to marshal the output.
+        """
+        if isinstance(field, type):
+            self.field = field()
+        else:
+            self.field = field
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            resp = f(*args, **kwargs)
+
+            if isinstance(resp, tuple):
+                data, code, headers = unpack(resp)
+                return self.field.format(data), code, headers
+            return self.field.format(resp)
+
         return wrapper

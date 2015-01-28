@@ -7,6 +7,7 @@ from json import dumps
 # function, used below.
 settings = {}
 
+
 def output_json(data, code, headers=None):
     """Makes a Flask response with a JSON encoded body"""
 

@@ -7,8 +7,8 @@ Quickstart
 
 It's time to write your first REST API. This guide assumes you have a working
 understanding of `Flask <http://flask.pocoo.org>`_, and that you have already
-installed both Flask and Flask-RESTful.  If not, then follow the steps in the 
-installation_ section.
+installed both Flask and Flask-RESTful.  If not, then follow the steps in the
+:ref:`installation` section.
 
 
 
@@ -80,26 +80,27 @@ like this: ::
 
 You can try it like this: ::
 
-    You can try this example as follow:
-        $ curl http://localhost:5000/todo1 -d "data=Remember the milk" -X PUT
-        {"todo1": "Remember the milk"}
-        $ curl http://localhost:5000/todo1
-        {"todo1": "Remember the milk"}
-        $ curl http://localhost:5000/todo2 -d "data=Change my breakpads" -X PUT
-        {"todo2": "Change my breakpads"}
-        $ curl http://localhost:5000/todo2
-        {"todo2": "Change my breakpads"}
+    $ curl http://localhost:5000/todo1 -d "data=Remember the milk" -X PUT
+    {"todo1": "Remember the milk"}
+    $ curl http://localhost:5000/todo1
+    {"todo1": "Remember the milk"}
+    $ curl http://localhost:5000/todo2 -d "data=Change my brakepads" -X PUT
+    {"todo2": "Change my brakepads"}
+    $ curl http://localhost:5000/todo2
+    {"todo2": "Change my brakepads"}
 
-    Or from python if you have the requests library installed:
+
+Or from python if you have the requests library installed::
+
      >>> from requests import put, get
      >>> put('http://localhost:5000/todo1', data={'data': 'Remember the milk'}).json()
      {u'todo1': u'Remember the milk'}
      >>> get('http://localhost:5000/todo1').json()
      {u'todo1': u'Remember the milk'}
-     >>> put('http://localhost:5000/todo2', data={'data': 'Change my breakpads'}).json()
-     {u'todo2': u'Change my breakpads'}
+     >>> put('http://localhost:5000/todo2', data={'data': 'Change my brakepads'}).json()
+     {u'todo2': u'Change my brakepads'}
      >>> get('http://localhost:5000/todo2').json()
-     {u'todo2': u'Change my breakpads'}
+     {u'todo2': u'Change my brakepads'}
 
 Flask-RESTful understands multiple kinds of return values from view methods.
 Similar to Flask, you can return any iterable and it will be converted into a
@@ -166,9 +167,13 @@ a 400 Bad Request and a response highlighting the error. ::
     {'status': 400, 'message': 'foo cannot be converted to int'}
 
 
-The :py:class:`types` module provides a number of included common conversion
-functions such as :py:meth:`types.date` and :py:meth:`types.url`.
+The :py:class:`inputs` module provides a number of included common conversion
+functions such as :py:meth:`inputs.date` and :py:meth:`inputs.url`.
 
+Calling ``parse_args`` with ``strict=True`` ensures that an error is thrown if
+the request includes arguments your parser does not define.
+
+    args = parser.parse_args(strict=True)
 
 Data Formatting
 ---------------
@@ -262,7 +267,8 @@ Save this example in api.py ::
 
         def post(self):
             args = parser.parse_args()
-            todo_id = 'todo%d' % (len(TODOS) + 1)
+            todo_id = int(max(TODOS.keys()).lstrip('todo')) + 1
+            todo_id = 'todo%i' % todo_id
             TODOS[todo_id] = {'task': args['task']}
             return TODOS[todo_id], 201
 
@@ -270,7 +276,7 @@ Save this example in api.py ::
     ## Actually setup the Api resource routing here
     ##
     api.add_resource(TodoList, '/todos')
-    api.add_resource(Todo, '/todos/<string:todo_id>')
+    api.add_resource(Todo, '/todos/<todo_id>')
 
 
     if __name__ == '__main__':

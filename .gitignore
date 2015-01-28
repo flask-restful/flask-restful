@@ -1,5 +1,5 @@
 *.py[cod]
-venv
+env
 
 # C extensions
 *.so
@@ -18,12 +18,14 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+.cache
 
 # Installer logs
 pip-log.txt
 
 # Unit test / coverage reports
 .coverage
+htmlcov/
 .tox
 nosetests.xml
 

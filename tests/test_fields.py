@@ -1,33 +1,38 @@
 from decimal import Decimal
+import pytz
 import unittest
 from mock import Mock
 from flask.ext.restful.fields import MarshallingException
-from flask.ext.restful.utils.ordereddict import OrderedDict
+from flask.ext.restful.utils import OrderedDict
 from flask_restful import fields
-from datetime import datetime
-from flask import Flask
+from datetime import datetime, timedelta, tzinfo
+from flask import Flask, Blueprint
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals # you need it for tests in form of continuations
+from nose.tools import assert_equals  # you need it for tests in form of continuations
 
 
 class Foo(object):
     def __init__(self):
         self.hey = 3
+
+
 class Bar(object):
     def __marshallable__(self):
         return {"hey": 3}
 
+
 def check_field(expected, field, value):
     assert_equals(expected, field.output('a', {'a': value}))
 
+
 def test_float():
     values = [
-        ("-3.13", "-3.13"),
-        (str(-3.13), "-3.13"),
-        (3, "3"),
+        ("-3.13", -3.13),
+        (str(-3.13), -3.13),
+        (3, 3.0),
     ]
     for value, expected in values:
-        yield check_field, expected, fields.Arbitrary(), value
+        yield check_field, expected, fields.Float(), value
 
 
 def test_boolean():
@@ -37,9 +42,37 @@ def test_boolean():
         ({}, False),
         ("false", True),  # These are different from php
         ("0", True),      # Will this be a problem?
-        ]
+    ]
     for value, expected in values:
         yield check_field, expected, fields.Boolean(), value
+
+
+def test_rfc822_datetime_formatters():
+    dates = [
+        (datetime(2011, 1, 1), "Sat, 01 Jan 2011 00:00:00 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59),
+         "Sat, 01 Jan 2011 23:59:59 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+         "Sat, 01 Jan 2011 23:59:59 -0000"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+         "Sat, 01 Jan 2011 22:59:59 -0000")
+    ]
+    for date_obj, expected in dates:
+        yield assert_equals, fields._rfc822(date_obj), expected
+
+
+def test_iso8601_datetime_formatters():
+    dates = [
+        (datetime(2011, 1, 1), "2011-01-01T00:00:00+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59),
+         "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+         "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+         "2011-01-01T22:59:59+00:00")
+    ]
+    for date_obj, expected in dates:
+        yield assert_equals, fields._iso8601(date_obj), expected
 
 
 class FieldsTestCase(unittest.TestCase):
@@ -52,45 +85,38 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.String()
         self.assertEquals(field.output("foo", obj), "3")
 
-
     def test_no_attribute(self):
         obj = {"bar": 3}
         field = fields.String()
         self.assertEquals(field.output("foo", obj), None)
-
 
     def test_date_field_invalid(self):
         obj = {"bar": 3}
         field = fields.DateTime()
         self.assertRaises(MarshallingException, lambda: field.output("bar", obj))
 
-
     def test_attribute(self):
         obj = {"bar": 3}
         field = fields.String(attribute="bar")
         self.assertEquals(field.output("foo", obj), "3")
-
 
     def test_formatting_field_none(self):
         obj = {}
         field = fields.FormattedString("/foo/{0[account_sid]}/{0[sid]}/")
         self.assertRaises(MarshallingException, lambda: field.output("foo", obj))
 
-
     def test_formatting_field_tuple(self):
         obj = (3, 4)
         field = fields.FormattedString("/foo/{0[account_sid]}/{0[sid]}/")
         self.assertRaises(MarshallingException, lambda: field.output("foo", obj))
 
-
     def test_formatting_field_dict(self):
         obj = {
             "sid": 3,
             "account_sid": 4,
-            }
+        }
         field = fields.FormattedString("/foo/{account_sid}/{sid}/")
         self.assertEquals(field.output("foo", obj), "/foo/4/3/")
-
 
     def test_formatting_field(self):
         obj = Mock()
@@ -99,20 +125,17 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.FormattedString("/foo/{account_sid}/{sid}/")
         self.assertEquals(field.output("foo", obj), "/foo/4/3/")
 
-
     def test_basic_field(self):
         obj = Mock()
         obj.foo = 3
         field = fields.Raw()
         self.assertEquals(field.output("foo", obj), 3)
 
-
     def test_raw_field(self):
         obj = Mock()
         obj.foo = 3
         field = fields.Raw()
         self.assertEquals(field.output("foo", obj), 3)
-
 
     def test_nested_raw_field(self):
         foo = Mock()
@@ -122,21 +145,21 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Raw()
         self.assertEquals(field.output("bar.value", foo), 3)
 
-
     def test_formatted_string_invalid_obj(self):
         field = fields.FormattedString("{hey}")
         self.assertRaises(MarshallingException, lambda: field.output("hey", None))
-
 
     def test_formatted_string(self):
         field = fields.FormattedString("{hey}")
         self.assertEquals("3", field.output("hey", Foo()))
 
-
     def test_string_with_attribute(self):
         field = fields.String(attribute="hey")
         self.assertEquals("3", field.output("foo", Foo()))
 
+    def test_string_with_lambda(self):
+        field = fields.String(attribute=lambda x: x.hey)
+        self.assertEquals("3", field.output("foo", Foo()))
 
     def test_url_invalid_object(self):
         app = Flask(__name__)
@@ -146,7 +169,6 @@ class FieldsTestCase(unittest.TestCase):
         with app.test_request_context("/"):
             self.assertRaises(MarshallingException, lambda: field.output("hey", None))
 
-
     def test_url(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
@@ -154,7 +176,6 @@ class FieldsTestCase(unittest.TestCase):
 
         with app.test_request_context("/"):
             self.assertEquals("/3", field.output("hey", Foo()))
-
 
     def test_url_absolute(self):
         app = Flask(__name__)
@@ -173,15 +194,85 @@ class FieldsTestCase(unittest.TestCase):
         with app.test_request_context("/", base_url="http://localhost"):
             self.assertEquals("https://localhost/3", field.output("hey", Foo()))
 
+    def test_url_without_endpoint_invalid_object(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url()
+
+        with app.test_request_context("/hey"):
+            self.assertRaises(MarshallingException, lambda: field.output("hey", None))
+
+    def test_url_without_endpoint(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url()
+
+        with app.test_request_context("/hey"):
+            self.assertEquals("/3", field.output("hey", Foo()))
+
+    def test_url_without_endpoint_absolute(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url(absolute=True)
+
+        with app.test_request_context("/hey"):
+            self.assertEquals("http://localhost/3", field.output("hey", Foo()))
+
+    def test_url_without_endpoint_absolute_scheme(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        field = fields.Url(absolute=True, scheme='https')
+
+        with app.test_request_context("/hey", base_url="http://localhost"):
+            self.assertEquals("https://localhost/3", field.output("hey", Foo()))
+
+    def test_url_with_blueprint_invalid_object(self):
+        app = Flask(__name__)
+        bp = Blueprint("foo", __name__, url_prefix="/foo")
+        bp.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        app.register_blueprint(bp)
+        field = fields.Url()
+
+        with app.test_request_context("/foo/hey"):
+            self.assertRaises(MarshallingException, lambda: field.output("hey", None))
+
+    def test_url_with_blueprint(self):
+        app = Flask(__name__)
+        bp = Blueprint("foo", __name__, url_prefix="/foo")
+        bp.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        app.register_blueprint(bp)
+        field = fields.Url()
+
+        with app.test_request_context("/foo/hey"):
+            self.assertEquals("/foo/3", field.output("hey", Foo()))
+
+    def test_url_with_blueprint_absolute(self):
+        app = Flask(__name__)
+        bp = Blueprint("foo", __name__, url_prefix="/foo")
+        bp.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        app.register_blueprint(bp)
+        field = fields.Url(absolute=True)
+
+        with app.test_request_context("/foo/hey"):
+            self.assertEquals("http://localhost/foo/3", field.output("hey", Foo()))
+
+    def test_url_with_blueprint_absolute_scheme(self):
+        app = Flask(__name__)
+        bp = Blueprint("foo", __name__, url_prefix="/foo")
+        bp.add_url_rule("/<hey>", "foobar", view_func=lambda x: x)
+        app.register_blueprint(bp)
+        field = fields.Url(absolute=True, scheme='https')
+
+        with app.test_request_context("/foo/hey", base_url="http://localhost"):
+            self.assertEquals("https://localhost/foo/3", field.output("hey", Foo()))
+
     def test_int(self):
         field = fields.Integer()
         self.assertEquals(3, field.output("hey", {'hey': 3}))
 
-
     def test_int_default(self):
         field = fields.Integer(default=1)
         self.assertEquals(1, field.output("hey", {'hey': None}))
-
 
     def test_no_int(self):
         field = fields.Integer()
@@ -193,7 +284,7 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_float(self):
         field = fields.Float()
-        self.assertEquals('3.0', field.output("hey", {'hey': 3.0}))
+        self.assertEquals(3.0, field.output("hey", {'hey': 3.0}))
 
     def test_float_decode_error(self):
         field = fields.Float()
@@ -225,7 +316,6 @@ class FieldsTestCase(unittest.TestCase):
         self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': '+inf'}))
         self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': '-inf'}))
 
-
     def test_advanced_fixed(self):
         field = fields.Fixed()
         self.assertRaises(MarshallingException, lambda: field.output("hey", {'hey': 'NaN'}))
@@ -234,32 +324,46 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Fixed(4, attribute="bar")
         self.assertEquals('3.0000', field.output("foo", {'bar': '3'}))
 
-
     def test_string(self):
         field = fields.String()
         self.assertEquals("3", field.output("hey", Foo()))
-
 
     def test_string_no_value(self):
         field = fields.String()
         self.assertEquals(None, field.output("bar", Foo()))
 
-
     def test_string_none(self):
         field = fields.String()
         self.assertEquals(None, field.output("empty", {'empty': None}))
 
-
-    def test_date_field_with_offset(self):
+    def test_rfc822_date_field_without_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
         field = fields.DateTime()
         self.assertEquals("Mon, 22 Aug 2011 20:58:45 -0000", field.output("bar", obj))
 
+    def test_rfc822_date_field_with_offset(self):
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
+        field = fields.DateTime()
+        self.assertEquals("Mon, 22 Aug 2011 19:58:45 -0000", field.output("bar", obj))
+
+    def test_iso8601_date_field_without_offset(self):
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
+        field = fields.DateTime(dt_format='iso8601')
+        self.assertEquals("2011-08-22T20:58:45+00:00", field.output("bar", obj))
+
+    def test_iso8601_date_field_with_offset(self):
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
+        field = fields.DateTime(dt_format='iso8601')
+        self.assertEquals("2011-08-22T19:58:45+00:00", field.output("bar", obj))
+
+    def test_unsupported_datetime_format(self):
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
+        field = fields.DateTime(dt_format='raw')
+        self.assertRaises(MarshallingException, lambda: field.output('bar', obj))
 
     def test_to_dict(self):
         obj = {"hey": 3}
         self.assertEquals(obj, fields.to_marshallable_type(obj))
-
 
     def test_to_dict_obj(self):
         obj = {"hey": 3}
@@ -272,10 +376,8 @@ class FieldsTestCase(unittest.TestCase):
     def test_get_value(self):
         self.assertEquals(3, fields.get_value("hey", {"hey": 3}))
 
-
     def test_get_value_no_value(self):
         self.assertEquals(None, fields.get_value("foo", {"hey": 3}))
-
 
     def test_get_value_obj(self):
         self.assertEquals(3, fields.get_value("hey", Foo()))
@@ -318,6 +420,7 @@ class FieldsTestCase(unittest.TestCase):
         class TestObject(object):
             def __init__(self, foo):
                 self.foo = foo
+
             def __getitem__(self, n):
                 if type(n) is int:
                     if n < 3:
@@ -339,6 +442,11 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.List(fields.Nested({'a': fields.Integer}))
         self.assertEquals([OrderedDict([('a', 1)]), OrderedDict([('a', 2)]), OrderedDict([('a', 3)])],
                           field.output('list', obj))
+
+    def test_nested_with_default(self):
+        obj = None
+        field = fields.Nested({'a': fields.Integer, 'b': fields.String}, default={})
+        self.assertEquals({}, field.output('a', obj))
 
     def test_list_of_raw(self):
         obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
