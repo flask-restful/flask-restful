@@ -79,6 +79,7 @@ class Api(object):
         self.catch_all_404s = catch_all_404s
         self.url_part_order = url_part_order
         self.errors = errors or {}
+        self.errorhandlers = []
         self.blueprint_setup = None
         self.endpoints = set()
         self.resources = []
@@ -284,6 +285,17 @@ class Api(object):
         data = getattr(e, 'data', error_data(code))
         headers = {}
 
+        error_cls_name = type(e).__name__
+        if error_cls_name in self.errors:
+            custom_data = self.errors.get(error_cls_name, {})
+            code = custom_data.get('status', 500)
+            data.update(custom_data)
+
+        for typecheck, handler in self.errorhandlers:
+            if isinstance(e, typecheck):
+                data, code, headers = unpack(handler(e))
+                break
+
         if code >= 500:
 
             # There's currently a bug in Python3 that disallows calling
@@ -315,12 +327,6 @@ class Api(object):
         if code == 405:
             headers['Allow'] = e.valid_methods
 
-        error_cls_name = type(e).__name__
-        if error_cls_name in self.errors:
-            custom_data = self.errors.get(error_cls_name, {})
-            code = custom_data.get('status', 500)
-            data.update(custom_data)
-
         if code == 406 and self.default_mediatype is None:
             # if we are handling NotAcceptable (406), make sure that
             # make_response uses a representation we support as the
@@ -339,7 +345,24 @@ class Api(object):
 
         if code == 401:
             resp = self.unauthorized(resp)
+
         return resp
+
+    def errorhandler(self, exception_type):
+        """A decorator that is used to register a function for a given exception.
+        Example::
+
+            @api.errorhandler(IntegrityError)
+            def handle_integrity_error(exception):
+                return {'message': 'Integrity Error!'}, 500
+
+        :param exception_type: the Exception class/type to handle
+        :type exception_type: Type
+        """
+        def wrapper(func):
+            self.errorhandlers.append((exception_type, func))
+            return func
+        return wrapper
 
     def mediatypes_method(self):
         """Return a method that returns a list of mediatypes

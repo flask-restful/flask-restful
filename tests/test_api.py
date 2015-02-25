@@ -435,6 +435,23 @@ class APITestCase(unittest.TestCase):
                 'foo': 'bar',
             }))
 
+    def test_errorhandler(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        @api.errorhandler(Mock)
+        def custom_error_response(e):
+            return {"My Field": "My Message"}, 503
+
+        with app.test_request_context("/foo"):
+            exception = Mock()
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 503)
+            self.assertEquals(resp.data.decode(), dumps({
+                'My Field': 'My Message',
+            }))
+
+
     def test_handle_smart_errors(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
