@@ -3,20 +3,6 @@ from flask import Flask
 import flask_restful
 from werkzeug import exceptions
 from nose.tools import assert_equals
-from nose import SkipTest
-import functools
-
-
-def expected_failure(test):
-    @functools.wraps(test)
-    def inner(*args, **kwargs):
-        try:
-            test(*args, **kwargs)
-        except Exception:
-            raise SkipTest
-        else:
-            raise AssertionError('Failure expected')
-    return inner
 
 
 class AcceptTestCase(unittest.TestCase):
@@ -29,7 +15,7 @@ class AcceptTestCase(unittest.TestCase):
 
         app = Flask(__name__)
         api = flask_restful.Api(app)
-        
+
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
@@ -46,7 +32,7 @@ class AcceptTestCase(unittest.TestCase):
 
         app = Flask(__name__)
         api = flask_restful.Api(app, default_mediatype=None)
-        
+
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
@@ -63,7 +49,7 @@ class AcceptTestCase(unittest.TestCase):
 
         app = Flask(__name__)
         api = flask_restful.Api(app)
-        
+
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
@@ -80,7 +66,7 @@ class AcceptTestCase(unittest.TestCase):
 
         app = Flask(__name__)
         api = flask_restful.Api(app, default_mediatype=None)
-        
+
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
@@ -103,7 +89,7 @@ class AcceptTestCase(unittest.TestCase):
         def text_rep(data, status_code, headers=None):
             resp = app.make_response((str(data), status_code, headers))
             return resp
-        
+
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
@@ -126,7 +112,7 @@ class AcceptTestCase(unittest.TestCase):
         def text_rep(data, status_code, headers=None):
             resp = app.make_response((str(data), status_code, headers))
             return resp
-        
+
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
@@ -135,7 +121,6 @@ class AcceptTestCase(unittest.TestCase):
             assert_equals(res.content_type, 'text/plain')
 
 
-    @expected_failure
     def test_accept_no_default_match_q0_not_acceptable(self):
         """
         q=0 should be considered NotAcceptable,
@@ -148,7 +133,7 @@ class AcceptTestCase(unittest.TestCase):
 
         app = Flask(__name__)
         api = flask_restful.Api(app, default_mediatype=None)
-        
+
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
@@ -163,7 +148,7 @@ class AcceptTestCase(unittest.TestCase):
 
         app = Flask(__name__)
         api = flask_restful.Api(app, default_mediatype=None)
-        
+
         @api.representation('text/plain')
         def text_rep(data, status_code, headers=None):
             resp = app.make_response((str(data), status_code, headers))
@@ -184,7 +169,7 @@ class AcceptTestCase(unittest.TestCase):
 
         app = Flask(__name__)
         api = flask_restful.Api(app, default_mediatype=None)
-        
+
         @api.representation('text/html')
         @api.representation('text/plain')
         def text_rep(data, status_code, headers=None):

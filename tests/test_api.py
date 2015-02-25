@@ -519,7 +519,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
 
         with app.test_request_context("/foo", headers={
-            'Accept': 'application/json; q=1; application/xml; q=.5'
+            'Accept': 'application/json; q=1, application/xml; q=.5'
         }):
             self.assertEquals(api.mediatypes(),
                               ['application/json', 'application/xml'])
