@@ -5,7 +5,7 @@ Request Parsing
 
 .. currentmodule:: flask.ext.restful
 
-Flask-RESTful's request parsing interface is modeled after the ``argparse``
+Flask-RESTful's request parsing interface, :py:class:`reqparse`, is modeled after the ``argparse``
 interface.  It's designed to provide simple and uniform access to any
 variable on the :py:class:`flask.request` object in Flask.
 
@@ -13,7 +13,7 @@ Basic Arguments
 ---------------
 
 Here's a simple example of the request parser. It looks for two arguments in
-the :py:attr:`flask.Request.values` dict. One of type ``int``, and the other of
+the :py:attr:`flask.Request.values` dict: one of type ``int``, and the other of
 type ``str`` ::
 
     from flask.ext.restful import reqparse
@@ -64,7 +64,7 @@ Other Destinations
 ------------------
 
 If for some reason you'd like your argument stored under a different name once
-it's parsed, you can use the ``dest`` kwarg. ::
+it's parsed, you can use the ``dest`` keyword argument. ::
 
     parser.add_argument('name', type=str, dest='public_name')
 

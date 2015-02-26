@@ -19,7 +19,7 @@ There are many different ways to organize your Flask-RESTful app, but here
 we'll describe one that scales pretty well with larger apps and maintains
 a nice level organization.
 
-The basic idea is to split your app into three main parts. The routes, the
+The basic idea is to split your app into three main parts: the routes, the
 resources, and any common infrastructure.
 
 Here's an example directory structure: ::
@@ -132,12 +132,11 @@ exercise a larger amount of options. We'll define a resource named "User". ::
 
         @marshal_with(user_fields)
         def get(self, id):
-            args = get_parser.parse_args()
+            args = post_parser.parse_args()
             user = fetch_user(id)
             return user
 
-As you can see, we create a `post_parser` specifically to handle parsing
-the arguments provided on POST. Let's step through the definition of each
+As you can see, we create a `post_parser` specifically to handle the parsing of arguments provided on POST. Let's step through the definition of each
 argument. ::
 
     post_parser.add_argument(
@@ -171,11 +170,11 @@ email type was invalid. ::
 
 The `user_priority` type takes advantage of the `choices` argument. This
 means that if the provided `user_priority` value doesn't fall in the range
-specified by the `choices` argument (in this case [1, 2, 3, 4]) Flask-RESTful
+specified by the `choices` argument (in this case [1, 2, 3, 4]), Flask-RESTful
 will automatically respond with a 400 and a descriptive error message.
 
 That covers the inputs. We also defined some interesting field types in the
-`user_fields` dictionary to show showcase a couple of the more exotic types.  ::
+`user_fields` dictionary to showcase a couple of the more exotic types.  ::
 
     user_fields = {
         'id': fields.Integer,
@@ -202,8 +201,8 @@ value returned from the `username` field.
 Next up, check out `fields.Nested`. ::
 
     'links': fields.Nested({
-        'friends': fields.Url('/Users/{id}/Friends', absolute=True),
-        'posts': fields.Url('Users/{id}/Posts', absolute=True),
+        'friends': fields.Url('/users/{id}/Friends', absolute=True),
+        'posts': fields.Url('/users/{id}/Posts', absolute=True),
     }),
 
 This field is used to create a sub-object in the response. In this case,
@@ -213,9 +212,9 @@ way that it would be an acceptable argument to `marshal` by itself.
 
 Finally, we used the `fields.Url` field type. ::
 
-        'friends': fields.Url('/Users/{id}/Friends', absolute=True),
-        'posts': fields.Url('Users/{id}/Posts', absolute=True),
+        'friends': fields.Url('/users/{id}/Friends', absolute=True),
+        'posts': fields.Url('/users/{id}/Posts', absolute=True),
 
 It takes a string that can be formatted in the same manner as `fields.FormattedString`
-which we covered above.  Passing `absolute=True` ensures that the generated Urls
+which we covered above.  Passing `absolute=True` ensures that the generated urls
 will have the hostname included.

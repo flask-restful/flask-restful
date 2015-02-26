@@ -40,6 +40,7 @@ never be used in a production environment. ::
 
     $ python api.py
      * Running on http://127.0.0.1:5000/
+     * Restarting with reloader
 
 
 Now open up a new prompt to test out your API using curl ::
@@ -241,7 +242,7 @@ Save this example in api.py ::
 
 
     # Todo
-    #   show a single todo item and lets you delete them
+    # shows a single todo item and lets you delete a todo item
     class Todo(Resource):
         def get(self, todo_id):
             abort_if_todo_doesnt_exist(todo_id)
@@ -260,7 +261,7 @@ Save this example in api.py ::
 
 
     # TodoList
-    #   shows a list of all todos, and lets you POST to add new tasks
+    # shows a list of all todos, and lets you POST to add new tasks
     class TodoList(Resource):
         def get(self):
             return TODOS
