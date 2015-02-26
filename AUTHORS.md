@@ -7,12 +7,13 @@ A huge thanks to all of our contributors:
 - Alex Gaynor
 - Andrew Dunham
 - Andriy Yurchuk
+- Antonio Dourado
 - Antonio Herraiz
 - Artur Rodrigues
 - Axel Haustant
 - Belousow Makc
 - Bennett, Bryan
-- Bret Barker
+- Bryan Bennett
 - Bulat Bochkariov
 - Cameron Brandon White
 - Catherine Devlin
@@ -33,22 +34,21 @@ A huge thanks to all of our contributors:
 - Guillaume BINET
 - Jacob Magnusson
 - James Booth
-- James Oguraa
+- James Ogura
 - Joakim Ekberg
 - Johannes
 - Josh Friend
 - Joshua C. Randall
+- Joshua Randall
 - JuneHyeon Bae
 - Kamil Gałuszka
-- Kelvin Hammond
 - Kevin Burke
 - Kevin Deldycke
 - Kevin Funk
 - Kyle Conroy
 - Lance Ingle
 - Lars Holm Nielsen
-- Lars Schöning
-- Mario Niebla
+- Marek Hlobil
 - Matt Wright
 - Max Peterson
 - Miguel Grinberg
@@ -63,13 +63,22 @@ A huge thanks to all of our contributors:
 - Sam Kimbrel
 - Sasha Baranov
 - Saul Diez-Guerra
-- Silas Ray
 - Sven-Hendrik Haase
 - Victor Neo
 - WooParadog
-- Xiadong Zhu
 - Yaniv Aknin
+- bret barker
+- kelvinhammond
+- lyschoening
+- mailto1587
+- mniebla
+- mozillazg
+- muchosalsa
 - nixdata
 - papaeye
 - pingz
 - saml
+- siavashg
+- silasray
+- soasme
+- y-p

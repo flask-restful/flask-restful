@@ -3,6 +3,22 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3.2
+-------------
+
+Released February 25, 2015
+
+- Doc fixes ([#344](https://github.com/flask-restful/flask-restful/pull/344), [#378](https://github.com/flask-restful/flask-restful/issues/378), [#402](https://github.com/flask-restful/flask-restful/pull/402))
+- Microseconds no longer truncated in ISO8601 format datetime inputs ([#381](https://github.com/flask-restful/flask-restful/pull/381))
+- Datetime inputs now preserve timezone instead of forcing conversion to UTC ([#381](https://github.com/flask-restful/flask-restful/pull/381))
+- Fixes content negotiation to respect q-values ([#245](https://github.com/flask-restful/flask-restful/pull/245))
+- Fix `fields.URL` when used with Blueprints ([#379](https://github.com/flask-restful/flask-restful/pull/379))
+- Fix `BadRequest` raised with empty body and `application/json` content type ([#366](https://github.com/flask-restful/flask-restful/pull/366))
+- Improved argument validation error messages ([#386](https://github.com/flask-restful/flask-restful/pull/386))
+- Allow custom validation for `FileStorage` type arguments ([#388](https://github.com/flask-restful/flask-restful/pull/388))
+- Allow lambdas to be specified for field attributes ([#309](https://github.com/flask-restful/flask-restful/pull/309))
+- Added regex input validator ([#374](https://github.com/flask-restful/flask-restful/pull/374))
+
 Version 0.3.1
 -------------
 
