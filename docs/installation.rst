@@ -11,9 +11,9 @@ Install Flask-RESTful with ``pip`` ::
 
 
 The development version can be downloaded from `its page at GitHub
-<http://github.com/twilio/flask-restful>`_. ::
+<https://github.com/flask-restful/flask-restful>`_. ::
 
-    git clone https://github.com/twilio/flask-restful.git
+    git clone https://github.com/flask-restful/flask-restful.git
     cd flask-restful
     python setup.py develop
    
