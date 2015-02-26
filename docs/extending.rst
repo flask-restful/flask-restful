@@ -116,7 +116,7 @@ These output functions take three parameters, ``data``, ``code``, and
 ``headers``
 
 ``data`` is the object you return from your resource method, code is the HTTP
-status code that it expects, and headers are any HTTP headers to define in the
+status code that it expects, and headers are any HTTP headers to set in the
 response.  Your output function should return a Flask response object. ::
 
     def output_json(data, code, headers=None):

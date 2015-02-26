@@ -136,7 +136,8 @@ exercise a larger amount of options. We'll define a resource named "User". ::
             user = fetch_user(id)
             return user
 
-As you can see, we create a `post_parser` specifically to handle the parsing of arguments provided on POST. Let's step through the definition of each
+As you can see, we create a `post_parser` specifically to handle the parsing of 
+arguments provided on POST. Let's step through the definition of each
 argument. ::
 
     post_parser.add_argument(
@@ -216,5 +217,5 @@ Finally, we used the `fields.Url` field type. ::
         'posts': fields.Url('/users/{id}/Posts', absolute=True),
 
 It takes a string that can be formatted in the same manner as `fields.FormattedString`
-which we covered above.  Passing `absolute=True` ensures that the generated urls
+which we covered above.  Passing ``absolute=True`` ensures that the generated urls
 will have the hostname included.

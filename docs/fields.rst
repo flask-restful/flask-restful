@@ -8,7 +8,7 @@ Output Fields
 
 Flask-RESTful provides an easy way to control what data you actually render in
 your response.  With the ``fields`` module, you can use whatever objects (ORM
-models/custom classes/etc.) you want in your resource; ``fields`` also lets you
+models/custom classes/etc.) you want in your resource. ``fields`` also lets you
 format and filter the response so you don't have to worry about exposing 
 internal data structures.
 
@@ -21,8 +21,8 @@ Basic Usage
 You can define a dict or OrderedDict of fields whose keys are names of
 attributes or keys on the object to render, and whose values are a class that
 will format & return the value for that field.  This example has three fields:
-two are Strings and one is a DateTime, formatted as an RFC 822 date string (ISO 8601
-is supported as well) ::
+two are ``Strings`` and one is a ``DateTime``, formatted as an RFC 822 date string 
+(ISO 8601 is supported as well) ::
 
     from flask.ext.restful import Resource, fields, marshal_with
 
@@ -44,18 +44,26 @@ attributes on the object are considered private and won't be rendered in the
 output. An optional ``envelope`` keyword argument is specified to wrap the
 resulting output.
 
-The decorator ``marshal_with`` is what actually takes your data object and applies the
-field filtering.  The marshalling can work on single objects, dicts, or
-lists of objects.
+The decorator ``marshal_with`` is what actually takes your data object and 
+applies the field filtering.  The marshalling can work on single objects, dicts,
+or lists of objects.
 
-Note: marshal_with is a convenience decorator, that is functionally equivalent to ``return marshal(db_get_todo(), resource_fields), 200``.
-This explicit expression can be used to return HTTP status codes other than 200 along with a successful response (see ``abort`` for errors).
+Note: ``marshal_with`` is a convenience decorator, that is functionally 
+equivalent to ::
+
+    class Todo(Resource):
+    def get(self, **kwargs):
+        return marshal(db_get_todo(), resource_fields), 200
+    
+This explicit expression can be used to return HTTP status codes other than 200 
+along with a successful response (see ``abort`` for errors).
 
 
 Renaming Attributes
 -------------------
 
-Often times your public facing field name is different from your internal field name. To configure this mapping, use the ``attribute`` keyword argument. ::
+Often times your public facing field name is different from your internal field 
+name. To configure this mapping, use the ``attribute`` keyword argument. ::
 
     fields = {
         'name': fields.String(attribute='private_name'),
@@ -132,8 +140,9 @@ your data object. ::
 
 
 By default ``fields.Url`` returns a relative uri. To generate an absolute uri that includes
-the scheme, hostname and port, pass the keyword argument ``absolute=True`` in the field declaration. To override
-the default scheme, pass the ``scheme`` keyword argument::
+the scheme, hostname and port, pass the keyword argument ``absolute=True`` in 
+the field declaration. To override the default scheme, pass the ``scheme`` 
+keyword argument::
 
     fields = {
         'uri': fields.Url('todo_resource', absolute=True)
@@ -143,7 +152,8 @@ the default scheme, pass the ``scheme`` keyword argument::
 Complex Structures
 ------------------
 
-You can have a flat structure that the function ``marshal`` will transform to a nested structure ::
+You can have a flat structure that :meth:`~flask.ext.restful.marshal` will 
+transform to a nested structure ::
 
     >>> from flask.ext.restful import fields, marshal
     >>> import json
@@ -184,7 +194,7 @@ Advanced : Nested Field
 -----------------------
 
 While nesting fields using dicts can turn a flat data object into a nested
-response, you can use ``Nested`` to unmarshal nested data
+response, you can use :class:`~fields.Nested` to unmarshal nested data
 structures and render them appropriately. ::
 
     >>> from flask.ext.restful import fields, marshal
@@ -208,10 +218,10 @@ structures and render them appropriately. ::
     >>> json.dumps(marshal_with(data, resource_fields))
     '{"billing_address": {"line 1": "123 fake street", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}, "name": "bob", "shipping_address": {"line 1": "555 nowhere", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}}'
 
-This example uses two Nested fields.  The ``Nested`` constructor takes a dict of
-fields to render as sub-fields.  The important difference between the ``Nested`` constructor
-and nested dicts (previous example), is the context for attributes.  In
-this example, "billing_address" is a complex object that has its own fields;
+This example uses two ``Nested`` fields.  The ``Nested`` constructor takes a dict of
+fields to render as sub-fields.  The important difference between the ``Nested`` 
+constructor and nested dicts (previous example), is the context for attributes.  
+In this example, "billing_address" is a complex object that has its own fields and
 the context passed to the nested field is the sub-object instead of the
 original "data" object.  In other words:  ``data.billing_address.addr1`` is in
 scope here, whereas in the previous example ``data.addr1`` was the location

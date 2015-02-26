@@ -5,9 +5,9 @@ Request Parsing
 
 .. currentmodule:: flask.ext.restful
 
-Flask-RESTful's request parsing interface, :py:class:`reqparse`, is modeled after the ``argparse``
-interface.  It's designed to provide simple and uniform access to any
-variable on the :py:class:`flask.request` object in Flask.
+Flask-RESTful's request parsing interface, :py:class:`reqparse`, is modeled 
+after the ``argparse`` interface.  It's designed to provide simple and uniform 
+access to any variable on the :py:class:`flask.request` object in Flask.
 
 Basic Arguments
 ---------------
@@ -23,7 +23,7 @@ type ``str`` ::
     parser.add_argument('name', type=str)
     args = parser.parse_args()
 
-If you specify the help value, it will be rendered as the error message
+If you specify the ``help`` value, it will be rendered as the error message
 when a type error is raised while parsing it.  If you do not
 specify a help message, the default behavior is to return the message from the
 type error itself.
@@ -103,7 +103,7 @@ Multiple argument locations can be specified by passing a list to ``location``::
 
     parser.add_argument('text', location=['headers', 'values'])
 
-The last location listed takes precedence in the result set.
+The last ``location`` listed takes precedence in the result set.
 
 Parser Inheritance
 ------------------

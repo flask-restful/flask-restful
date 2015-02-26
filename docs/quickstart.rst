@@ -129,8 +129,8 @@ Endpoints
 ---------
 
 Many times in an API, your resource will have multiple URLs. You can pass
-multiple URLs to the :py:meth:`Api.add_resource` method on the Api object. Each one
-will be routed to your :py:class:`Resource` ::
+multiple URLs to the :py:meth:`Api.add_resource` method on the `Api` object. 
+Each one will be routed to your :py:class:`Resource` ::
 
     api.add_resource(HelloWorld,
         '/',
@@ -184,7 +184,7 @@ this works great when you're just dealing with Python data structures,
 it can become very frustrating when working with objects. To solve this
 problem, Flask-RESTful provides the :py:class:`fields` module and the
 :py:meth:`marshal_with` decorator. Similar to the Django ORM and WTForm, you
-use the fields module to describe the structure of your response. ::
+use the ``fields`` module to describe the structure of your response. ::
 
     from collections import OrderedDict
     from flask.ext.restful import fields, marshal_with
