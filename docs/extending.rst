@@ -15,7 +15,7 @@ Content Negotiation
 -------------------
 
 Out of the box, Flask-RESTful is only configured to support JSON. We made this
-decision to give API maintainers full control of over API format support, so a
+decision to give API maintainers full control of over API format support; so a
 year down the road you don’t have to support people using the CSV
 representation of your API you didn’t even know existed. To add additional
 mediatypes to your API, you’ll need to declare your supported representations
@@ -38,7 +38,7 @@ Custom Fields & Inputs
 ----------------------
 
 One of the most common additions to Flask-RESTful is to define custom types or
-fields based on the data your own data types.  
+fields based on your own data types.  
 
 Fields
 ~~~~~~
@@ -91,7 +91,7 @@ You can also convert public parameter values to internal representations: ::
         return statuses.index(value)
 
 
-Then you can use these custom input type in your RequestParser: ::
+Then you can use these custom input types in your RequestParser: ::
 
     parser = reqparse.RequestParser()
     parser.add_argument('OddNumber', type=odd_number)
@@ -102,7 +102,7 @@ Then you can use these custom input type in your RequestParser: ::
 Response Formats
 ----------------
 
-To support other representations (like xml, csv, html) you can use the
+To support other representations (xml, csv, html), you can use the
 :meth:`~Api.representation` decorator.  You need to have a reference to your API. ::
 
     api = restful.Api(app)
@@ -123,7 +123,6 @@ response.  Your output function should return a Flask response object. ::
         """Makes a Flask response with a JSON encoded body"""
         resp = make_response(json.dumps(data), code)
         resp.headers.extend(headers or {})
-
         return resp
 
 Another way to accomplish this is to subclass the :class:`~Api` class and
@@ -142,7 +141,7 @@ provide your own output functions. ::
 Resource Method Decorators
 --------------------------
 
-There is a property on the :meth:`~flask.ext.restful.Resource` called
+There is a property on the :class:`~flask.ext.restful.Resource` class called
 method_decorators.  You can subclass the Resource and add your own decorators
 that will be added to all ``method`` functions in resource.  For instance, if
 you want to build custom authentication into every request. ::
