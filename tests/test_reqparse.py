@@ -149,6 +149,11 @@ class ReqParseTestCase(unittest.TestCase):
         arg = Argument('foo', location=['headers'])
         self.assertEquals(arg.source(req), MultiDict(req.headers))
 
+    def test_convert_default_type_with_null_input(self):
+        """convert() should properly handle case where input is None"""
+        arg = Argument('foo')
+        self.assertEquals(arg.convert(None, None), None)
+
     def test_source_bad_location(self):
         req = Mock(['values'])
         arg = Argument('foo', location=['foo'])
