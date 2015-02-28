@@ -63,13 +63,17 @@ def test_rfc822_datetime_formatters():
 
 def test_iso8601_datetime_formatters():
     dates = [
-        (datetime(2011, 1, 1), "2011-01-01T00:00:00+00:00"),
+        (datetime(2011, 1, 1), "2011-01-01T00:00:00"),
         (datetime(2011, 1, 1, 23, 59, 59),
-         "2011-01-01T23:59:59+00:00"),
+         "2011-01-01T23:59:59"),
+        (datetime(2011, 1, 1, 23, 59, 59, 1000),
+         "2011-01-01T23:59:59.001000"),
         (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
          "2011-01-01T23:59:59+00:00"),
+        (datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc),
+         "2011-01-01T23:59:59.001000+00:00"),
         (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
-         "2011-01-01T22:59:59+00:00")
+         "2011-01-01T23:59:59+01:00")
     ]
     for date_obj, expected in dates:
         yield assert_equals, fields._iso8601(date_obj), expected
@@ -349,12 +353,12 @@ class FieldsTestCase(unittest.TestCase):
     def test_iso8601_date_field_without_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
         field = fields.DateTime(dt_format='iso8601')
-        self.assertEquals("2011-08-22T20:58:45+00:00", field.output("bar", obj))
+        self.assertEquals("2011-08-22T20:58:45", field.output("bar", obj))
 
     def test_iso8601_date_field_with_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
         field = fields.DateTime(dt_format='iso8601')
-        self.assertEquals("2011-08-22T19:58:45+00:00", field.output("bar", obj))
+        self.assertEquals("2011-08-22T20:58:45+01:00", field.output("bar", obj))
 
     def test_unsupported_datetime_format(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}

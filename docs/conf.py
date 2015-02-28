@@ -255,4 +255,8 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
 
-intersphinx_mapping = {'flask': ('http://flask.pocoo.org/docs/', None)}
+intersphinx_mapping = {
+  'flask': ('http://flask.pocoo.org/docs/', None),
+  'python': ('https://docs.python.org/2/', None),
+  'python3': ('https://docs.python.org/3/', None)
+}
