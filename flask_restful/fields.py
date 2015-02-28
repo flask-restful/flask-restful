@@ -131,7 +131,6 @@ class Nested(Raw):
     :param kwargs: if ``default`` keyword argument is present, a nested dictionary
         will be marshaled as its value if nested dictionary is all-null keys
         (e.g. lets you return an empty JSON object instead of null)
-    :keyword default
     """
 
     def __init__(self, nested, allow_null=False, **kwargs):
@@ -328,6 +327,11 @@ class DateTime(Raw):
     Return a formatted datetime string in UTC. Supported formats are RFC 822
     and ISO 8601.
 
+    See :py:func:`email.utils.formatdate` for more info on the RFC 822 format.
+
+    See :py:meth:`datetime.datetime.isoformat` for more info on the ISO 8601
+    format.
+
     :param dt_format: ``'rfc822'`` or ``'iso8601'``
     :type dt_format: str
     """
@@ -389,12 +393,10 @@ def _iso8601(dt):
 
     Example::
 
-        fields._iso8601(datetime(2012, 1, 1, 0, 0)) => "2012-01-01T00:00:00+00:00"
+        fields._iso8601(datetime(2012, 1, 1, 0, 0)) => "2012-01-01T00:00:00"
 
     :param dt: The datetime to transform
     :type dt: datetime
     :return: A ISO 8601 formatted date string
     """
-    return datetime.isoformat(
-        datetime.fromtimestamp(timegm(dt.utctimetuple()), tz=pytz.UTC)
-    )
+    return dt.isoformat()
