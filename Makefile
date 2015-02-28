@@ -51,7 +51,7 @@ PIP := $(BIN)/pip
 FLAKE8 := $(BIN)/flake8
 PEP8RADIUS := $(BIN)/pep8radius
 PEP257 := $(BIN)/pep257
-NOSE := $(BIN)/nosetests
+PYTEST := $(BIN)/py.test
 COVERAGE := $(BIN)/coverage
 ACTIVATE := $(BIN)/activate
 
@@ -135,9 +135,13 @@ fix: .depends-dev
 
 # Testing ####################################################################
 
+PYTEST_OPTS := --cov $(PACKAGE) \
+			   --cov-report term-missing \
+			   --cov-report html
+
 .PHONY: test
 test: .depends-test .clean-test
-	$(NOSE) tests --with-coverage --cover-package=$(PACKAGE)
+	$(PYTEST) tests $(PYTEST_OPTS)
 
 test-all: test-py26 test-py27 test-py33 test-py34
 test-py26:

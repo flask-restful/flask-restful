@@ -1,7 +1,24 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
 import sys
+
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+
+class PyTest(TestCommand):
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(['tests'])
+        sys.exit(errno)
+
 
 PY26 = sys.version_info[:2] == (2, 6,)
 
@@ -25,9 +42,13 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
-    test_suite = 'nose.collector',
+    cmdclass = {'test': PyTest},
+    tests_require=[
+        'Flask-RESTful[paging]',
+        'mock>=0.8',
+        'pytest'
+    ],
     install_requires=requirements,
-    tests_require=['Flask-RESTful[paging]', 'mock>=0.8', 'blinker'],
     # Install these with "pip install -e '.[paging]'" or '.[docs]'
     extras_require={
         'paging': 'pycrypto>=2.6',

@@ -1,12 +1,9 @@
-import unittest
 from flask import Flask
 import flask_restful
 from werkzeug import exceptions
-from nose.tools import assert_equals
 
 
-class AcceptTestCase(unittest.TestCase):
-
+class TestAccept(object):
     def test_accept_default_application_json(self):
 
         class Foo(flask_restful.Resource):
@@ -20,9 +17,8 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'application/json')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'application/json')
-
+            assert res.status_code == 200
+            assert res.content_type == 'application/json'
 
     def test_accept_no_default_match_acceptable(self):
 
@@ -37,9 +33,8 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'application/json')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'application/json')
-
+            assert res.status_code == 200
+            assert res.content_type == 'application/json'
 
     def test_accept_default_override_accept(self):
 
@@ -54,9 +49,8 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'application/json')
-
+            assert res.status_code == 200
+            assert res.content_type == 'application/json'
 
     def test_accept_no_default_no_match_not_acceptable(self):
 
@@ -71,9 +65,8 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 406)
-            assert_equals(res.content_type, 'application/json')
-
+            assert res.status_code == 406
+            assert res.content_type == 'application/json'
 
     def test_accept_no_default_custom_repr_match(self):
 
@@ -94,9 +87,8 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'text/plain')
-
+            assert res.status_code == 200
+            assert res.content_type == 'text/plain'
 
     def test_accept_no_default_custom_repr_not_acceptable(self):
 
@@ -117,9 +109,8 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'application/json')])
-            assert_equals(res.status_code, 406)
-            assert_equals(res.content_type, 'text/plain')
-
+            assert res.status_code == 406
+            assert res.content_type == 'text/plain'
 
     def test_accept_no_default_match_q0_not_acceptable(self):
         """
@@ -138,8 +129,8 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'application/json; q=0')])
-            assert_equals(res.status_code, 406)
-            assert_equals(res.content_type, 'application/json')
+            assert res.status_code == 406
+            assert res.content_type == 'application/json'
 
     def test_accept_no_default_accept_highest_quality_of_two(self):
         class Foo(flask_restful.Resource):
@@ -157,10 +148,11 @@ class AcceptTestCase(unittest.TestCase):
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'application/json; q=0.1, text/plain; q=1.0')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'text/plain')
-
+            res = client.get('/', headers=[
+                ('Accept', 'application/json; q=0.1, text/plain; q=1.0')
+            ])
+            assert res.status_code == 200
+            assert res.content_type == 'text/plain'
 
     def test_accept_no_default_accept_highest_quality_of_three(self):
         class Foo(flask_restful.Resource):
@@ -179,10 +171,12 @@ class AcceptTestCase(unittest.TestCase):
         api.add_resource(Foo, '/')
 
         with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'application/json; q=0.1, text/plain; q=0.3, text/html; q=0.2')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'text/plain')
-
+            res = client.get('/', headers=[
+                ('Accept', ('application/json; q=0.1, '
+                            'text/plain; q=0.3, text/html; q=0.2'))
+            ])
+            assert res.status_code == 200
+            assert res.content_type == 'text/plain'
 
     def test_accept_no_default_no_representations(self):
 
@@ -198,8 +192,8 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 406)
-            assert_equals(res.content_type, 'text/plain')
+            assert res.status_code == 406
+            assert res.content_type == 'text/plain'
 
     def test_accept_invalid_default_no_representations(self):
 
@@ -215,8 +209,5 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 500)
-
-
-
+            assert res.status_code == 500
 
