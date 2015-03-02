@@ -280,7 +280,8 @@ class Url(Raw):
     """
     A string representation of a Url
 
-    :param endpoint: endpoint name
+    :param endpoint: Endpoint name. If endpoint is None, request.endpoint
+        is used instead
     :type endpoint: str
     :param absolute: If True, ensures that the generated urls will have the
         hostname included
