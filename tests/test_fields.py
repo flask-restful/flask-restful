@@ -412,6 +412,23 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.List(fields.String, attribute='foo')
         self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
 
+    def test_list_with_scoped_attribute_on_dict_or_obj(self):
+        class TestObject(object):
+            def __init__(self, list):
+                self.bar = list
+
+        class TestEgg(object):
+            def __init__(self, val):
+                self.attrib = val
+
+        eggs = [TestEgg(i) for i in ['a', 'b', 'c']]
+        test_obj = TestObject(eggs)
+        test_dict = {'bar': [{'attrib': 'a'}, {'attrib':'b'}, {'attrib':'c'}]}
+
+        field = fields.List(fields.String(attribute='attrib'), attribute='bar')
+        self.assertEquals(['a', 'b', 'c'], field.output('bar', test_obj))
+        self.assertEquals(['a', 'b', 'c'], field.output('bar', test_dict))
+
     def test_null_list(self):
         class TestObject(object):
             def __init__(self, list):

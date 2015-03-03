@@ -185,7 +185,9 @@ class List(Raw):
 
         return [
             self.container.output(idx,
-                                  val if isinstance(val, dict) and
+                                  val if (isinstance(val, dict)
+                                      or (self.container.attribute
+                                          and hasattr(val, self.container.attribute))) and
                                          not isinstance(self.container, Nested)
                                   and not type(self.container) is Raw
                                   else value)
