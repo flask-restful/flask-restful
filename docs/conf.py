@@ -258,5 +258,6 @@ texinfo_documents = [
 intersphinx_mapping = {
   'flask': ('http://flask.pocoo.org/docs/', None),
   'python': ('https://docs.python.org/2/', None),
-  'python3': ('https://docs.python.org/3/', None)
+  'python3': ('https://docs.python.org/3/', None),
+  'six': ('http://pythonhosted.org/six/', None),
 }

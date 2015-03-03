@@ -5,15 +5,16 @@ Request Parsing
 
 .. currentmodule:: flask.ext.restful
 
-Flask-RESTful's request parsing interface, :py:class:`reqparse`, is modeled 
-after the ``argparse`` interface.  It's designed to provide simple and uniform 
-access to any variable on the :py:class:`flask.request` object in Flask.
+Flask-RESTful's request parsing interface, :mod:`reqparse`, is modeled after
+the `argparse <http://docs.python.org/dev/library/argparse.html>`_ interface.
+It's designed to provide simple and uniform access to any variable on the
+:class:`flask.request` object in Flask.
 
 Basic Arguments
 ---------------
 
 Here's a simple example of the request parser. It looks for two arguments in
-the :py:attr:`flask.Request.values` dict: one of type ``int``, and the other of
+the :attr:`flask.Request.values` dict: one of type ``int``, and the other of
 type ``str`` ::
 
     from flask.ext.restful import reqparse
@@ -24,9 +25,9 @@ type ``str`` ::
     args = parser.parse_args()
 
 If you specify the ``help`` value, it will be rendered as the error message
-when a type error is raised while parsing it.  If you do not
-specify a help message, the default behavior is to return the message from the
-type error itself.
+when a type error is raised while parsing it.  If you do not specify a help
+message, the default behavior is to return the message from the type error
+itself.
 
 By default, arguments are **not** required.  Also, arguments supplied in the
 request that are not part of the RequestParser will be ignored.
@@ -38,7 +39,7 @@ Required Arguments
 ------------------
 
 To require a value be passed for an argument, just add ``required=True`` to
-the call to :py:meth:`~reqparse.RequestParser.add_argument`. ::
+the call to :meth:`~reqparse.RequestParser.add_argument`. ::
 
     parser.add_argument('name', type=str, required=True,
     help="Name cannot be blank!")
@@ -53,7 +54,7 @@ If you want to accept multiple values for a key as a list, you can pass
 
 This will let you make queries like ::
 
-    curl http://api.example.com -d "Name=bob" -d "Name=sue" -d "Name=joe"
+    curl http://api.example.com -d "name=bob" -d "name=sue" -d "name=joe"
 
 And your args will look like this ::
 
@@ -74,12 +75,12 @@ it's parsed, you can use the ``dest`` keyword argument. ::
 Argument Locations
 ------------------
 
-By default, the :py:class:`~reqparse.RequestParser` tries to parse values
-from :py:attr:`flask.Request.values`, and :py:attr:`flask.Request.json`.
+By default, the :class:`~reqparse.RequestParser` tries to parse values from
+:attr:`flask.Request.values`, and :attr:`flask.Request.json`.
 
-Use the ``location`` argument to :py:meth:`~reqparse.RequestParser.add_argument`
+Use the ``location`` argument to :meth:`~reqparse.RequestParser.add_argument`
 to specify alternate locations to pull the values from. Any variable on the
-:py:class:`flask.Request` can be used. For example: ::
+:class:`flask.Request` can be used. For example: ::
 
     # Look only in the POST body
     parser.add_argument('name', type=int, location='form')
@@ -108,14 +109,13 @@ The last ``location`` listed takes precedence in the result set.
 Parser Inheritance
 ------------------
 
-Often you will make a different parser for each resource you write.
-The problem with this is if parsers have arguments in common. Instead of
-rewriting arguments you can write a parent parser containing all the
-shared arguments and then extend the parser with
-:py:meth:`~reqparse.RequestParser.copy`. You can also overwrite any argument
-in the parent with :py:meth:`~reqparse.RequestParser.replace_argument`, or remove
-it completely with :py:meth:`~reqparse.RequestParser.remove_argument`.
-For example: ::
+Often you will make a different parser for each resource you write. The problem
+with this is if parsers have arguments in common. Instead of rewriting
+arguments you can write a parent parser containing all the shared arguments and
+then extend the parser with :meth:`~reqparse.RequestParser.copy`. You can
+also overwrite any argument in the parent with
+:meth:`~reqparse.RequestParser.replace_argument`, or remove it completely
+with :meth:`~reqparse.RequestParser.remove_argument`. For example: ::
 
     from flask.ext.restful import RequestParser
 

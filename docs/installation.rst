@@ -16,7 +16,7 @@ The development version can be downloaded from `its page at GitHub
     git clone https://github.com/flask-restful/flask-restful.git
     cd flask-restful
     python setup.py develop
-   
+
 
 Flask-RESTful has the following dependencies (which will be automatically
 installed if you use ``pip``):
@@ -24,4 +24,4 @@ installed if you use ``pip``):
 
 * `Flask <http://flask.pocoo.org>`_ version 0.8 or greater
 
-Flask-RESTful requires Python version 2.6, 2.7, or 3.3.
+Flask-RESTful requires Python version 2.6, 2.7, 3.3, or 3.4.

@@ -39,7 +39,7 @@ class Argument(object):
     :param default: The value produced if the argument is absent from the
         request.
     :param dest: The name of the attribute to be added to the object
-        returned by :py:meth:`~reqparse.RequestParser.parse_args()`.
+        returned by :meth:`~reqparse.RequestParser.parse_args()`.
     :param bool required: Whether or not the argument may be omitted (optionals
         only).
     :param action: The basic type of action to be taken when this argument
@@ -48,9 +48,9 @@ class Argument(object):
         conversion
     :param type: The type to which the request argument should be
         converted. If a type raises a ValidationError, the message in the
-        error will be returned in the response. Defaults to :py:class:`unicode`
-        in python2 and :py:class:`str` in python3.
-    :param location: The attributes of the :py:class:`flask.Request` object
+        error will be returned in the response. Defaults to :class:`unicode`
+        in python2 and :class:`str` in python3.
+    :param location: The attributes of the :class:`flask.Request` object
         to source the arguments from (ex: headers, args, etc.), can be an
         iterator. The last item listed takes precedence in the result set.
     :param choices: A container of the allowable values for the argument.
