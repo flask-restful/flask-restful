@@ -414,8 +414,8 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_list_with_scoped_attribute_on_dict_or_obj(self):
         class TestObject(object):
-            def __init__(self, list):
-                self.bar = list
+            def __init__(self, list_):
+                self.bar = list_
 
         class TestEgg(object):
             def __init__(self, val):
