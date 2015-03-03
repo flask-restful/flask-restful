@@ -185,12 +185,12 @@ class List(Raw):
 
         return [
             self.container.output(idx,
-                                  val if (isinstance(val, dict)
-                                      or (self.container.attribute
-                                          and hasattr(val, self.container.attribute))) and
-                                         not isinstance(self.container, Nested)
-                                  and not type(self.container) is Raw
-                                  else value)
+                val if (isinstance(val, dict)
+                        or (self.container.attribute
+                            and hasattr(val, self.container.attribute)))
+                        and not isinstance(self.container, Nested)
+                        and not type(self.container) is Raw
+                    else value)
             for idx, val in enumerate(value)
         ]
 
