@@ -117,8 +117,8 @@ exercise a larger amount of options. We'll define a resource named "User". ::
         'date_created': fields.DateTime,
         'date_updated': fields.DateTime,
         'links': fields.Nested({
-            'friends': fields.Url('/Users/{id}/Friends'),
-            'posts': fields.Url('Users/{id}/Posts'),
+            'friends': fields.Url('user_friends'),
+            'posts': fields.Url('user_posts'),
         }),
     }
 
@@ -186,8 +186,8 @@ That covers the inputs. We also defined some interesting field types in the
         'date_created': fields.DateTime,
         'date_updated': fields.DateTime,
         'links': fields.Nested({
-            'friends': fields.Url('/Users/{id}/Friends', absolute=True),
-            'posts': fields.Url('Users/{id}/Posts', absolute=True),
+            'friends': fields.Url('user_friends', absolute=True),
+            'posts': fields.Url('user_friends', absolute=True),
         }),
     }
 
@@ -202,8 +202,8 @@ value returned from the `username` field.
 Next up, check out `fields.Nested`. ::
 
     'links': fields.Nested({
-        'friends': fields.Url('/users/{id}/Friends', absolute=True),
-        'posts': fields.Url('/users/{id}/Posts', absolute=True),
+        'friends': fields.Url('user_friends', absolute=True),
+        'posts': fields.Url('user_posts', absolute=True),
     }),
 
 This field is used to create a sub-object in the response. In this case,
@@ -213,9 +213,8 @@ way that it would be an acceptable argument to `marshal` by itself.
 
 Finally, we used the `fields.Url` field type. ::
 
-        'friends': fields.Url('/users/{id}/Friends', absolute=True),
-        'posts': fields.Url('/users/{id}/Posts', absolute=True),
+        'friends': fields.Url('user_friends', absolute=True),
+        'posts': fields.Url('user_friends', absolute=True),
 
-It takes a string that can be formatted in the same manner as `fields.FormattedString`
-which we covered above.  Passing ``absolute=True`` ensures that the generated urls
+It takes as its first parameter the name of the endpoint associated with the urls of the objects in the `links` sub-object.  Passing ``absolute=True`` ensures that the generated urls
 will have the hostname included.

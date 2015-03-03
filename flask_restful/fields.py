@@ -279,6 +279,15 @@ class FormattedString(Raw):
 class Url(Raw):
     """
     A string representation of a Url
+
+    :param endpoint: Endpoint name. If endpoint is None, request.endpoint
+        is used instead
+    :type endpoint: str
+    :param absolute: If True, ensures that the generated urls will have the
+        hostname included
+    :type absolute: bool
+    :param scheme: URL scheme specifier
+    :type scheme: str
     """
     def __init__(self, endpoint=None, absolute=False, scheme=None):
         super(Url, self).__init__()
