@@ -74,6 +74,31 @@ Basically, this file configures your entire API.
 The things in the common directory are just things you'd want to support your
 resource modules.
 
+Use With Blueprints
+-------------------
+
+See :ref:`blueprints` in the Flask documentation for what blueprints are and
+why you should use them. Here's an example of how to link an :class:`Api`
+up to a :class:`~flask.Blueprint`. ::
+
+    from flask import Flask, Blueprint
+    from flask.ext.restful import Api, Resource, url_for
+
+    app = Flask(__name__)
+    api_bp = Blueprint('api', __name__)
+    api = Api(api_bp)
+
+    class TodoItem(Resource):
+        def get(self, id):
+            return {'task': 'Say "Hello, World!"'}
+
+    api.add_resource(TodoItem, '/todos/<int:id>')
+    app.register_blueprint(api_bp)
+
+Note that calling :meth:`Api.init_app` is not required here because registering
+the blueprint with the app takes care of setting up the routing for the
+application.
+
 Full Parameter Parsing Example
 ------------------------------
 
