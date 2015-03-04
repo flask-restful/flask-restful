@@ -1,5 +1,5 @@
 import unittest
-from flask import Flask, redirect, views
+from flask import Flask, Blueprint, redirect, views
 from flask.signals import got_request_exception, signals_available
 try:
     from mock import Mock, patch
@@ -730,6 +730,18 @@ class APITestCase(unittest.TestCase):
         api.add_resource(HelloWorld, '/ids/<int:id>')
         with app.test_request_context('/foo'):
             self.assertEqual(api.url_for(HelloWorld, id=123), '/ids/123')
+
+    def test_url_for_with_blueprint(self):
+        """Verify that url_for works when an Api object is mounted on a
+        Blueprint.
+        """
+        api_bp = Blueprint('api', __name__)
+        app = Flask(__name__)
+        api = flask_restful.Api(api_bp)
+        api.add_resource(HelloWorld, '/foo/<string:bar>')
+        app.register_blueprint(api_bp)
+        with app.test_request_context('/foo'):
+            self.assertEqual(api.url_for(HelloWorld, bar='baz'), '/foo/baz')
 
     def test_fr_405(self):
         app = Flask(__name__)
