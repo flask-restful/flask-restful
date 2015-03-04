@@ -451,8 +451,13 @@ class Api(object):
         return wrapper
 
     def url_for(self, resource, **values):
-        """Generates a URL to the given resource."""
-        return url_for(resource.endpoint, **values)
+        """Generates a URL to the given resource.
+
+        Works like :func:`flask.url_for`."""
+        endpoint = resource.endpoint
+        if self.blueprint:
+            endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
+        return url_for(endpoint, **values)
 
     def make_response(self, data, *args, **kwargs):
         """Looks up the representation transformer for the requested media
