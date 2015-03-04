@@ -3,7 +3,7 @@ from flask import make_response, request, current_app
 from functools import update_wrapper
 
 
-def crossdomain(origin=None, methods=None, headers=None,
+def crossdomain(origin=None, methods=None, headers=None, expose_headers=None,
                 max_age=21600, attach_to_all=True,
                 automatic_options=True, credentials=False):
     """
@@ -13,6 +13,8 @@ def crossdomain(origin=None, methods=None, headers=None,
         methods = ', '.join(sorted(x.upper() for x in methods))
     if headers is not None and not isinstance(headers, str):
         headers = ', '.join(x.upper() for x in headers)
+    if expose_headers is not None and not isinstance(expose_headers, str):
+        expose_headers = ', '.join(x.upper() for x in expose_headers)
     if not isinstance(origin, str):
         origin = ', '.join(origin)
     if isinstance(max_age, timedelta):
@@ -43,6 +45,8 @@ def crossdomain(origin=None, methods=None, headers=None,
                 h['Access-Control-Allow-Credentials'] = 'true'
             if headers is not None:
                 h['Access-Control-Allow-Headers'] = headers
+            if expose_headers is not None:
+                h['Access-Control-Expose-Headers'] = expose_headers
             return resp
 
         f.provide_automatic_options = False
