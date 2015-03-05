@@ -255,7 +255,7 @@ class RequestParser(object):
 
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
-        req.unparsed_arguments = dict(Argument('').source(req)) if strict else {}
+        req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
 
         for arg in self.args:
             value, found = arg.parse(req)
@@ -270,7 +270,7 @@ class RequestParser(object):
 
     def copy(self):
         """ Creates a copy of this RequestParser with the same set of arguments """
-        parser_copy = RequestParser(self.argument_class, self.namespace_class)
+        parser_copy = self.__class__(self.argument_class, self.namespace_class)
         parser_copy.args = deepcopy(self.args)
         return parser_copy
 
