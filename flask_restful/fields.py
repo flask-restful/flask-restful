@@ -1,7 +1,6 @@
 from datetime import datetime
 from calendar import timegm
 import pytz
-from inspect import isfunction
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
 from email.utils import formatdate
 import six
@@ -38,7 +37,7 @@ def get_value(key, obj, default=None):
     """Helper for pulling a keyed value off various types of objects"""
     if type(key) == int:
         return _get_value_for_key(key, obj, default)
-    elif isfunction(key):
+    elif callable(key):
         return key(obj)
     else:
         return _get_value_for_keys(key.split('.'), obj, default)
