@@ -1,4 +1,5 @@
 from decimal import Decimal
+from functools import partial
 import pytz
 import unittest
 from mock import Mock
@@ -164,6 +165,15 @@ class FieldsTestCase(unittest.TestCase):
     def test_string_with_lambda(self):
         field = fields.String(attribute=lambda x: x.hey)
         self.assertEquals("3", field.output("foo", Foo()))
+
+    def test_string_with_partial(self):
+
+        def f(x, suffix):
+            return "%s-%s" % (x.hey, suffix)
+
+        p = partial(f, suffix="whatever")
+        field = fields.String(attribute=p)
+        self.assertEquals("3-whatever", field.output("foo", Foo()))
 
     def test_url_invalid_object(self):
         app = Flask(__name__)
