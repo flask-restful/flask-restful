@@ -3,7 +3,7 @@
 API Docs
 ========
 
-.. module:: flask.ext.restful
+.. module:: flask_restful
 
 
 .. autofunction:: marshal

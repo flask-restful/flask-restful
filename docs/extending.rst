@@ -3,7 +3,7 @@
 Extending Flask-RESTful
 =======================
 
-.. currentmodule:: flask.ext.restful
+.. currentmodule:: flask_restful
 
 We realize that everyone has different needs in a REST framework.
 Flask-RESTful tries to be as flexible as possible, but sometimes you might
@@ -150,7 +150,7 @@ provide your own output functions. ::
 Resource Method Decorators
 --------------------------
 
-There is a property on the :class:`~flask.ext.restful.Resource` class called
+There is a property on the :class:`~flask_restful.Resource` class called
 ``method_decorators``. You can subclass the Resource and add your own
 decorators that will be added to all ``method`` functions in resource. For
 instance, if you want to build custom authentication into every request. ::
@@ -183,11 +183,11 @@ Error handling is a tricky problem. Your Flask application may be wearing
 multiple hats, yet you want to handle all Flask-RESTful errors with the correct
 content type and error syntax as your 200-level requests.
 
-Flask-RESTful will call the :meth:`~flask.ext.restful.Api.handle_error`
+Flask-RESTful will call the :meth:`~flask_restful.Api.handle_error`
 function on any 400 or 500 error that happens on a Flask-RESTful route, and
 leave other routes alone. You may want your app to return an error message with
 the correct media type on 404 Not Found errors; in which case, use the
-`catch_all_404s` parameter of the :class:`~flask.ext.restful.Api` constructor. ::
+`catch_all_404s` parameter of the :class:`~flask_restful.Api` constructor. ::
 
     app = Flask(__name__)
     api = flask_restful.Api(app, catch_all_404s=True)
@@ -228,7 +228,7 @@ Including the `'status'` key will set the Response's status code. If not
 specified it will default to 500.
 
 Once your ``errors`` dictionary is defined, simply pass it to the
-:class:`~flask.ext.restful.Api` constructor. ::
+:class:`~flask_restful.Api` constructor. ::
 
     app = Flask(__name__)
     api = flask_restful.Api(app, errors=errors)

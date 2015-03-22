@@ -3,8 +3,8 @@ from functools import partial
 import pytz
 import unittest
 from mock import Mock
-from flask.ext.restful.fields import MarshallingException
-from flask.ext.restful.utils import OrderedDict
+from flask_restful.fields import MarshallingException
+from flask_restful.utils import OrderedDict
 from flask_restful import fields
 from datetime import datetime, timedelta, tzinfo
 from flask import Flask, Blueprint

@@ -3,7 +3,7 @@
 Request Parsing
 ===============
 
-.. currentmodule:: flask.ext.restful
+.. currentmodule:: flask_restful
 
 Flask-RESTful's request parsing interface, :mod:`reqparse`, is modeled after
 the `argparse <http://docs.python.org/dev/library/argparse.html>`_ interface.
@@ -17,7 +17,7 @@ Here's a simple example of the request parser. It looks for two arguments in
 the :attr:`flask.Request.values` dict: one of type ``int``, and the other of
 type ``str`` ::
 
-    from flask.ext.restful import reqparse
+    from flask_restful import reqparse
 
     parser = reqparse.RequestParser()
     parser.add_argument('rate', type=int, help='Rate cannot be converted')
@@ -117,7 +117,7 @@ also overwrite any argument in the parent with
 :meth:`~reqparse.RequestParser.replace_argument`, or remove it completely
 with :meth:`~reqparse.RequestParser.remove_argument`. For example: ::
 
-    from flask.ext.restful import RequestParser
+    from flask_restful import RequestParser
 
     parser = RequestParser()
     parser.add_argument('foo', type=int)

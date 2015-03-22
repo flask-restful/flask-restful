@@ -3,7 +3,7 @@
 Quickstart
 ==========
 
-.. currentmodule:: flask.ext.restful
+.. currentmodule:: flask_restful
 
 It's time to write your first REST API. This guide assumes you have a working
 understanding of `Flask <http://flask.pocoo.org>`_, and that you have already
@@ -18,12 +18,12 @@ A Minimal API
 A minimal Flask-RESTful API looks like this: ::
 
     from flask import Flask
-    from flask.ext import restful
+    from flask_restful import Resource, Api
 
     app = Flask(__name__)
-    api = restful.Api(app)
+    api = Api(app)
 
-    class HelloWorld(restful.Resource):
+    class HelloWorld(Resource):
         def get(self):
             return {'hello': 'world'}
 
@@ -62,7 +62,7 @@ your resource. A basic CRUD resource for a todo application (of course) looks
 like this: ::
 
     from flask import Flask, request
-    from flask.ext.restful import Resource, Api
+    from flask_restful import Resource, Api
 
     app = Flask(__name__)
     api = Api(app)
@@ -152,7 +152,7 @@ form encoded data), it's still a pain to validate form data. Flask-RESTful
 has built-in support for request data validation using a library similar to
 `argparse <http://docs.python.org/dev/library/argparse.html>`_. ::
 
-    from flask.ext.restful import reqparse
+    from flask_restful import reqparse
 
     parser = reqparse.RequestParser()
     parser.add_argument('rate', type=int, help='Rate to charge for this resource')
@@ -190,7 +190,7 @@ problem, Flask-RESTful provides the :class:`fields` module and the
 use the ``fields`` module to describe the structure of your response. ::
 
     from collections import OrderedDict
-    from flask.ext.restful import fields, marshal_with
+    from flask_restful import fields, marshal_with
 
     resource_fields = {
         'task':   fields.String,
@@ -224,7 +224,7 @@ Full Example
 Save this example in api.py ::
 
     from flask import Flask
-    from flask.ext.restful import reqparse, abort, Api, Resource
+    from flask_restful import reqparse, abort, Api, Resource
 
     app = Flask(__name__)
     api = Api(app)

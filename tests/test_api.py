@@ -8,7 +8,7 @@ except:
     from unittest.mock import Mock, patch
 import flask
 import werkzeug
-from flask.ext.restful.utils import http_status_message, error_data, unpack
+from flask_restful.utils import http_status_message, error_data, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
@@ -796,7 +796,7 @@ class APITestCase(unittest.TestCase):
         #   1. Set the settings dict() with some value
         #   2. Patch the json.dumps function in the module with a Mock object.
 
-        from flask.ext.restful.representations import json as json_rep
+        from flask_restful.representations import json as json_rep
         json_dumps_mock = Mock(return_value='bar')
         new_settings = {'indent': 123}
 

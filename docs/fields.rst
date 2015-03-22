@@ -3,7 +3,7 @@
 Output Fields
 ===============
 
-.. currentmodule:: flask.ext.restful
+.. currentmodule:: flask_restful
 
 
 Flask-RESTful provides an easy way to control what data you actually render in
@@ -24,7 +24,7 @@ will format & return the value for that field.  This example has three fields:
 two are :class:`~fields.String` and one is a :class:`~fields.DateTime`,
 formatted as an RFC 822 date string (ISO 8601 is supported as well) ::
 
-    from flask.ext.restful import Resource, fields, marshal_with
+    from flask_restful import Resource, fields, marshal_with
 
     resource_fields = {
         'name': fields.String,
@@ -52,8 +52,8 @@ Note: :class:`marshal_with` is a convenience decorator, that is functionally
 equivalent to ::
 
     class Todo(Resource):
-    def get(self, **kwargs):
-        return marshal(db_get_todo(), resource_fields), 200
+        def get(self, **kwargs):
+            return marshal(db_get_todo(), resource_fields), 200
 
 This explicit expression can be used to return HTTP status codes other than 200
 along with a successful response (see :func:`abort` for errors).
@@ -70,7 +70,7 @@ name. To configure this mapping, use the ``attribute`` keyword argument. ::
         'address': fields.String,
     }
 
-A lambda can also be specified as the ``attribute`` ::
+A lambda (or any callable) can also be specified as the ``attribute`` ::
 
     fields = {
         'name': fields.String(attribute=lambda x: x._private_name),
@@ -154,7 +154,7 @@ Complex Structures
 You can have a flat structure that :meth:`marshal` will
 transform to a nested structure ::
 
-    >>> from flask.ext.restful import fields, marshal
+    >>> from flask_restful import fields, marshal
     >>> import json
     >>>
     >>> resource_fields = {'name': fields.String}
@@ -179,7 +179,7 @@ List Field
 
 You can also unmarshal fields as lists ::
 
-    >>> from flask.ext.restful import fields, marshal
+    >>> from flask_restful import fields, marshal
     >>> import json
     >>>
     >>> resource_fields = {'name': fields.String, 'first_names': fields.List(fields.String)}
@@ -196,7 +196,7 @@ While nesting fields using dicts can turn a flat data object into a nested
 response, you can use :class:`~fields.Nested` to unmarshal nested data
 structures and render them appropriately. ::
 
-    >>> from flask.ext.restful import fields, marshal
+    >>> from flask_restful import fields, marshal
     >>> import json
     >>>
     >>> address_fields = {}

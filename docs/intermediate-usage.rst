@@ -3,7 +3,7 @@
 Intermediate Usage
 ==================
 
-.. currentmodule:: flask.ext.restful
+.. currentmodule:: flask_restful
 
 This page covers building a slightly more complex Flask-RESTful app that will
 cover out some best practices when setting up a real-world Flask-RESTful-based
@@ -42,9 +42,9 @@ example, any custom input/output types your resources need to get the job done.
 In the resource files, you just have your resource objects. So here's what
 ``foo.py`` might look like: ::
 
-    from flask.ext import restful
+    from flask_restful import Resource
 
-    class Foo(restful.Resource):
+    class Foo(Resource):
         def get(self):
             pass
         def post(self):
@@ -53,13 +53,13 @@ In the resource files, you just have your resource objects. So here's what
 The key to this setup lies in ``app.py``: ::
 
     from flask import Flask
-    from flask.ext import restful
+    from flask_restful import Api
     from myapi.resources.foo import Foo
     from myapi.resources.bar import Bar
     from myapi.resources.baz import Baz
 
     app = Flask(__name__)
-    api = restful.Api(app)
+    api = Api(app)
 
     api.add_resource(Foo, '/Foo', '/Foo/<str:id>')
     api.add_resource(Bar, '/Bar', '/Bar/<str:id>')
@@ -82,7 +82,7 @@ why you should use them. Here's an example of how to link an :class:`Api`
 up to a :class:`~flask.Blueprint`. ::
 
     from flask import Flask, Blueprint
-    from flask.ext.restful import Api, Resource, url_for
+    from flask_restful import Api, Resource, url_for
 
     app = Flask(__name__)
     api_bp = Blueprint('api', __name__)
@@ -106,8 +106,7 @@ Elsewhere in the documentation, we've described how to use the reqparse example
 in detail. Here we'll set up a resource with multiple input parameters that
 exercise a larger amount of options. We'll define a resource named "User". ::
 
-    from flask.ext import restful
-    from flask.ext.restful import fields, marshal_with, reqparse
+    from flask_restful import fields, marshal_with, reqparse, Resource
 
     def email(email_str):
         """ return True if email_str is a valid email """
@@ -147,7 +146,7 @@ exercise a larger amount of options. We'll define a resource named "User". ::
         }),
     }
 
-    class User(restful.Resource):
+    class User(Resource):
 
         @marshal_with(user_fields)
         def post(self):

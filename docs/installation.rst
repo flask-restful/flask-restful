@@ -3,7 +3,7 @@
 Installation
 ============
 
-.. currentmodule:: flask.ext.restful
+.. currentmodule:: flask_restful
 
 Install Flask-RESTful with ``pip`` ::
 
