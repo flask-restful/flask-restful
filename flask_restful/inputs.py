@@ -271,3 +271,160 @@ def datetime_from_iso8601(datetime_str):
     :return: A datetime
     """
     return aniso8601.parse_datetime(datetime_str)
+
+
+# These regular expressions are used by the email parser
+user_regex = re.compile(
+    r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*$"  # dot-atom
+    r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-\011\013\014\016-\177])*"$)',  # quoted-string
+    re.IGNORECASE)
+domain_regex = re.compile(
+    # max length of the domain is 249: 254 (max email length) minus one
+    # period, two characters for the TLD, @ sign, & one character before @.
+    r'(?:[A-Z0-9](?:[A-Z0-9-]{0,247}[A-Z0-9])?\.)+(?:[A-Z]{2,6}|[A-Z0-9-]{2,}(?<!-))$',
+    re.IGNORECASE)
+literal_regex = re.compile(
+    # literal form, ipv4 or ipv6 address (SMTP 4.1.3)
+    r'\[([A-f0-9:\.]+)\]$',
+    re.IGNORECASE)
+ipv4_re = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$')
+
+
+def email(value):
+    if value and '@' in value:
+        user, domain = value.rsplit('@', 1)
+        if _valid_user_part(user) and _valid_domain_part(domain):
+            return value
+    raise ValueError("Invalid email address: %s" % value)
+
+
+def _valid_user_part(user_part):
+    if user_regex.match(user_part):
+        return True
+    raise ValueError("Invalid email username: %s" % user_part)
+
+
+def _valid_domain_part(domain_part):
+    if domain_regex.match(domain_part):
+        return True
+    literal_match = literal_regex.match(domain_part)
+    if literal_match:
+        ip_address = literal_match.group(1)
+        if _valid_ipv4(ip_address) or _valid_ipv6(ip_address):
+            return True
+    # check for IDN domain
+    if domain_regex.match(domain_part.encode('idna')):
+        return True
+    raise ValueError("Invalid email domain: %s" % domain_part)
+
+
+def _valid_ipv4(addr):
+    return ipv4_re.match(addr)
+
+
+def _valid_ipv6(ip_str):
+    """Source: Django's ipv6.py utility"""
+
+    # We need to have at least one ':'.
+    if ':' not in ip_str:
+        return False
+
+    # We can only have one '::' shortener.
+    if ip_str.count('::') > 1:
+        return False
+
+    # '::' should be encompassed by start, digits or end.
+    if ':::' in ip_str:
+        return False
+
+    # A single colon can neither start nor end an address.
+    if ((ip_str.startswith(':') and not ip_str.startswith('::')) or
+            (ip_str.endswith(':') and not ip_str.endswith('::'))):
+        return False
+
+    # We can never have more than 7 ':' (1::2:3:4:5:6:7:8 is invalid)
+    if ip_str.count(':') > 7:
+        return False
+
+    # If we have no concatenation, we need to have 8 fields with 7 ':'.
+    if '::' not in ip_str and ip_str.count(':') != 7:
+        # We might have an IPv4 mapped address.
+        if ip_str.count('.') != 3:
+            return False
+
+    ip_str = _explode_shorthand_ip_string(ip_str)
+
+    # Now that we have that all squared away, let's check that each of the
+    # hextets are between 0x0 and 0xFFFF.
+    for hextet in ip_str.split(':'):
+        if hextet.count('.') == 3:
+            # If we have an IPv4 mapped address, the IPv4 portion has to
+            # be at the end of the IPv6 portion.
+            if not ip_str.split(':')[-1] == hextet:
+                return False
+            return _valid_ipv4(hextet)
+        else:
+            try:
+                # a value error here means that we got a bad hextet,
+                # something like 0xzzzz
+                if int(hextet, 16) < 0x0 or int(hextet, 16) > 0xFFFF:
+                    return False
+            except ValueError:
+                return False
+    return True
+
+
+def _explode_shorthand_ip_string(ip_str):
+    """
+    Expand a shortened IPv6 address.
+    Args:
+        ip_str: A string, the IPv6 address.
+    Returns:
+        A string, the expanded IPv6 address.
+    """
+    if not _is_shorthand_ip(ip_str):
+        # We've already got a longhand ip_str.
+        return ip_str
+
+    new_ip = []
+    hextet = ip_str.split('::')
+
+    # If there is a ::, we need to expand it with zeroes
+    # to get to 8 hextets - unless there is a dot in the last hextet,
+    # meaning we're doing v4-mapping
+    if '.' in ip_str.split(':')[-1]:
+        fill_to = 7
+    else:
+        fill_to = 8
+
+    if len(hextet) > 1:
+        sep = len(hextet[0].split(':')) + len(hextet[1].split(':'))
+        new_ip = hextet[0].split(':')
+
+        for __ in range(fill_to - sep):
+            new_ip.append('0000')
+        new_ip += hextet[1].split(':')
+
+    else:
+        new_ip = ip_str.split(':')
+
+    # Now need to make sure every hextet is 4 lower case characters.
+    # If a hextet is < 4 characters, we've got missing leading 0's.
+    ret_ip = []
+    for hextet in new_ip:
+        ret_ip.append(('0' * (4 - len(hextet)) + hextet).lower())
+    return ':'.join(ret_ip)
+
+
+def _is_shorthand_ip(ip_str):
+    """Determine if the address is shortened.
+    Args:
+        ip_str: A string, the IPv6 address.
+    Returns:
+        A boolean, True if the address is shortened.
+    """
+    if ip_str.count('::') == 1:
+        return True
+    if any(len(x) < 4 for x in ip_str.split(':')):
+        return True
+    return False
