@@ -313,7 +313,8 @@ def _valid_domain_part(domain_part):
         if _valid_ipv4(ip_address) or _valid_ipv6(ip_address):
             return True
     # check for IDN domain
-    if domain_regex.match(domain_part.encode('idna')):
+    idn = domain_part.encode('idna').decode('ascii')
+    if domain_regex.match(idn):
         return True
     raise ValueError("Invalid email domain: %s" % domain_part)
 
