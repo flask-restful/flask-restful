@@ -400,7 +400,11 @@ class Api(object):
         self.endpoints.add(endpoint)
 
         if endpoint in app.view_functions.keys():
-            previous_view_class = app.view_functions[endpoint].__dict__['view_class']
+            try:
+                previous_view_class = app.view_functions[endpoint].__dict__['view_class']
+            except:
+                print(endpoint, app.view_functions[endpoint])
+                raise
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
             if previous_view_class != resource:
