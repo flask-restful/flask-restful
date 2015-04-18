@@ -160,7 +160,7 @@ class Argument(object):
                     values = [source.get(name)]
 
                 for value in values:
-                    if self.trim:
+                    if hasattr(value, "strip") and self.trim:
                         value = value.strip()
                     if hasattr(value, "lower") and not self.case_sensitive:
                         value = value.lower()
@@ -250,7 +250,7 @@ class RequestParser(object):
             self.args.append(self.argument_class(*args, **kwargs))
 
         #Do not know what other argument classes are out there
-        if self.trim and type(self.argument_class) is type(Argument):
+        if self.trim and self.argument_class is Argument:
             #enable trim for appended element
             self.args[-1].trim = True
 

@@ -757,5 +757,21 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], 1)
 
+    def test_trim_request_parser_json(self):
+        app = Flask(__name__)
+
+        parser = RequestParser(trim=True)
+        parser.add_argument("foo", location="json")
+        parser.add_argument("int1", location="json", type=int)
+        parser.add_argument("int2", location="json", type=int)
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"foo": " bar ", "int1": 1, "int2": " 2 "}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], 'bar')
+            self.assertEquals(args['int1'], 1)
+            self.assertEquals(args['int2'], 2)
+
 if __name__ == '__main__':
     unittest.main()
