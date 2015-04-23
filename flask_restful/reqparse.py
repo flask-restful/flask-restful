@@ -127,7 +127,7 @@ class Argument(object):
             except TypeError:
                 return self.type(value)
 
-    def handle_validation_error(self, error):
+    def handle_validation_error(self, error, bundle_errors):
         """Called when an error is raised while parsing. Aborts the request
         with a 400 status and an error message
 
@@ -136,11 +136,11 @@ class Argument(object):
         help_str = '(%s) ' % self.help if self.help else ''
         error_msg = ' '.join([help_str, str(error)]) if help_str else str(error)
         msg = json.dumps({self.name: "%s" % (error_msg)})
-        if current_app.config.get("BUNDLE_ERRORS", False):
+        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
             return error, msg
         flask_restful.abort(400, message=msg)
 
-    def parse(self, request):
+    def parse(self, request, bundle_errors=False):
         """Parses argument value(s) from the request, converting according to
         the argument's type.
 
@@ -178,16 +178,16 @@ class Argument(object):
                     except Exception as error:
                         if self.ignore:
                             continue
-                        return self.handle_validation_error(error)
+                        return self.handle_validation_error(error, bundle_errors)
 
                     if self.choices and value not in self.choices:
-                        if current_app.config.get("BUNDLE_ERRORS", False):
+                        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
                             return self.handle_validation_error(
                                 ValueError(u"{0} is not a valid choice".format(
-                                    value)))
+                                    value)), bundle_errors)
                         self.handle_validation_error(
                                 ValueError(u"{0} is not a valid choice".format(
-                                    value)))
+                                    value)), bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -204,9 +204,9 @@ class Argument(object):
                 error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
-            if current_app.config.get("BUNDLE_ERRORS", False):
-                return self.handle_validation_error(ValueError(error_msg))
-            self.handle_validation_error(ValueError(error_msg))
+            if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+                return self.handle_validation_error(ValueError(error_msg), bundle_errors)
+            self.handle_validation_error(ValueError(error_msg), bundle_errors)
 
         if not results:
             if callable(self.default):
@@ -236,11 +236,13 @@ class RequestParser(object):
     :param bool trim: If enabled, trims whitespace on all arguments in this parser
     """
 
-    def __init__(self, argument_class=Argument, namespace_class=Namespace, trim=False):
+    def __init__(self, argument_class=Argument, namespace_class=Namespace,
+            trim=False, bundle_errors=False):
         self.args = []
         self.argument_class = argument_class
         self.namespace_class = namespace_class
         self.trim = trim
+        self.bundle_errors = bundle_errors
 
     def add_argument(self, *args, **kwargs):
         """Adds an argument to be parsed.
@@ -280,7 +282,7 @@ class RequestParser(object):
         req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
         errors = []
         for arg in self.args:
-            value, found = arg.parse(req)
+            value, found = arg.parse(req, self.bundle_errors)
             if isinstance(value, ValueError):
                 errors.append(found)
                 found = None

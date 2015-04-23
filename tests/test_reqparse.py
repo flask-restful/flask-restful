@@ -409,6 +409,27 @@ class ReqParseTestCase(unittest.TestCase):
                 'request\'s cookies"}')
             self.assertEquals(message, error_message)
 
+    def test_parse_error_bundling_w_parser_arg(self):
+        app = Flask(__name__)
+        app.config['BUNDLE_ERRORS']=False
+        with app.app_context():
+            req = Request.from_values("/bubble")
+
+            parser = RequestParser(bundle_errors=True)
+            parser.add_argument("foo", required=True, location='values')
+            parser.add_argument("bar", required=True, location=['values', 'cookies'])
+
+            message = ''
+            try:
+                parser.parse_args(req)
+            except exceptions.BadRequest as e:
+                message = e.data['message']
+            error_message = (u'{"foo": "Missing required parameter in the post '
+                'body or the query string"}, {"bar": "Missing required '
+                'parameter in the post body or the query string or the '
+                'request\'s cookies"}')
+            self.assertEquals(message, error_message)
+
     def test_parse_default_append(self):
         req = Request.from_values("/bubble")
         parser = RequestParser()
