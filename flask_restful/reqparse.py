@@ -62,12 +62,13 @@ class Argument(object):
         case sensitive or not
     :param bool store_missing: Whether the arguments default value should
         be stored if the argument is missing from the request.
+    :param bool trim: If enabled, trims whitespace around the argument.
     """
 
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True, store_missing=True):
+                 case_sensitive=True, store_missing=True, trim=False):
         self.name = name
         self.default = default
         self.dest = dest
@@ -81,6 +82,7 @@ class Argument(object):
         self.case_sensitive = case_sensitive
         self.operators = operators
         self.store_missing = store_missing
+        self.trim = trim
 
     def source(self, request):
         """Pulls values off the request in the provided location
@@ -162,6 +164,8 @@ class Argument(object):
                     values = [source.get(name)]
 
                 for value in values:
+                    if hasattr(value, "strip") and self.trim:
+                        value = value.strip()
                     if hasattr(value, "lower") and not self.case_sensitive:
                         value = value.lower()
 
@@ -228,12 +232,15 @@ class RequestParser(object):
         parser.add_argument('foo')
         parser.add_argument('int_bar', type=int)
         args = parser.parse_args()
+
+    :param bool trim: If enabled, trims whitespace on all arguments in this parser
     """
 
-    def __init__(self, argument_class=Argument, namespace_class=Namespace):
+    def __init__(self, argument_class=Argument, namespace_class=Namespace, trim=False):
         self.args = []
         self.argument_class = argument_class
         self.namespace_class = namespace_class
+        self.trim = trim
 
     def add_argument(self, *args, **kwargs):
         """Adds an argument to be parsed.
@@ -244,10 +251,17 @@ class RequestParser(object):
         See :class:`Argument`'s constructor for documentation on the
         available options.
         """
+
         if len(args) == 1 and isinstance(args[0], self.argument_class):
             self.args.append(args[0])
         else:
             self.args.append(self.argument_class(*args, **kwargs))
+
+        #Do not know what other argument classes are out there
+        if self.trim and self.argument_class is Argument:
+            #enable trim for appended element
+            self.args[-1].trim = True
+
         return self
 
     def parse_args(self, req=None, strict=False):
