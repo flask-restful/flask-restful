@@ -1,5 +1,6 @@
 from copy import deepcopy
-from flask import request
+from flask import current_app, request
+import json
 from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
 import flask_restful
@@ -131,7 +132,10 @@ class Argument(object):
         :param error: the error that was raised
         """
         help_str = '(%s) ' % self.help if self.help else ''
-        msg = '[%s]: %s%s' % (self.name, help_str, str(error))
+        error_msg = ' '.join([help_str, str(error)]) if help_str else str(error)
+        msg = json.dumps({self.name: "%s" % (error_msg)})
+        if current_app.config.get("BUNDLE_ERRORS", False):
+            return error, msg
         flask_restful.abort(400, message=msg)
 
     def parse(self, request):
@@ -170,14 +174,16 @@ class Argument(object):
                     except Exception as error:
                         if self.ignore:
                             continue
-                        self.handle_validation_error(error)
+                        return self.handle_validation_error(error)
 
                     if self.choices and value not in self.choices:
+                        if current_app.config.get("BUNDLE_ERRORS", False):
+                            return self.handle_validation_error(
+                                ValueError(u"{0} is not a valid choice".format(
+                                    value)))
                         self.handle_validation_error(
-                            ValueError(u"{0} is not a valid choice".format(
-                                value
-                            ))
-                        )
+                                ValueError(u"{0} is not a valid choice".format(
+                                    value)))
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -194,6 +200,8 @@ class Argument(object):
                 error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
+            if current_app.config.get("BUNDLE_ERRORS", False):
+                return self.handle_validation_error(ValueError(error_msg))
             self.handle_validation_error(ValueError(error_msg))
 
         if not results:
@@ -256,11 +264,16 @@ class RequestParser(object):
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
         req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
-
+        errors = []
         for arg in self.args:
             value, found = arg.parse(req)
+            if isinstance(value, ValueError):
+                errors.append(found)
+                found = None
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
+        if errors:
+            flask_restful.abort(400, message=', '.join([error for error in errors]))
 
         if strict and req.unparsed_arguments:
             raise exceptions.BadRequest('Unknown arguments: %s'
