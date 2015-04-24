@@ -132,6 +132,9 @@ class Argument(object):
         with a 400 status and an error message
 
         :param error: the error that was raised
+        :param bundle_errors: do not abort when first error occurs, return a
+            dict with the name of the argument and the error message to be
+            bundled
         """
         help_str = '(%s) ' % self.help if self.help else ''
         error_msg = ' '.join([help_str, str(error)]) if help_str else str(error)
@@ -146,6 +149,9 @@ class Argument(object):
         the argument's type.
 
         :param request: The flask request object to parse arguments from
+        :param do not abort when first error occurs, return a
+            dict with the name of the argument and the error message to be
+            bundled
         """
         source = self.source(request)
 
@@ -234,7 +240,11 @@ class RequestParser(object):
         parser.add_argument('int_bar', type=int)
         args = parser.parse_args()
 
-    :param bool trim: If enabled, trims whitespace on all arguments in this parser
+    :param bool trim: If enabled, trims whitespace on all arguments in this
+        parser
+    :param bool bundle_errors: If enabled, do not abort when first error occurs,
+        return a dict with the name of the argument and the error message to be
+        bundled and return all validation errors
     """
 
     def __init__(self, argument_class=Argument, namespace_class=Namespace,
