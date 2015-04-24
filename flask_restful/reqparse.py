@@ -135,9 +135,10 @@ class Argument(object):
         """
         help_str = '(%s) ' % self.help if self.help else ''
         error_msg = ' '.join([help_str, str(error)]) if help_str else str(error)
-        msg = json.dumps({self.name: "%s" % (error_msg)})
         if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+            msg = {self.name: "%s" % (error_msg)}
             return error, msg
+        msg = json.dumps({self.name: "%s" % (error_msg)})
         flask_restful.abort(400, message=msg)
 
     def parse(self, request, bundle_errors=False):
@@ -289,7 +290,7 @@ class RequestParser(object):
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
         if errors:
-            flask_restful.abort(400, message=', '.join([error for error in errors]))
+            flask_restful.abort(400, message=json.dumps(errors))
 
         if strict and req.unparsed_arguments:
             raise exceptions.BadRequest('Unknown arguments: %s'
