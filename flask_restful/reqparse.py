@@ -47,7 +47,7 @@ class Argument(object):
     :param ignore: Whether to ignore cases where the argument fails type
         conversion
     :param type: The type to which the request argument should be
-        converted. If a type raises a ValidationError, the message in the
+        converted. If a type raises an exception, the message in the
         error will be returned in the response. Defaults to :class:`unicode`
         in python2 and :class:`str` in python3.
     :param location: The attributes of the :class:`flask.Request` object
@@ -56,7 +56,7 @@ class Argument(object):
     :param choices: A container of the allowable values for the argument.
     :param help: A brief description of the argument, returned in the
         response when the argument is invalid with the name of the argument and
-        the message passed to a ValidationError raised by a type converter.
+        the message passed to any exception raised by a type converter.
     :param bool case_sensitive: Whether the arguments in the request are
         case sensitive or not
     :param bool store_missing: Whether the arguments default value should

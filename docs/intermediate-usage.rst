@@ -109,11 +109,11 @@ exercise a larger amount of options. We'll define a resource named "User". ::
     from flask_restful import fields, marshal_with, reqparse, Resource
 
     def email(email_str):
-        """ return True if email_str is a valid email """
-        if valid_email(email):
-            return True
+        """Return email_str if valid, raise an exception in other case."""
+        if valid_email(email_str):
+            return email_str
         else:
-            raise ValidationError("{} is not a valid email")
+            raise ValueError('{} is not a valid email'.format(email_str))
 
     post_parser = reqparse.RequestParser()
     post_parser.add_argument(
@@ -183,9 +183,9 @@ of 'the username field is required'. ::
     )
 
 The ``email`` field has a custom type of ``email``. A few lines earlier we
-defined an ``email`` function that takes a string and returns ``True`` if the
-type is valid, else it raises a ``ValidationError`` exclaiming that the
-email type was invalid. ::
+defined an ``email`` function that takes a string and returns it if the type is
+valid, else it raises an exception, exclaiming that the email type was
+invalid. ::
 
     post_parser.add_argument(
         'user_priority', dest='user_priority',
