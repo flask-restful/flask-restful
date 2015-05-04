@@ -65,6 +65,9 @@ class regex(object):
             raise ValueError(message)
         return value
 
+    def __deepcopy__(self, memo):
+        return regex(self.pattern)
+
 
 def _normalize_interval(start, end, value):
     """Normalize datetime intervals.
