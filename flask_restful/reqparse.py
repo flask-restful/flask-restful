@@ -291,11 +291,11 @@ class RequestParser(object):
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
         req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
-        errors = []
+        errors = {}
         for arg in self.args:
             value, found = arg.parse(req, self.bundle_errors)
             if isinstance(value, ValueError):
-                errors.append(found)
+                errors.update(found)
                 found = None
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value

@@ -403,10 +403,10 @@ class ReqParseTestCase(unittest.TestCase):
                 parser.parse_args(req)
             except exceptions.BadRequest as e:
                 message = e.data['message']
-            error_message = ('[{"foo": "Missing required parameter in the '
-                'post body or the query string"}, {"bar": "Missing required '
+            error_message = ('{"foo": "Missing required parameter in the '
+                'post body or the query string", "bar": "Missing required '
                 'parameter in the post body or the query string or the '
-                'request\'s cookies"}]')
+                'request\'s cookies"}')
             self.assertEquals(json.loads(message), json.loads(error_message))
 
     def test_parse_error_bundling_w_parser_arg(self):
@@ -424,10 +424,10 @@ class ReqParseTestCase(unittest.TestCase):
                 parser.parse_args(req)
             except exceptions.BadRequest as e:
                 message = e.data['message']
-            error_message = ('[{"foo": "Missing required parameter in the '
-                'post body or the query string"}, {"bar": "Missing required '
+            error_message = ('{"foo": "Missing required parameter in the '
+                'post body or the query string", "bar": "Missing required '
                 'parameter in the post body or the query string or the '
-                'request\'s cookies"}]')
+                'request\'s cookies"}')
             self.assertEquals(json.loads(message), json.loads(error_message))
 
     def test_parse_default_append(self):
