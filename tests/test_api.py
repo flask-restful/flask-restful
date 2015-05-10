@@ -1,4 +1,5 @@
 import unittest
+import json
 from flask import Flask, Blueprint, redirect, views
 from flask.signals import got_request_exception, signals_available
 try:
@@ -8,7 +9,8 @@ except:
     from unittest.mock import Mock, patch
 import flask
 import werkzeug
-from flask_restful.utils import http_status_message, error_data, unpack
+from werkzeug import exceptions
+from flask_restful.utils import http_status_message, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
@@ -89,11 +91,19 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.headers['WWW-Authenticate'],
                               'Basic realm="test-realm"')
 
-    def test_error_data(self):
-        self.assertEquals(error_data(400), {
-            'status': 400,
-            'message': 'Bad Request',
-        })
+
+    def test_handle_error_does_not_swallow_exceptions(self):
+
+        app = Flask(__name__)
+        app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
+        api = flask_restful.Api(app)
+        exception = exceptions.BadRequest('x')
+
+        with app.test_request_context('/foo'):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 400)
+            self.assertEquals(resp.get_data(), b'{"message": "x"}')
+
 
     def test_marshal(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
@@ -374,7 +384,6 @@ class APITestCase(unittest.TestCase):
         assert_equals(resp.status_code, 404)
         assert_equals('application/json', resp.headers['Content-Type'])
         data = loads(resp.data.decode())
-        assert_equals(data.get('status'), 404)
         assert_true('message' in data)
 
     def test_handle_non_api_error(self):
