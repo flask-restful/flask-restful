@@ -26,7 +26,7 @@ class ReqParseTestCase(unittest.TestCase):
             req = Mock(['values'])
             req.values = MultiDict([('foo', 'three')])
             parser.parse_args(req)
-            expected = '{"foo": "(Bad choice)  three is not a valid choice"}'
+            expected = {'foo': '(Bad choice)  three is not a valid choice'}
             abort.assert_called_with(400, message=expected)
 
     @patch('flask_restful.abort', side_effect=exceptions.BadRequest('Bad Request'))
@@ -374,8 +374,9 @@ class ReqParseTestCase(unittest.TestCase):
             except exceptions.BadRequest as e:
                 message = e.data['message']
 
-            self.assertEquals(message, (u'{"foo": "Missing required parameter in the '
-                                        'post body or the query string"}'))
+            self.assertEquals(message, ({'foo': 'Missing required parameter in '
+                                                'the post body or the query '
+                                                'string'}))
 
             parser = RequestParser()
             parser.add_argument("bar", required=True, location=['values', 'cookies'])
@@ -384,9 +385,10 @@ class ReqParseTestCase(unittest.TestCase):
                 parser.parse_args(req)
             except exceptions.BadRequest as e:
                 message = e.data['message']
-            self.assertEquals(message, (u'{"bar": "Missing required parameter '
-                                    'in the post body or the query string or the '
-                                    'request\'s cookies"}'))
+            self.assertEquals(message, ({'bar': 'Missing required parameter in '
+                                                'the post body or the query '
+                                                'string or the request\'s '
+                                                'cookies'}))
 
     def test_parse_error_bundling(self):
         app = Flask(__name__)
@@ -403,11 +405,12 @@ class ReqParseTestCase(unittest.TestCase):
                 parser.parse_args(req)
             except exceptions.BadRequest as e:
                 message = e.data['message']
-            error_message = ('{"foo": "Missing required parameter in the '
-                'post body or the query string", "bar": "Missing required '
-                'parameter in the post body or the query string or the '
-                'request\'s cookies"}')
-            self.assertEquals(message, json.loads(error_message))
+            error_message = {'foo': 'Missing required parameter in the post '
+                                    'body or the query string',
+                             'bar': 'Missing required parameter in the post '
+                                    'body or the query string or the '
+                                    'request\'s cookies'}
+            self.assertEquals(message, error_message)
 
     def test_parse_error_bundling_w_parser_arg(self):
         app = Flask(__name__)
@@ -424,11 +427,12 @@ class ReqParseTestCase(unittest.TestCase):
                 parser.parse_args(req)
             except exceptions.BadRequest as e:
                 message = e.data['message']
-            error_message = ('{"foo": "Missing required parameter in the '
-                'post body or the query string", "bar": "Missing required '
-                'parameter in the post body or the query string or the '
-                'request\'s cookies"}')
-            self.assertEquals(message, json.loads(error_message))
+            error_message = {'foo': 'Missing required parameter in the post '
+                                    'body or the query string',
+                             'bar': 'Missing required parameter in the post '
+                             'body or the query string or the request\'s '
+                             'cookies'}
+            self.assertEquals(message, error_message)
 
     def test_parse_default_append(self):
         req = Request.from_values("/bubble")
