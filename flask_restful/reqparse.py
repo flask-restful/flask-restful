@@ -1,6 +1,5 @@
 from copy import deepcopy
 from flask import current_app, request
-import json
 from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
 import flask_restful
@@ -141,7 +140,7 @@ class Argument(object):
         if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
             msg = {self.name: "%s" % (error_msg)}
             return error, msg
-        msg = json.dumps({self.name: "%s" % (error_msg)})
+        msg = {self.name: "%s" % (error_msg)}
         flask_restful.abort(400, message=msg)
 
     def parse(self, request, bundle_errors=False):
@@ -300,7 +299,7 @@ class RequestParser(object):
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
         if errors:
-            flask_restful.abort(400, message=json.dumps(errors))
+            flask_restful.abort(400, message=errors)
 
         if strict and req.unparsed_arguments:
             raise exceptions.BadRequest('Unknown arguments: %s'
