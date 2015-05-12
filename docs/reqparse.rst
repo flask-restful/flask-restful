@@ -177,7 +177,7 @@ The application configuration key is "BUNDLE_ERRORS". For example ::
 
     from flask import Flask
 
-    app = Flaske(__name__)
+    app = Flask(__name__)
     app.config['BUNDLE_ERRRORS] = True
 
 Note: If ``BUNDLE_ERRORS`` is set on the application, setting ``bundle_errors``
