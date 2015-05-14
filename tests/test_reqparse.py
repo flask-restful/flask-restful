@@ -19,13 +19,15 @@ class ReqParseTestCase(unittest.TestCase):
 
     @patch('flask_restful.abort')
     def test_help(self, abort):
-        parser = RequestParser()
-        parser.add_argument('foo', choices=['one', 'two'], help='Bad choice')
-        req = Mock(['values'])
-        req.values = MultiDict([('foo', 'three')])
-        parser.parse_args(req)
-        expected = '[foo]: (Bad choice) three is not a valid choice'
-        abort.assert_called_with(400, message=expected)
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument('foo', choices=['one', 'two'], help='Bad choice')
+            req = Mock(['values'])
+            req.values = MultiDict([('foo', 'three')])
+            parser.parse_args(req)
+            expected = {'foo': '(Bad choice)  three is not a valid choice'}
+            abort.assert_called_with(400, message=expected)
 
     @patch('flask_restful.abort', side_effect=exceptions.BadRequest('Bad Request'))
     def test_no_help(self, abort):
@@ -36,8 +38,9 @@ class ReqParseTestCase(unittest.TestCase):
             req.values = MultiDict([('foo', 'three')])
             parser.parse_args(req)
             abort.assert_called_with(400, message='three is not a valid choice')
-
-        self.assertRaises(exceptions.BadRequest, bad_choice)
+        app = Flask(__name__)
+        with app.app_context():
+            self.assertRaises(exceptions.BadRequest, bad_choice)
 
     def test_name(self):
         arg = Argument("foo")
@@ -299,10 +302,12 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(args['foo'], "bar")
 
     def test_parse_foo_operators_four_hunderd(self):
-        parser = RequestParser()
-        parser.add_argument("foo", type=int),
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument("foo", type=int),
 
-        self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(Request.from_values("/bubble?foo=bar")))
+            self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(Request.from_values("/bubble?foo=bar")))
 
     def test_parse_foo_operators_ignore(self):
         parser = RequestParser()
@@ -356,31 +361,78 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(args['foo'], "bar")
 
     def test_parse_required(self):
-        req = Request.from_values("/bubble")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble")
 
-        parser = RequestParser()
-        parser.add_argument("foo", required=True, location='values')
+            parser = RequestParser()
+            parser.add_argument("foo", required=True, location='values')
 
-        message = ''
-        try:
-            parser.parse_args(req)
-        except exceptions.BadRequest as e:
-            message = e.data['message']
+            message = ''
+            try:
+                parser.parse_args(req)
+            except exceptions.BadRequest as e:
+                message = e.data['message']
 
-        self.assertEquals(message, (u'[foo]: Missing required parameter in the '
-                                    'post body or the query string'))
+            self.assertEquals(message, ({'foo': 'Missing required parameter in '
+                                                'the post body or the query '
+                                                'string'}))
 
-        parser = RequestParser()
-        parser.add_argument("bar", required=True, location=['values', 'cookies'])
+            parser = RequestParser()
+            parser.add_argument("bar", required=True, location=['values', 'cookies'])
 
-        try:
-            parser.parse_args(req)
-        except exceptions.BadRequest as e:
-            message = e.data['message']
+            try:
+                parser.parse_args(req)
+            except exceptions.BadRequest as e:
+                message = e.data['message']
+            self.assertEquals(message, ({'bar': 'Missing required parameter in '
+                                                'the post body or the query '
+                                                'string or the request\'s '
+                                                'cookies'}))
 
-        self.assertEquals(message, (u"[bar]: Missing required parameter in the "
-                                    "post body or the query string or the "
-                                    "request's cookies"))
+    def test_parse_error_bundling(self):
+        app = Flask(__name__)
+        app.config['BUNDLE_ERRORS']=True
+        with app.app_context():
+            req = Request.from_values("/bubble")
+
+            parser = RequestParser()
+            parser.add_argument("foo", required=True, location='values')
+            parser.add_argument("bar", required=True, location=['values', 'cookies'])
+
+            message = ''
+            try:
+                parser.parse_args(req)
+            except exceptions.BadRequest as e:
+                message = e.data['message']
+            error_message = {'foo': 'Missing required parameter in the post '
+                                    'body or the query string',
+                             'bar': 'Missing required parameter in the post '
+                                    'body or the query string or the '
+                                    'request\'s cookies'}
+            self.assertEquals(message, error_message)
+
+    def test_parse_error_bundling_w_parser_arg(self):
+        app = Flask(__name__)
+        app.config['BUNDLE_ERRORS']=False
+        with app.app_context():
+            req = Request.from_values("/bubble")
+
+            parser = RequestParser(bundle_errors=True)
+            parser.add_argument("foo", required=True, location='values')
+            parser.add_argument("bar", required=True, location=['values', 'cookies'])
+
+            message = ''
+            try:
+                parser.parse_args(req)
+            except exceptions.BadRequest as e:
+                message = e.data['message']
+            error_message = {'foo': 'Missing required parameter in the post '
+                                    'body or the query string',
+                             'bar': 'Missing required parameter in the post '
+                             'body or the query string or the request\'s '
+                             'cookies'}
+            self.assertEquals(message, error_message)
 
     def test_parse_default_append(self):
         req = Request.from_values("/bubble")
@@ -447,20 +499,24 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(args['foo'], "bat")
 
     def test_parse_choices(self):
-        req = Request.from_values("/bubble?foo=bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar")
 
-        parser = RequestParser()
-        parser.add_argument("foo", choices=["bat"]),
+            parser = RequestParser()
+            parser.add_argument("foo", choices=["bat"]),
 
-        self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
+            self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
 
     def test_parse_choices_sensitive(self):
-        req = Request.from_values("/bubble?foo=BAT")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=BAT")
 
-        parser = RequestParser()
-        parser.add_argument("foo", choices=["bat"], case_sensitive=True),
+            parser = RequestParser()
+            parser.add_argument("foo", choices=["bat"], case_sensitive=True),
 
-        self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
+            self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
 
     def test_parse_choices_insensitive(self):
         req = Request.from_values("/bubble?foo=BAT")
