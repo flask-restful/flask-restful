@@ -42,9 +42,18 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(http_status_message(200), 'OK')
         self.assertEquals(http_status_message(404), 'Not Found')
 
-    def test_unauthorized(self):
+    def test_unauthorized_no_challenge_by_default(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
+        response = Mock()
+        response.headers = {}
+        with app.test_request_context('/foo'):
+            response = api.unauthorized(response)
+        self.assertNotIn('WWW-Autheneticate', response.headers)
+
+    def test_unauthorized(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
         response = Mock()
         response.headers = {}
         with app.test_request_context('/foo'):
@@ -55,16 +64,28 @@ class APITestCase(unittest.TestCase):
     def test_unauthorized_custom_realm(self):
         app = Flask(__name__)
         app.config['HTTP_BASIC_AUTH_REALM'] = 'Foo'
-        api = flask_restful.Api(app)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
         response = Mock()
         response.headers = {}
         with app.test_request_context('/foo'):
             response = api.unauthorized(response)
         self.assertEquals(response.headers['WWW-Authenticate'], 'Basic realm="Foo"')
 
-    def test_handle_error_401_sends_challege_default_realm(self):
+    def test_handle_error_401_no_challenge_by_default(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
+        exception = Mock()
+        exception.code = 401
+        exception.data = {'foo': 'bar'}
+
+        with app.test_request_context('/foo'):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 401)
+            self.assertNotIn('WWW-Authenticate', resp.headers)
+
+    def test_handle_error_401_sends_challege_default_realm(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
         exception = Mock()
         exception.code = 401
         exception.data = {'foo': 'bar'}
@@ -78,7 +99,7 @@ class APITestCase(unittest.TestCase):
     def test_handle_error_401_sends_challege_configured_realm(self):
         app = Flask(__name__)
         app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
-        api = flask_restful.Api(app)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
         exception = Mock()
         exception.code = 401
         exception.data = {'foo': 'bar'}
@@ -346,7 +367,7 @@ class APITestCase(unittest.TestCase):
 
     def test_handle_auth(self):
         app = Flask(__name__)
-        api = flask_restful.Api(app)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
 
         exception = Mock()
         exception.code = 401

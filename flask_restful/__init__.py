@@ -57,6 +57,9 @@ class Api(object):
     :type decorators: list
     :param catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
+    :param serve_challenge_on_401: Whether to serve a challenge response to
+        clients on receiving 401. This usually leads to a username/password
+        popup in web browers.
     :param url_part_order: A string that controls the order that the pieces
         of the url are concatenated when the full url is constructed.  'b'
         is the blueprint (or blueprint registration) prefix, 'a' is the api
@@ -70,13 +73,15 @@ class Api(object):
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False, url_part_order='bae', errors=None):
+                 catch_all_404s=False, serve_challenge_on_401=False,
+                 url_part_order='bae', errors=None):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
+        self.serve_challenge_on_401 = serve_challenge_on_401
         self.url_part_order = url_part_order
         self.errors = errors or {}
         self.blueprint_setup = None
@@ -520,10 +525,11 @@ class Api(object):
     def unauthorized(self, response):
         """ Given a response, change it to ask for credentials """
 
-        realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
-        challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+        if self.serve_challenge_on_401:
+            realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
+            challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
 
-        response.headers['WWW-Authenticate'] = challenge
+            response.headers['WWW-Authenticate'] = challenge
         return response
 
 
