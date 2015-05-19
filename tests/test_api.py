@@ -14,7 +14,7 @@ import flask_restful.fields
 from flask_restful import OrderedDict
 from json import dumps, loads
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals, assert_true  # you need it for tests in form of continuations
+from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
 import six
 
 
@@ -49,7 +49,7 @@ class APITestCase(unittest.TestCase):
         response.headers = {}
         with app.test_request_context('/foo'):
             response = api.unauthorized(response)
-        self.assertNotIn('WWW-Autheneticate', response.headers)
+        assert_false('WWW-Autheneticate' in response.headers)
 
     def test_unauthorized(self):
         app = Flask(__name__)
@@ -81,7 +81,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/foo'):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 401)
-            self.assertNotIn('WWW-Authenticate', resp.headers)
+            assert_false('WWW-Autheneticate' in resp.headers)
 
     def test_handle_error_401_sends_challege_default_realm(self):
         app = Flask(__name__)
