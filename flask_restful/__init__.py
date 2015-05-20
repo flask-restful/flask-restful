@@ -365,6 +365,14 @@ class Api(object):
             Can be used to reference this route in :class:`fields.Url` fields
         :type endpoint: str
 
+        :param resource_class_args: args to be forwarded to the constructor of
+            the resource.
+        :type resource_class_args: tuple
+
+        :param resource_class_kwargs: kwargs to be forwarded to the constructor
+            of the resource.
+        :type resource_class_kwargs: dict
+
         Additional keyword arguments not specified above will be passed as-is
         to :meth:`flask.Flask.add_url_rule`.
 
@@ -403,6 +411,8 @@ class Api(object):
     def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
+        resource_class_args = kwargs.pop('resource_class_args', ())
+        resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
 
         if endpoint in app.view_functions.keys():
             previous_view_class = app.view_functions[endpoint].__dict__['view_class']
@@ -413,7 +423,8 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
-        resource_func = self.output(resource.as_view(endpoint))
+        resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
+            **resource_class_kwargs))
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)

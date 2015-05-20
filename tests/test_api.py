@@ -636,6 +636,26 @@ class APITestCase(unittest.TestCase):
                                             view_func=api.output(),
                                             defaults={"bar": "baz"})
 
+    def test_add_resource_forward_resource_class_parameters(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class Foo(flask_restful.Resource):
+            def __init__(self, *args, **kwargs):
+                self.one = args[0]
+                self.two = kwargs['secret_state']
+
+            def get(self):
+                return "{0} {1}".format(self.one, self.two)
+
+        api.add_resource(Foo, '/foo',
+                resource_class_args=('wonderful',),
+                resource_class_kwargs={'secret_state': 'slurm'})
+
+        with app.test_client() as client:
+            foo = client.get('/foo')
+            self.assertEquals(foo.data, b'"wonderful slurm"')
+
     def test_output_unpack(self):
 
         def make_empty_response():
