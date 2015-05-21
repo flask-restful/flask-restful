@@ -173,9 +173,6 @@ class TypesTestCase(unittest.TestCase):
     def test_date_later_than_1900(self):
         assert_equal(inputs.date("1900-01-01"), datetime(1900, 1, 1))
 
-    def test_date_too_early(self):
-        assert_raises(ValueError, lambda: inputs.date("0001-01-01"))
-
     def test_date_input_error(self):
         assert_raises(ValueError, lambda: inputs.date("2008-13-13"))
 
