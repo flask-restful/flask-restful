@@ -167,7 +167,7 @@ Using the :class:`reqparse` module also gives you sane error messages for
 free. If an argument fails to pass validation, Flask-RESTful will respond with
 a 400 Bad Request and a response highlighting the error. ::
 
-    $ curl -d 'rate=foo' http://127.0.0.1:5000/
+    $ curl -d 'rate=foo' http://127.0.0.1:5000/todos
     {'status': 400, 'message': 'foo cannot be converted to int'}
 
 
