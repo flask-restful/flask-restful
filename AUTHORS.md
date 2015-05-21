@@ -71,6 +71,7 @@ A huge thanks to all of our contributors:
 - kelvinhammond
 - lyschoening
 - mailto1587
+- mikehwang
 - mniebla
 - mozillazg
 - muchosalsa
