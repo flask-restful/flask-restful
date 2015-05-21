@@ -274,7 +274,7 @@ class Api(object):
         """
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
-        if not hasattr(e, 'code') and current_app.propagate_exceptions:
+        if not isinstance(e, HTTPException) and current_app.propagate_exceptions:
             exc_type, exc_value, tb = sys.exc_info()
             if exc_value is e:
                 raise
