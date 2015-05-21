@@ -244,3 +244,33 @@ Finally, we used the :class:`fields.Url` field type. ::
 It takes as its first parameter the name of the endpoint associated with the
 urls of the objects in the ``links`` sub-object.  Passing ``absolute=True``
 ensures that the generated urls will have the hostname included.
+
+
+Passing Constructor Parameters Into Resources
+---------------------------------------------
+Your :class:`Resource` implementation may require outside dependencies. Those
+dependencies are best passed-in through the constructor to loosely couple each
+other. The :meth:`Api.add_resource` method has two keyword arguments:
+`resource_class_args` and `resource_class_kwargs`. Their values will be forwarded
+and passed into your Resource implementation's constructor.
+
+So you could have a :class:`Resource`: ::
+
+    from flask_restful import Resource
+
+    class TodoNext(Resource):
+        def __init__(**kwargs):
+            # smart_engine is a black box dependency
+            self.smart_engine = kwargs['smart_engine']
+
+        def get(self):
+            return self.smart_engine.next_todo()
+
+You can inject the required dependency into TodoNext like so: ::
+
+    smart_engine = SmartEngine()
+
+    api.add_resource(TodoNext, '/next',
+        resource_class_kwargs={ 'smart_engine': smart_engine })
+
+Same idea applies for forwarding `args`.
