@@ -251,7 +251,7 @@ Passing Constructor Parameters Into Resources
 Your :class:`Resource` implementation may require outside dependencies. Those
 dependencies are best passed-in through the constructor to loosely couple each
 other. The :meth:`Api.add_resource` method has two keyword arguments:
-`resource_class_args` and `resource_class_kwargs`. Their values will be forwarded
+``resource_class_args`` and ``resource_class_kwargs``. Their values will be forwarded
 and passed into your Resource implementation's constructor.
 
 So you could have a :class:`Resource`: ::
