@@ -9,23 +9,24 @@ Version 0.3.3
 
 Released May 22, 2015
 
-- Disable challenge on 401 by default (THIS IS A BREAKING CHANGE, albeit a very small one with behavior that probably no one depended upon. You can easily change this back to the old way).
+- Disable [challenge on 401](https://github.com/flask-restful/flask-restful/commit/fe53f49bdc28dd83ee3acbeb0a313b411411e377)
+  by default (**THIS IS A BREAKING CHANGE**, albeit a very small one with behavior that probably no one depended upon. You can easily change this back to the old way).
 - Doc fixes ([#404](https://github.com/flask-restful/flask-restful/pull/404), [#406](https://github.com/flask-restful/flask-restful/pull/406), [#436](https://github.com/flask-restful/flask-restful/pull/436), misc. other commits)
 - Fix truncation of microseconds in iso8601 datetime output ([#368](https://github.com/flask-restful/flask-restful/pull/405))
+- `null` arguments from JSON no longer cast to string ([#390](https://github.com/flask-restful/flask-restful/pull/390))
 - Made list fields work with classes ([#409](https://github.com/flask-restful/flask-restful/pull/409))
-- fix url_for when used with Blueprints ([#410](https://github.com/flask-restful/flask-restful/pull/410))
-- add CORS "Access-Control-Expose-Headers" support ([#412](https://github.com/flask-restful/flask-restful/pull/412))
+- Fix `url_for()` when used with Blueprints ([#410](https://github.com/flask-restful/flask-restful/pull/410))
+- Add CORS "Access-Control-Expose-Headers" support ([#412](https://github.com/flask-restful/flask-restful/pull/412))
 - Fix class references in RequestParser ([#414](https://github.com/flask-restful/flask-restful/pull/414))
 - Allow any callables to be used as lazy attributes ([#417](https://github.com/flask-restful/flask-restful/pull/417))
-- fix references to flask.ext.*
+- Fix references to `flask.ext.*` ([#420](https://github.com/flask-restful/flask-restful/issues/420))
 - Trim support with fixes ([#428](https://github.com/flask-restful/flask-restful/pull/428))
 - Added ability to pass-in parameters into Resource constructors ([#444](https://github.com/flask-restful/flask-restful/pull/444))
 - Fix custom type docs on "Intermediate usage" and docstring ([#434](https://github.com/flask-restful/flask-restful/pull/434))
-- Fixed problem with deepcopy ([#435](https://github.com/flask-restful/flask-restful/pull/435))
-- use find_packages to get all the flask_restful directories ([#1](https://github.com/flask-restful/flask-restful/pull/1))
+- Fixed problem with `RequestParser.copy` ([#435](https://github.com/flask-restful/flask-restful/pull/435))
 - Feature/error bundling ([#431](https://github.com/flask-restful/flask-restful/pull/431))
-- Explicitly check the class type for propagate_exceptions ([#445](https://github.com/flask-restful/flask-restful/pull/445))
-- Remove min. year limit 1900 in inputs date func ([#446](https://github.com/flask-restful/flask-restful/pull/446))
+- Explicitly check the class type for `propagate_exceptions` ([#445](https://github.com/flask-restful/flask-restful/pull/445))
+- Remove min. year limit 1900 in `inputs.date` ([#446](https://github.com/flask-restful/flask-restful/pull/446))
 
 Version 0.3.2
 -------------
