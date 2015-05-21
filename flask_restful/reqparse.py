@@ -57,8 +57,8 @@ class Argument(object):
     :param help: A brief description of the argument, returned in the
         response when the argument is invalid with the name of the argument and
         the message passed to any exception raised by a type converter.
-    :param bool case_sensitive: Whether the arguments in the request are
-        case sensitive or not
+    :param bool case_sensitive: Whether argument values in the request are
+        case sensitive or not (this will convert all values to lowercase)
     :param bool store_missing: Whether the arguments default value should
         be stored if the argument is missing from the request.
     :param bool trim: If enabled, trims whitespace around the argument.
