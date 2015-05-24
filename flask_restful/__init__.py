@@ -287,7 +287,7 @@ class Api(object):
                 raise e
         code = getattr(e, 'code', 500)
         data = getattr(e, 'data', error_data(code))
-        headers = {}
+        headers = getattr(e, 'headers', {})
 
         if code >= 500:
 
