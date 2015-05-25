@@ -17,6 +17,7 @@ from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
 from flask_restful.utils.mail_error import email_exception
+from flask_mail import Mail as __Mail
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
@@ -117,6 +118,8 @@ class Api(object):
             self._init_app(app)
         else:
             self.blueprint = app
+
+        self.mail = __Mail(app)
 
     def _complete_url(self, url_part, registration_prefix):
         """This method is used to defer the construction of the final url in
@@ -264,11 +267,14 @@ class Api(object):
         """
         if self._has_fr_route():
             try:
+                email_exception(self.mail, e)
+            except:
+                pass
+
+            try:
                 return self.handle_error(e)
             except Exception:
                 pass  # Fall through to original handler
-            else:
-                email_exception(e)
 
         return original_handler(e)
 

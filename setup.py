@@ -10,7 +10,7 @@ requirements = [
     'Flask>=0.8',
     'six>=1.3.0',
     'pytz',
-    'Flask-ErrorMail==0.2.2'
+    'Flask-Mail==0.9.1'
 ]
 if PY26:
     requirements.append('ordereddict')

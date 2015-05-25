@@ -6,14 +6,12 @@ import traceback
 
 from flask import request as __request
 from flask import current_app
-from flask_mail import Mail as __Mail
 from flask_mail import Message as __Message
 
 
-mail = __Mail(current_app)
 
 # create a closure to track the sender and recipients
-def email_exception(exception):
+def email_exception(mail, exception):
     try:
         current_app.config['DEFAULT_MAIL_SENDER']
         current_app.config['ADMINISTRATORS']
@@ -37,5 +35,7 @@ def email_exception(exception):
         msg_contents.append('%s: %s' % (key, environ.get(key)))
 
     msg.body = '\n'.join(msg_contents) + '\n'
-
-    mail.send(msg)
+    try:
+        mail.send(msg)
+    except:
+         current_app.logger.exception("Error send email")
