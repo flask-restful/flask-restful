@@ -119,8 +119,6 @@ class Api(object):
         else:
             self.blueprint = app
 
-        from flask_mail import Mail as __Mail
-        self.mail = __Mail(app)
 
     def _complete_url(self, url_part, registration_prefix):
         """This method is used to defer the construction of the final url in
@@ -195,6 +193,10 @@ class Api(object):
         :param app: The flask application object
         :type app: flask.Flask
         """
+
+        from flask_mail import Mail as __Mail
+        self.mail = __Mail(app)
+
         app.handle_exception = partial(self.error_router, app.handle_exception)
         app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
 
