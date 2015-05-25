@@ -16,7 +16,7 @@ import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
-
+from flask_restful.utils.mail_error import email_exception
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
@@ -267,6 +267,9 @@ class Api(object):
                 return self.handle_error(e)
             except Exception:
                 pass  # Fall through to original handler
+            else:
+                email_exception(e)
+
         return original_handler(e)
 
     def handle_error(self, e):
