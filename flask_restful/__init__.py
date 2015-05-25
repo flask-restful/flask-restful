@@ -17,7 +17,7 @@ from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
 from flask_restful.utils.mail_error import email_exception
-from flask_mail import Mail as __Mail
+
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
@@ -119,6 +119,7 @@ class Api(object):
         else:
             self.blueprint = app
 
+        from flask_mail import Mail as __Mail
         self.mail = __Mail(app)
 
     def _complete_url(self, url_part, registration_prefix):
