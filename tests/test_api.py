@@ -76,6 +76,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         exception = Mock()
         exception.code = 401
+        exception.headers = {}
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context('/foo'):
@@ -88,6 +89,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app, serve_challenge_on_401=True)
         exception = Mock()
         exception.code = 401
+        exception.headers = {}
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context('/foo'):
@@ -102,6 +104,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app, serve_challenge_on_401=True)
         exception = Mock()
         exception.code = 401
+        exception.headers = {}
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context('/foo'):
@@ -356,6 +359,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 500
+        exception.headers = {}
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context("/foo"):
@@ -371,6 +375,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 401
+        exception.headers = {}
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context("/foo"):
@@ -425,6 +430,7 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 400
+        exception.headers = {}
         exception.data = {'foo': 'bar'}
 
         recorded = []
@@ -447,11 +453,13 @@ class APITestCase(unittest.TestCase):
 
         exception = Mock()
         exception.code = 400
+        exception.headers = {"X-Something": "OK"}
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 400)
+            self.assertEqual(resp.headers.get("X-Something"), "OK")
             self.assertEquals(resp.data.decode(), dumps({
                 'foo': 'bar',
             }))
@@ -464,6 +472,7 @@ class APITestCase(unittest.TestCase):
         exception = Mock()
         exception.code = 404
         exception.data = {"status": 404, "message": "Not Found"}
+        exception.headers = {}
         api.add_resource(view, '/foo', endpoint='bor')
         api.add_resource(view, '/fee', endpoint='bir')
         api.add_resource(view, '/fii', endpoint='ber')
