@@ -4,6 +4,7 @@ Authors
 A huge thanks to all of our contributors:
 
 
+- Alec Reiter
 - Alex Gaynor
 - Alex M
 - Alex Morken
