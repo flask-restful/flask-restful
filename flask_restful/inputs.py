@@ -215,15 +215,21 @@ def positive(value, argument='argument'):
     return value
 
 
-def int_range(low, high, value, argument='argument'):
+class int_range(object):
     """ Restrict input to an integer in a range (inclusive) """
-    value = _get_integer(value)
-    if value < low or value > high:
-        error = ('Invalid {arg}: {val}. {arg} must be within the range {lo} - {hi}'
-                 .format(arg=argument, val=value, lo=low, hi=high))
-        raise ValueError(error)
+    def __init__(self, low, high, argument='argument'):
+        self.low = low
+        self.high = high
+        self.argument = argument
 
-    return value
+    def __call__(self, value):
+        value = _get_integer(value)
+        if value < self.low or value > self.high:
+            error = ('Invalid {arg}: {val}. {arg} must be within the range {lo} - {hi}'
+                     .format(arg=self.argument, val=value, lo=self.low, hi=self.high))
+            raise ValueError(error)
+
+        return value
 
 
 def boolean(value):
