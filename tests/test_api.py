@@ -3,10 +3,10 @@ import json
 from flask import Flask, Blueprint, redirect, views
 from flask.signals import got_request_exception, signals_available
 try:
-    from mock import Mock, patch
+    from mock import Mock
 except:
     # python3
-    from unittest.mock import Mock, patch
+    from unittest.mock import Mock
 import flask
 import werkzeug
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
@@ -14,7 +14,7 @@ from flask_restful.utils import http_status_message, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps, loads
+from json import dumps, loads, JSONEncoder
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
 import six
@@ -115,7 +115,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/foo'):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 400)
-            self.assertEquals(resp.get_data(), b'{"message": "x"}')
+            self.assertEquals(resp.get_data(), b'{"message": "x"}\n')
 
 
     def test_marshal(self):
@@ -359,7 +359,9 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(Exception())
             self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.data.decode(), dumps({"message": "Internal Server Error"}))
+            self.assertEquals(resp.data.decode(), dumps({
+                "message": "Internal Server Error"
+            }) + "\n")
 
     def test_handle_error_with_code(self):
         app = Flask(__name__)
@@ -372,7 +374,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.data.decode(), dumps({"foo": "bar"}))
+            self.assertEquals(resp.data.decode(), dumps({"foo": "bar"}) + "\n")
 
     def test_handle_auth(self):
         app = Flask(__name__)
@@ -381,7 +383,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo"):
             resp = api.handle_error(Unauthorized())
             self.assertEquals(resp.status_code, 401)
-            expected_data = dumps({'message': Unauthorized.description})
+            expected_data = dumps({'message': Unauthorized.description}) + "\n"
             self.assertEquals(resp.data.decode(), expected_data)
 
             self.assertTrue('WWW-Authenticate' in resp.headers)
@@ -453,7 +455,7 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.data.decode(), dumps({
                 'message': BadRequest.description,
-            }))
+            }) + "\n")
 
     def test_handle_smart_errors(self):
         app = Flask(__name__)
@@ -463,6 +465,13 @@ class APITestCase(unittest.TestCase):
         api.add_resource(view, '/foo', endpoint='bor')
         api.add_resource(view, '/fee', endpoint='bir')
         api.add_resource(view, '/fii', endpoint='ber')
+
+        with app.test_request_context("/faaaaa"):
+            resp = api.handle_error(NotFound())
+            self.assertEquals(resp.status_code, 404)
+            self.assertEquals(resp.data.decode(), dumps({
+                "message": NotFound.description,
+            }) + "\n")
 
         with app.test_request_context("/fOo"):
             resp = api.handle_error(NotFound())
@@ -476,7 +485,7 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data.decode(), dumps({
                 "message": NotFound.description
-            }))
+            }) + "\n")
 
     def test_error_router_falls_back_to_original(self):
         """Verify that if an exception occurs in the Flask-RESTful error handler,
@@ -576,9 +585,9 @@ class APITestCase(unittest.TestCase):
 
         with app.test_client() as client:
             foo1 = client.get('/foo')
-            self.assertEquals(foo1.data, b'"foo1"')
+            self.assertEquals(foo1.data, b'"foo1"\n')
             foo2 = client.get('/foo/toto')
-            self.assertEquals(foo2.data, b'"foo1"')
+            self.assertEquals(foo2.data, b'"foo1"\n')
 
     def test_add_resource(self):
         app = Mock(flask.Flask)
@@ -632,7 +641,7 @@ class APITestCase(unittest.TestCase):
 
         with app.test_client() as client:
             foo = client.get('/foo')
-            self.assertEquals(foo.data, b'"wonderful slurm"')
+            self.assertEquals(foo.data, b'"wonderful slurm"\n')
 
     def test_output_unpack(self):
 
@@ -646,7 +655,7 @@ class APITestCase(unittest.TestCase):
             wrapper = api.output(make_empty_response)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
-            self.assertEquals(resp.data.decode(), '{"foo": "bar"}')
+            self.assertEquals(resp.data.decode(), '{"foo": "bar"}\n')
 
     def test_output_func(self):
 
@@ -800,34 +809,69 @@ class APITestCase(unittest.TestCase):
             # Assert our trailing newline.
             self.assertTrue(foo.data.endswith(b'\n'))
 
-    def test_will_pass_options_to_json(self):
+    def test_read_json_settings_from_config(self):
+        class TestConfig(object):
+            RESTFUL_JSON = {'indent': 2,
+                            'sort_keys': True,
+                            'separators': (', ', ': ')}
 
+        app = Flask(__name__)
+        app.config.from_object(TestConfig)
+        api = flask_restful.Api(app)
+
+        class Foo(flask_restful.Resource):
+            def get(self):
+                return {'foo': 'bar', 'baz': 'qux'}
+
+        api.add_resource(Foo, '/foo')
+
+        with app.test_client() as client:
+            data = client.get('/foo').data
+
+        expected = b'{\n  "baz": "qux", \n  "foo": "bar"\n}\n'
+
+        self.assertEquals(data, expected)
+
+
+    def test_use_custom_jsonencoder(self):
+        class CabageEncoder(JSONEncoder):
+            def default(self, obj):
+                return 'cabbage'
+
+        class TestConfig(object):
+            RESTFUL_JSON = {'cls': CabageEncoder}
+
+        app = Flask(__name__)
+        app.config.from_object(TestConfig)
+        api = flask_restful.Api(app)
+
+        class Cabbage(flask_restful.Resource):
+            def get(self):
+                return {'frob': object()}
+
+        api.add_resource(Cabbage, '/cabbage')
+
+        with app.test_client() as client:
+            data = client.get('/cabbage').data
+
+        expected = b'{"frob": "cabbage"}\n'
+        self.assertEquals(data, expected)
+
+    def test_json_with_no_settings(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        class Foo1(flask_restful.Resource):
+        class Foo(flask_restful.Resource):
             def get(self):
                 return {'foo': 'bar'}
 
-        api.add_resource(Foo1, '/foo', endpoint='bar')
+        api.add_resource(Foo, '/foo')
 
-        # We patch the representations module here, with two things:
-        #   1. Set the settings dict() with some value
-        #   2. Patch the json.dumps function in the module with a Mock object.
+        with app.test_client() as client:
+            data = client.get('/foo').data
 
-        from flask_restful.representations import json as json_rep
-        json_dumps_mock = Mock(return_value='bar')
-        new_settings = {'indent': 123}
-
-        with patch.multiple(json_rep, dumps=json_dumps_mock,
-                            settings=new_settings):
-            with app.test_client() as client:
-                client.get('/foo')
-
-        # Assert that the function was called with the above settings.
-        data, kwargs = json_dumps_mock.call_args
-        self.assertTrue(json_dumps_mock.called)
-        self.assertEqual(123, kwargs['indent'])
+        expected = b'{"foo": "bar"}\n'
+        self.assertEquals(data, expected)
 
     def test_redirect(self):
         app = Flask(__name__)
@@ -858,7 +902,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 200)
-        self.assertEquals(resp.data.decode('utf-8'), '{"foo": 3.0}')
+        self.assertEquals(resp.data.decode('utf-8'), '{"foo": 3.0}\n')
 
     def test_custom_error_message(self):
         errors = {
