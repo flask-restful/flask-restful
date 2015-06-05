@@ -8,7 +8,7 @@ except:
     from unittest.mock import Mock, patch
 import flask
 import werkzeug
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest
 from flask_restful.utils import http_status_message, error_data, unpack
 import flask_restful
 import flask_restful.fields
@@ -356,42 +356,33 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock(spec=HTTPException)
-        exception.code = 500
-        exception.data = {'foo': 'bar'}
-
         with app.test_request_context("/foo"):
-            resp = api.handle_error(exception)
+            resp = api.handle_error(Exception())
             self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.data.decode(), dumps({
-                'foo': 'bar',
-            }))
+            self.assertEquals(resp.data.decode(), dumps({"status": 500, "message": "Internal Server Error"}))
 
     def test_handle_error_with_code(self):
         app = Flask(__name__)
         api = flask_restful.Api(app, serve_challenge_on_401=True)
 
-        exception = Mock()
-        exception.code = "JSONResponseError"
+        exception = Exception()
+        exception.code = "Not an integer"
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.data.decode(), dumps({"status": 500, "message": "Internal Server Error"}))
+            self.assertEquals(resp.data.decode(), dumps({"foo": "bar"}))
 
     def test_handle_auth(self):
         app = Flask(__name__)
         api = flask_restful.Api(app, serve_challenge_on_401=True)
 
-        exception = Mock(spec=HTTPException)
-        exception.code = 401
-        exception.data = {'foo': 'bar'}
-
         with app.test_request_context("/foo"):
-            resp = api.handle_error(exception)
+            resp = api.handle_error(Unauthorized())
             self.assertEquals(resp.status_code, 401)
-            self.assertEquals(resp.data.decode(), dumps({'foo': 'bar'}))
+            expected_data = dumps({'status': 401, 'message': 'Unauthorized'})
+            self.assertEquals(resp.data.decode(), expected_data)
 
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
@@ -438,9 +429,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock(spec=HTTPException)
-        exception.code = 400
-        exception.data = {'foo': 'bar'}
+        exception = BadRequest()
 
         recorded = []
 
@@ -460,15 +449,12 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock(spec=HTTPException)
-        exception.code = 400
-        exception.data = {'foo': 'bar'}
-
         with app.test_request_context("/foo"):
-            resp = api.handle_error(exception)
+            resp = api.handle_error(BadRequest())
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.data.decode(), dumps({
-                'foo': 'bar',
+                'status': 400,
+                'message': 'Bad Request',
             }))
 
     def test_handle_smart_errors(self):
@@ -491,29 +477,19 @@ class APITestCase(unittest.TestCase):
             }))
 
         with app.test_request_context("/fOo"):
+            del exception.data["message"]
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data.decode(), dumps({
                 "status": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
             }))
 
-        with app.test_request_context("/fOo"):
-            del exception.data["message"]
-            resp = api.handle_error(exception)
-            self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data.decode(), dumps({
-                "status": 404, "message": "You have requested this URI [/fOo] but did you mean /foo ?",
-            }))
-
         app.config['ERROR_404_HELP'] = False
 
         with app.test_request_context("/fOo"):
-            del exception.data["message"]
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data.decode(), dumps({
-                "status": 404
-            }))
+            self.assertEquals(resp.data.decode(), dumps({"status": 404, "message": "Not Found"}))
 
     def test_error_router_falls_back_to_original(self):
         """Verify that if an exception occurs in the Flask-RESTful error handler,

@@ -288,16 +288,14 @@ class Api(object):
 
         if isinstance(e, HTTPException):
             code = e.code
-            data = getattr(e, 'data', error_data(code))
-
+            data = error_data(code)
         else:
             code = 500
-            data = error_data(code)
+            data = getattr(e, 'data', error_data(code))
 
         headers = {}
 
         if code >= 500:
-
             # There's currently a bug in Python3 that disallows calling
             # logging.exception() when an exception hasn't actually be raised
             if sys.exc_info() == (None, None, None):
