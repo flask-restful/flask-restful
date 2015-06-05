@@ -1,5 +1,5 @@
 from copy import deepcopy
-from flask import request
+from flask import current_app, request
 from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
 import flask_restful
@@ -57,8 +57,8 @@ class Argument(object):
     :param help: A brief description of the argument, returned in the
         response when the argument is invalid with the name of the argument and
         the message passed to any exception raised by a type converter.
-    :param bool case_sensitive: Whether the arguments in the request are
-        case sensitive or not
+    :param bool case_sensitive: Whether argument values in the request are
+        case sensitive or not (this will convert all values to lowercase)
     :param bool store_missing: Whether the arguments default value should
         be stored if the argument is missing from the request.
     :param bool trim: If enabled, trims whitespace around the argument.
@@ -126,21 +126,31 @@ class Argument(object):
             except TypeError:
                 return self.type(value)
 
-    def handle_validation_error(self, error):
+    def handle_validation_error(self, error, bundle_errors):
         """Called when an error is raised while parsing. Aborts the request
         with a 400 status and an error message
 
         :param error: the error that was raised
+        :param bundle_errors: do not abort when first error occurs, return a
+            dict with the name of the argument and the error message to be
+            bundled
         """
         help_str = '(%s) ' % self.help if self.help else ''
-        msg = '[%s]: %s%s' % (self.name, help_str, str(error))
+        error_msg = ' '.join([help_str, str(error)]) if help_str else str(error)
+        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+            msg = {self.name: "%s" % (error_msg)}
+            return error, msg
+        msg = {self.name: "%s" % (error_msg)}
         flask_restful.abort(400, message=msg)
 
-    def parse(self, request):
+    def parse(self, request, bundle_errors=False):
         """Parses argument value(s) from the request, converting according to
         the argument's type.
 
         :param request: The flask request object to parse arguments from
+        :param do not abort when first error occurs, return a
+            dict with the name of the argument and the error message to be
+            bundled
         """
         source = self.source(request)
 
@@ -174,14 +184,16 @@ class Argument(object):
                     except Exception as error:
                         if self.ignore:
                             continue
-                        self.handle_validation_error(error)
+                        return self.handle_validation_error(error, bundle_errors)
 
                     if self.choices and value not in self.choices:
+                        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+                            return self.handle_validation_error(
+                                ValueError(u"{0} is not a valid choice".format(
+                                    value)), bundle_errors)
                         self.handle_validation_error(
-                            ValueError(u"{0} is not a valid choice".format(
-                                value
-                            ))
-                        )
+                                ValueError(u"{0} is not a valid choice".format(
+                                    value)), bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -198,7 +210,9 @@ class Argument(object):
                 error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
-            self.handle_validation_error(ValueError(error_msg))
+            if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+                return self.handle_validation_error(ValueError(error_msg), bundle_errors)
+            self.handle_validation_error(ValueError(error_msg), bundle_errors)
 
         if not results:
             if callable(self.default):
@@ -225,14 +239,20 @@ class RequestParser(object):
         parser.add_argument('int_bar', type=int)
         args = parser.parse_args()
 
-    :param bool trim: If enabled, trims whitespace on all arguments in this parser
+    :param bool trim: If enabled, trims whitespace on all arguments in this
+        parser
+    :param bool bundle_errors: If enabled, do not abort when first error occurs,
+        return a dict with the name of the argument and the error message to be
+        bundled and return all validation errors
     """
 
-    def __init__(self, argument_class=Argument, namespace_class=Namespace, trim=False):
+    def __init__(self, argument_class=Argument, namespace_class=Namespace,
+            trim=False, bundle_errors=False):
         self.args = []
         self.argument_class = argument_class
         self.namespace_class = namespace_class
         self.trim = trim
+        self.bundle_errors = bundle_errors
 
     def add_argument(self, *args, **kwargs):
         """Adds an argument to be parsed.
@@ -270,11 +290,16 @@ class RequestParser(object):
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
         req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
-
+        errors = {}
         for arg in self.args:
-            value, found = arg.parse(req)
+            value, found = arg.parse(req, self.bundle_errors)
+            if isinstance(value, ValueError):
+                errors.update(found)
+                found = None
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
+        if errors:
+            flask_restful.abort(400, message=errors)
 
         if strict and req.unparsed_arguments:
             raise exceptions.BadRequest('Unknown arguments: %s'

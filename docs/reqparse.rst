@@ -133,3 +133,52 @@ with :meth:`~reqparse.RequestParser.remove_argument`. For example: ::
 
     parser_copy.remove_argument('foo')
     # parser_copy no longer has 'foo' argument
+
+Error Handling
+--------------
+
+The default way errors are handled by the RequestParser is to abort on the
+first error that occurred.  This can be beneficial when you have arguments that
+might take some time to process.  However, often it is nice to have the errors
+bundled together and sent back to the client all at once.  This behavior can be
+specified either at the Flask application level or on the specific RequestParser
+instance.  To invoke a RequestParser with the bundling errors option, pass in the
+argument ``bundle_errors``.  For example ::
+
+    from flask_restful import RequestParser
+
+    parser = RequestParser(bundle_errors=True)
+    parser.add_argument('foo', type=int, required=True)
+    parser.add_argument('bar', type=int, required=True)
+
+    # If a request comes in not containing both 'foo' and 'bar', the error that
+    # will come back will look something like this.
+
+    {
+     "message":  {
+        "foo": "foo error message",
+        "bar": "bar error message"
+        }
+    }
+
+    # The default behavior would only return the first error
+
+    parser = RequestParser()
+    parser.add_argument('foo', type=int, required=True)
+    parser.add_argument('bar', type=int, required=True)
+
+    {
+         "message":  {
+                 "foo": "foo error message"
+            }
+    }
+
+The application configuration key is "BUNDLE_ERRORS". For example ::
+
+    from flask import Flask
+
+    app = Flask(__name__)
+    app.config['BUNDLE_ERRRORS'] = True
+
+Note: If ``BUNDLE_ERRORS`` is set on the application, setting ``bundle_errors``
+to ``False`` in the RequestParser keyword argument will not work.

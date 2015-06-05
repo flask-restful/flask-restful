@@ -173,9 +173,6 @@ class TypesTestCase(unittest.TestCase):
     def test_date_later_than_1900(self):
         assert_equal(inputs.date("1900-01-01"), datetime(1900, 1, 1))
 
-    def test_date_too_early(self):
-        assert_raises(ValueError, lambda: inputs.date("0001-01-01"))
-
     def test_date_input_error(self):
         assert_raises(ValueError, lambda: inputs.date("2008-13-13"))
 
@@ -202,16 +199,20 @@ class TypesTestCase(unittest.TestCase):
         assert_raises(ValueError, lambda: inputs.positive(-1))
 
     def test_int_range_good(self):
-        assert_equal(3, inputs.int_range(1, 5, 3, 'my_arg'))
+        int_range = inputs.int_range(1, 5)
+        assert_equal(3, int_range(3))
 
     def test_int_range_inclusive(self):
-        assert_equal(5, inputs.int_range(1, 5, 5, 'my_arg'))
+        int_range = inputs.int_range(1, 5)
+        assert_equal(5, int_range(5))
 
     def test_int_range_low(self):
-        assert_raises(ValueError, lambda: inputs.int_range(0, 5, -1, 'my_arg'))
+        int_range = inputs.int_range(0, 5)
+        assert_raises(ValueError, lambda: int_range(-1))
 
     def test_int_range_high(self):
-        assert_raises(ValueError, lambda: inputs.int_range(0, 5, 6, 'my_arg'))
+        int_range = inputs.int_range(0, 5)
+        assert_raises(ValueError, lambda: int_range(6))
 
 
 def test_isointerval():

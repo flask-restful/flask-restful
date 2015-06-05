@@ -57,6 +57,9 @@ class Api(object):
     :type decorators: list
     :param catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
+    :param serve_challenge_on_401: Whether to serve a challenge response to
+        clients on receiving 401. This usually leads to a username/password
+        popup in web browers.
     :param url_part_order: A string that controls the order that the pieces
         of the url are concatenated when the full url is constructed.  'b'
         is the blueprint (or blueprint registration) prefix, 'a' is the api
@@ -70,13 +73,15 @@ class Api(object):
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False, url_part_order='bae', errors=None):
+                 catch_all_404s=False, serve_challenge_on_401=False,
+                 url_part_order='bae', errors=None):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
+        self.serve_challenge_on_401 = serve_challenge_on_401
         self.url_part_order = url_part_order
         self.errors = errors or {}
         self.blueprint_setup = None
@@ -274,22 +279,28 @@ class Api(object):
         """
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
-        if not hasattr(e, 'code') and current_app.propagate_exceptions:
+        if not isinstance(e, HTTPException) and current_app.propagate_exceptions:
             exc_type, exc_value, tb = sys.exc_info()
             if exc_value is e:
                 raise
             else:
                 raise e
-        code = getattr(e, 'code', 500)
-        data = getattr(e,
-                       'data',
-                       {'message': getattr(e, 'description', http_status_message(code))}
-                      )
 
+        if isinstance(e, HTTPException):
+            code = e.code
+            default_data = {
+                'message': getattr(e, 'description', http_status_message(code))
+            }
+        else:
+            code = 500
+            default_data = {
+                'message': http_status_message(code),
+            }
+
+        data = getattr(e, 'data', default_data)
         headers = {}
 
         if code >= 500:
-
             # There's currently a bug in Python3 that disallows calling
             # logging.exception() when an exception hasn't actually be raised
             if sys.exc_info() == (None, None, None):
@@ -298,15 +309,14 @@ class Api(object):
                 current_app.logger.exception("Internal Error")
 
         help_on_404 = current_app.config.get("ERROR_404_HELP", True)
-        if code == 404 and help_on_404 and ('message' not in data or
-                                            data['message'] == HTTP_STATUS_CODES[404]):
+        if code == 404 and help_on_404:
             rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
                           for rule in current_app.url_map.iter_rules()])
             close_matches = difflib.get_close_matches(request.path, rules.keys())
             if close_matches:
                 # If we already have a message, add punctuation and continue it.
                 if "message" in data:
-                    data["message"] += ". "
+                    data["message"] = data["message"].rstrip('.') + '. '
                 else:
                     data["message"] = ""
 
@@ -364,6 +374,14 @@ class Api(object):
             Can be used to reference this route in :class:`fields.Url` fields
         :type endpoint: str
 
+        :param resource_class_args: args to be forwarded to the constructor of
+            the resource.
+        :type resource_class_args: tuple
+
+        :param resource_class_kwargs: kwargs to be forwarded to the constructor
+            of the resource.
+        :type resource_class_kwargs: dict
+
         Additional keyword arguments not specified above will be passed as-is
         to :meth:`flask.Flask.add_url_rule`.
 
@@ -402,6 +420,8 @@ class Api(object):
     def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
+        resource_class_args = kwargs.pop('resource_class_args', ())
+        resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
 
         if endpoint in app.view_functions.keys():
             previous_view_class = app.view_functions[endpoint].__dict__['view_class']
@@ -412,7 +432,8 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
-        resource_func = self.output(resource.as_view(endpoint))
+        resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
+            **resource_class_kwargs))
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
@@ -524,10 +545,11 @@ class Api(object):
     def unauthorized(self, response):
         """ Given a response, change it to ask for credentials """
 
-        realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
-        challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+        if self.serve_challenge_on_401:
+            realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
+            challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
 
-        response.headers['WWW-Authenticate'] = challenge
+            response.headers['WWW-Authenticate'] = challenge
         return response
 
 

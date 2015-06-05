@@ -5,8 +5,11 @@ A huge thanks to all of our contributors:
 
 
 - Alex Gaynor
+- Alex M
+- Alex Morken
 - Andrew Dunham
 - Andriy Yurchuk
+- Anil Kulkarni
 - Antonio Dourado
 - Antonio Herraiz
 - Artur Rodrigues
@@ -26,7 +29,6 @@ A huge thanks to all of our contributors:
 - Doug Black
 - Evan Dale Aromin
 - Frank Stratton
-- Frank Stratton ☺
 - Garret Raziel
 - Gary Belvin
 - Gilles Dartiguelongue
@@ -37,9 +39,12 @@ A huge thanks to all of our contributors:
 - James Ogura
 - Joakim Ekberg
 - Johannes
+- Jordan Yelloz
 - Josh Friend
 - Joshua C. Randall
 - Joshua Randall
+- José Fernández Ramos
+- Juan Rossi
 - JuneHyeon Bae
 - Kamil Gałuszka
 - Kevin Burke
@@ -48,9 +53,12 @@ A huge thanks to all of our contributors:
 - Kyle Conroy
 - Lance Ingle
 - Lars Holm Nielsen
+- Luiz Armesto
 - Marek Hlobil
 - Matt Wright
 - Max Peterson
+- Maxim
+- Michael Hwang
 - Miguel Grinberg
 - Mihai Tomescu
 - Pavel Tyslyatsky
@@ -61,14 +69,19 @@ A huge thanks to all of our contributors:
 - Robert Warner
 - Ryan Horn
 - Sam Kimbrel
+- Sander Sink
 - Sasha Baranov
 - Saul Diez-Guerra
 - Sven-Hendrik Haase
+- Usman Ehtesham Gul
 - Victor Neo
+- Vladimir Pal
 - WooParadog
 - Yaniv Aknin
 - bret barker
+- k-funk
 - kelvinhammond
+- kenjones
 - lyschoening
 - mailto1587
 - mniebla
