@@ -420,7 +420,11 @@ class Api(object):
         resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
 
         if endpoint in app.view_functions.keys():
-            previous_view_class = app.view_functions[endpoint].__dict__['view_class']
+            try:
+                previous_view_class = app.view_functions[endpoint].__dict__['view_class']
+            except:
+                print(endpoint, app.view_functions[endpoint])
+                raise
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
             if previous_view_class != resource:
@@ -432,7 +436,9 @@ class Api(object):
             **resource_class_kwargs))
 
         for decorator in self.decorators:
+            methods = resource_func.methods
             resource_func = decorator(resource_func)
+            resource_func.methods = methods
 
         for url in urls:
             # If this Api has a blueprint
