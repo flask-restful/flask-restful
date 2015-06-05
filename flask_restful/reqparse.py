@@ -1,5 +1,5 @@
 from copy import deepcopy
-from flask import request
+from flask import current_app, request
 from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
 import flask_restful
@@ -39,7 +39,7 @@ class Argument(object):
     :param default: The value produced if the argument is absent from the
         request.
     :param dest: The name of the attribute to be added to the object
-        returned by :py:meth:`~reqparse.RequestParser.parse_args()`.
+        returned by :meth:`~reqparse.RequestParser.parse_args()`.
     :param bool required: Whether or not the argument may be omitted (optionals
         only).
     :param action: The basic type of action to be taken when this argument
@@ -47,26 +47,27 @@ class Argument(object):
     :param ignore: Whether to ignore cases where the argument fails type
         conversion
     :param type: The type to which the request argument should be
-        converted. If a type raises a ValidationError, the message in the
-        error will be returned in the response. Defaults to :py:class:`unicode`
-        in python2 and :py:class:`str` in python3.
-    :param location: The attributes of the :py:class:`flask.Request` object
+        converted. If a type raises an exception, the message in the
+        error will be returned in the response. Defaults to :class:`unicode`
+        in python2 and :class:`str` in python3.
+    :param location: The attributes of the :class:`flask.Request` object
         to source the arguments from (ex: headers, args, etc.), can be an
         iterator. The last item listed takes precedence in the result set.
     :param choices: A container of the allowable values for the argument.
     :param help: A brief description of the argument, returned in the
-        response when the argument is invalid. This takes precedence over
-        the message passed to a ValidationError raised by a type converter.
-    :param bool case_sensitive: Whether the arguments in the request are
-        case sensitive or not
+        response when the argument is invalid with the name of the argument and
+        the message passed to any exception raised by a type converter.
+    :param bool case_sensitive: Whether argument values in the request are
+        case sensitive or not (this will convert all values to lowercase)
     :param bool store_missing: Whether the arguments default value should
         be stored if the argument is missing from the request.
+    :param bool trim: If enabled, trims whitespace around the argument.
     """
 
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True, store_missing=True):
+                 case_sensitive=True, store_missing=True, trim=False):
         self.name = name
         self.default = default
         self.dest = dest
@@ -80,6 +81,7 @@ class Argument(object):
         self.case_sensitive = case_sensitive
         self.operators = operators
         self.store_missing = store_missing
+        self.trim = trim
 
     def source(self, request):
         """Pulls values off the request in the provided location
@@ -104,9 +106,14 @@ class Argument(object):
         return MultiDict()
 
     def convert(self, value, op):
-        # check if we're expecting a string and the value is `None`
-        if value is None and inspect.isclass(self.type) and issubclass(self.type, six.string_types):
+        # Don't cast None
+        if value is None:
             return None
+
+        # and check if we're expecting a filestorage and haven't overridden `type`
+        # (required because the below instantiation isn't valid for FileStorage)
+        elif isinstance(value, FileStorage) and self.type == FileStorage:
+            return value
 
         try:
             return self.type(value, self.name, op)
@@ -119,20 +126,31 @@ class Argument(object):
             except TypeError:
                 return self.type(value)
 
-    def handle_validation_error(self, error):
+    def handle_validation_error(self, error, bundle_errors):
         """Called when an error is raised while parsing. Aborts the request
         with a 400 status and an error message
 
         :param error: the error that was raised
+        :param bundle_errors: do not abort when first error occurs, return a
+            dict with the name of the argument and the error message to be
+            bundled
         """
-        msg = self.help if self.help is not None else str(error)
+        help_str = '(%s) ' % self.help if self.help else ''
+        error_msg = ' '.join([help_str, str(error)]) if help_str else str(error)
+        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+            msg = {self.name: "%s" % (error_msg)}
+            return error, msg
+        msg = {self.name: "%s" % (error_msg)}
         flask_restful.abort(400, message=msg)
 
-    def parse(self, request):
+    def parse(self, request, bundle_errors=False):
         """Parses argument value(s) from the request, converting according to
         the argument's type.
 
         :param request: The flask request object to parse arguments from
+        :param do not abort when first error occurs, return a
+            dict with the name of the argument and the error message to be
+            bundled
         """
         source = self.source(request)
 
@@ -152,25 +170,30 @@ class Argument(object):
                     values = [source.get(name)]
 
                 for value in values:
-                    if not isinstance(value, FileStorage):
-                        if not self.case_sensitive:
-                            value = value.lower()
-                            if hasattr(self.choices, "__iter__"):
-                                self.choices = [choice.lower() for choice in self.choices]
+                    if hasattr(value, "strip") and self.trim:
+                        value = value.strip()
+                    if hasattr(value, "lower") and not self.case_sensitive:
+                        value = value.lower()
 
-                        try:
-                            value = self.convert(value, operator)
-                        except Exception as error:
-                            if self.ignore:
-                                continue
-                            self.handle_validation_error(error)
+                        if hasattr(self.choices, "__iter__"):
+                            self.choices = [choice.lower()
+                                            for choice in self.choices]
 
-                        if self.choices and value not in self.choices:
-                            self.handle_validation_error(
+                    try:
+                        value = self.convert(value, operator)
+                    except Exception as error:
+                        if self.ignore:
+                            continue
+                        return self.handle_validation_error(error, bundle_errors)
+
+                    if self.choices and value not in self.choices:
+                        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+                            return self.handle_validation_error(
                                 ValueError(u"{0} is not a valid choice".format(
-                                    value
-                                ))
-                            )
+                                    value)), bundle_errors)
+                        self.handle_validation_error(
+                                ValueError(u"{0} is not a valid choice".format(
+                                    value)), bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -178,18 +201,18 @@ class Argument(object):
 
         if not results and self.required:
             if isinstance(self.location, six.string_types):
-                error_msg = u"Missing required parameter {0} in {1}".format(
-                    self.name,
+                error_msg = u"Missing required parameter in {0}".format(
                     _friendly_location.get(self.location, self.location)
                 )
             else:
                 friendly_locations = [_friendly_location.get(loc, loc)
                                       for loc in self.location]
-                error_msg = u"Missing required parameter {0} in {1}".format(
-                    self.name,
+                error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
-            self.handle_validation_error(ValueError(error_msg))
+            if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+                return self.handle_validation_error(ValueError(error_msg), bundle_errors)
+            self.handle_validation_error(ValueError(error_msg), bundle_errors)
 
         if not results:
             if callable(self.default):
@@ -215,12 +238,21 @@ class RequestParser(object):
         parser.add_argument('foo')
         parser.add_argument('int_bar', type=int)
         args = parser.parse_args()
+
+    :param bool trim: If enabled, trims whitespace on all arguments in this
+        parser
+    :param bool bundle_errors: If enabled, do not abort when first error occurs,
+        return a dict with the name of the argument and the error message to be
+        bundled and return all validation errors
     """
 
-    def __init__(self, argument_class=Argument, namespace_class=Namespace):
+    def __init__(self, argument_class=Argument, namespace_class=Namespace,
+            trim=False, bundle_errors=False):
         self.args = []
         self.argument_class = argument_class
         self.namespace_class = namespace_class
+        self.trim = trim
+        self.bundle_errors = bundle_errors
 
     def add_argument(self, *args, **kwargs):
         """Adds an argument to be parsed.
@@ -231,10 +263,17 @@ class RequestParser(object):
         See :class:`Argument`'s constructor for documentation on the
         available options.
         """
+
         if len(args) == 1 and isinstance(args[0], self.argument_class):
             self.args.append(args[0])
         else:
             self.args.append(self.argument_class(*args, **kwargs))
+
+        #Do not know what other argument classes are out there
+        if self.trim and self.argument_class is Argument:
+            #enable trim for appended element
+            self.args[-1].trim = True
+
         return self
 
     def parse_args(self, req=None, strict=False):
@@ -250,12 +289,17 @@ class RequestParser(object):
 
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
-        req.unparsed_arguments = dict(Argument('').source(req)) if strict else {}
-
+        req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
+        errors = {}
         for arg in self.args:
-            value, found = arg.parse(req)
+            value, found = arg.parse(req, self.bundle_errors)
+            if isinstance(value, ValueError):
+                errors.update(found)
+                found = None
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
+        if errors:
+            flask_restful.abort(400, message=errors)
 
         if strict and req.unparsed_arguments:
             raise exceptions.BadRequest('Unknown arguments: %s'
@@ -265,7 +309,7 @@ class RequestParser(object):
 
     def copy(self):
         """ Creates a copy of this RequestParser with the same set of arguments """
-        parser_copy = RequestParser(self.argument_class, self.namespace_class)
+        parser_copy = self.__class__(self.argument_class, self.namespace_class)
         parser_copy.args = deepcopy(self.args)
         return parser_copy
 

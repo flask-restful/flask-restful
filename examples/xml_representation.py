@@ -1,7 +1,7 @@
 # needs: pip install python-simplexml
 from simplexml import dumps
 from flask import make_response, Flask
-from flask.ext.restful import Api, Resource
+from flask_restful import Api, Resource
 
 def output_xml(data, code, headers=None):
     """Makes a Flask response with a XML encoded body"""

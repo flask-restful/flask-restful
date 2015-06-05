@@ -3,13 +3,54 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+
+Version 0.3.3
+-------------
+
+Released May 22, 2015
+
+- Disable [challenge on 401](https://github.com/flask-restful/flask-restful/commit/fe53f49bdc28dd83ee3acbeb0a313b411411e377)
+  by default (**THIS IS A BREAKING CHANGE**, albeit a very small one with behavior that probably no one depended upon. You can easily change this back to the old way).
+- Doc fixes ([#404](https://github.com/flask-restful/flask-restful/pull/404), [#406](https://github.com/flask-restful/flask-restful/pull/406), [#436](https://github.com/flask-restful/flask-restful/pull/436), misc. other commits)
+- Fix truncation of microseconds in iso8601 datetime output ([#368](https://github.com/flask-restful/flask-restful/pull/405))
+- `null` arguments from JSON no longer cast to string ([#390](https://github.com/flask-restful/flask-restful/pull/390))
+- Made list fields work with classes ([#409](https://github.com/flask-restful/flask-restful/pull/409))
+- Fix `url_for()` when used with Blueprints ([#410](https://github.com/flask-restful/flask-restful/pull/410))
+- Add CORS "Access-Control-Expose-Headers" support ([#412](https://github.com/flask-restful/flask-restful/pull/412))
+- Fix class references in RequestParser ([#414](https://github.com/flask-restful/flask-restful/pull/414))
+- Allow any callables to be used as lazy attributes ([#417](https://github.com/flask-restful/flask-restful/pull/417))
+- Fix references to `flask.ext.*` ([#420](https://github.com/flask-restful/flask-restful/issues/420))
+- Trim support with fixes ([#428](https://github.com/flask-restful/flask-restful/pull/428))
+- Added ability to pass-in parameters into Resource constructors ([#444](https://github.com/flask-restful/flask-restful/pull/444))
+- Fix custom type docs on "Intermediate usage" and docstring ([#434](https://github.com/flask-restful/flask-restful/pull/434))
+- Fixed problem with `RequestParser.copy` ([#435](https://github.com/flask-restful/flask-restful/pull/435))
+- Feature/error bundling ([#431](https://github.com/flask-restful/flask-restful/pull/431))
+- Explicitly check the class type for `propagate_exceptions` ([#445](https://github.com/flask-restful/flask-restful/pull/445))
+- Remove min. year limit 1900 in `inputs.date` ([#446](https://github.com/flask-restful/flask-restful/pull/446))
+
+Version 0.3.2
+-------------
+
+Released February 25, 2015
+
+- Doc fixes ([#344](https://github.com/flask-restful/flask-restful/pull/344), [#378](https://github.com/flask-restful/flask-restful/issues/378), [#402](https://github.com/flask-restful/flask-restful/pull/402))
+- Microseconds no longer truncated in ISO8601 format datetime inputs ([#381](https://github.com/flask-restful/flask-restful/pull/381))
+- Datetime inputs now preserve timezone instead of forcing conversion to UTC ([#381](https://github.com/flask-restful/flask-restful/pull/381))
+- Fixes content negotiation to respect q-values ([#245](https://github.com/flask-restful/flask-restful/pull/245))
+- Fix `fields.URL` when used with Blueprints ([#379](https://github.com/flask-restful/flask-restful/pull/379))
+- Fix `BadRequest` raised with empty body and `application/json` content type ([#366](https://github.com/flask-restful/flask-restful/pull/366))
+- Improved argument validation error messages ([#386](https://github.com/flask-restful/flask-restful/pull/386))
+- Allow custom validation for `FileStorage` type arguments ([#388](https://github.com/flask-restful/flask-restful/pull/388))
+- Allow lambdas to be specified for field attributes ([#309](https://github.com/flask-restful/flask-restful/pull/309))
+- Added regex input validator ([#374](https://github.com/flask-restful/flask-restful/pull/374))
+
 Version 0.3.1
 -------------
 
 Released December 13, 2014
 
-- Addd `strict` option to `parse_args()` ([#358](https://github.com/flask-restful/flask-restful/pull/358))
-- Addd an option to envelop marshaled objects ([#349](https://github.com/flask-restful/flask-restful/pull/349))
+- Adds `strict` option to `parse_args()` ([#358](https://github.com/flask-restful/flask-restful/pull/358))
+- Adds an option to envelop marshaled objects ([#349](https://github.com/flask-restful/flask-restful/pull/349))
 - Fixes initialization of `Api.blueprint` attribute ([#263](https://github.com/flask-restful/flask-restful/pull/263))
 - Makes `Api.error_router` fall back to Flask handlers ([#296](https://github.com/flask-restful/flask-restful/pull/296)/[#356](https://github.com/flask-restful/flask-restful/pull/356))
 - Makes docs more viewable on mobile devices ([#347](https://github.com/flask-restful/flask-restful/issues/347))

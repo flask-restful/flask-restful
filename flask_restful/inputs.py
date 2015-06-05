@@ -1,6 +1,6 @@
 from calendar import timegm
 from datetime import datetime, time, timedelta
-from email.utils import formatdate, parsedate_tz, mktime_tz
+from email.utils import parsedate_tz, mktime_tz
 import re
 
 import aniso8601
@@ -64,6 +64,9 @@ class regex(object):
             message = 'Value does not match pattern: "{}"'.format(self.pattern)
             raise ValueError(message)
         return value
+
+    def __deepcopy__(self, memo):
+        return regex(self.pattern)
 
 
 def _normalize_interval(start, end, value):
@@ -182,8 +185,6 @@ def iso8601interval(value, argument='argument'):
 def date(value):
     """Parse a valid looking date in the format YYYY-mm-dd"""
     date = datetime.strptime(value, "%Y-%m-%d")
-    if date.year < 1900:
-        raise ValueError(u"Year must be >= 1900")
     return date
 
 
@@ -226,10 +227,12 @@ def int_range(low, high, value, argument='argument'):
 
 
 def boolean(value):
-    """Parse the string "true" or "false" as a boolean (case insensitive).
-    Also accepts "1" and "0" as True/False (respectively). If
-    the input is from the request JSON body, the type is already a native
-    python boolean, and will be passed through without further parsing."""
+    """Parse the string ``"true"`` or ``"false"`` as a boolean (case
+    insensitive). Also accepts ``"1"`` and ``"0"`` as ``True``/``False``
+    (respectively). If the input is from the request JSON body, the type is
+    already a native python boolean, and will be passed through without
+    further parsing.
+    """
     if type(value) == bool:
         return value
 
@@ -241,36 +244,6 @@ def boolean(value):
     if value in ('false', '0',):
         return False
     raise ValueError("Invalid literal for boolean(): {}".format(value))
-
-
-def rfc822(dt):
-    """Turn a datetime object into a formatted date.
-
-    Example::
-
-        inputs.rfc822(datetime(2011, 1, 1)) => "Sat, 01 Jan 2011 00:00:00 -0000"
-
-    :param dt: The datetime to transform
-    :type dt: datetime
-    :return: A RFC 822 formatted date string
-    """
-    return formatdate(timegm(dt.utctimetuple()))
-
-
-def iso8601(dt):
-    """Turn a datetime object into an ISO8601 formatted date.
-
-    Example::
-
-        inputs.iso8601(datetime(2012, 1, 1, 0, 0)) => "2012-01-01T00:00:00+00:00"
-
-    :param dt: The datetime to transform
-    :type dt: datetime
-    :return: A ISO 8601 formatted date string
-    """
-    return datetime.isoformat(
-        datetime.fromtimestamp(timegm(dt.utctimetuple()), tz=pytz.UTC)
-    )
 
 
 def datetime_from_rfc822(datetime_str):
@@ -298,6 +271,4 @@ def datetime_from_iso8601(datetime_str):
     :type datetime_str: str
     :return: A datetime
     """
-    return datetime.fromtimestamp(
-        timegm(aniso8601.parse_datetime(datetime_str).utctimetuple()), tz=pytz.UTC
-    )
+    return aniso8601.parse_datetime(datetime_str)

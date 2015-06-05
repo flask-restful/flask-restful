@@ -22,7 +22,7 @@ Example::
     $ source env/bin/activate
     $ nosetests tests/test_reqparse.py:ReqParseTestCase.test_parse_choices_insensitive
 
-Alternately, push changes to your fork on Github, and Travis will run the tests
+Alternately, if you push changes to your fork on Github, Travis will run the tests
 for your branch automatically.
 
 A Tox config file is also provided so you can test against multiple python

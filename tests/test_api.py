@@ -1,29 +1,22 @@
 import unittest
-
-from json import dumps, loads
-
-import flask
-from flask import Flask, redirect, views
-from flask.ext.restful.utils import http_status_message, error_data, unpack
+from flask import Flask, Blueprint, redirect, views
 from flask.signals import got_request_exception, signals_available
-
 try:
     from mock import Mock, patch
 except:
     # python3
     from unittest.mock import Mock, patch
-
-from nose.tools import assert_equals, assert_true  # you need it for tests in form of continuations
-
-#noinspection PyUnresolvedReferences
-import six
-
+import flask
 import werkzeug
 from werkzeug.exceptions import HTTPException
-
+from flask_restful.utils import http_status_message, error_data, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
+from json import dumps, loads
+#noinspection PyUnresolvedReferences
+from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
+import six
 
 
 
@@ -51,9 +44,18 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(http_status_message(200), 'OK')
         self.assertEquals(http_status_message(404), 'Not Found')
 
-    def test_unauthorized(self):
+    def test_unauthorized_no_challenge_by_default(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
+        response = Mock()
+        response.headers = {}
+        with app.test_request_context('/foo'):
+            response = api.unauthorized(response)
+        assert_false('WWW-Autheneticate' in response.headers)
+
+    def test_unauthorized(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
         response = Mock()
         response.headers = {}
         with app.test_request_context('/foo'):
@@ -64,17 +66,29 @@ class APITestCase(unittest.TestCase):
     def test_unauthorized_custom_realm(self):
         app = Flask(__name__)
         app.config['HTTP_BASIC_AUTH_REALM'] = 'Foo'
-        api = flask_restful.Api(app)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
         response = Mock()
         response.headers = {}
         with app.test_request_context('/foo'):
             response = api.unauthorized(response)
         self.assertEquals(response.headers['WWW-Authenticate'], 'Basic realm="Foo"')
 
-    def test_handle_error_401_sends_challege_default_realm(self):
+    def test_handle_error_401_no_challenge_by_default(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
         exception = Mock(spec=HTTPException)
+        exception.code = 401
+        exception.data = {'foo': 'bar'}
+
+        with app.test_request_context('/foo'):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 401)
+            assert_false('WWW-Autheneticate' in resp.headers)
+
+    def test_handle_error_401_sends_challege_default_realm(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
+        exception = HTTPException()
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -87,8 +101,8 @@ class APITestCase(unittest.TestCase):
     def test_handle_error_401_sends_challege_configured_realm(self):
         app = Flask(__name__)
         app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
-        api = flask_restful.Api(app)
         exception = Mock(spec=HTTPException)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -355,7 +369,7 @@ class APITestCase(unittest.TestCase):
 
     def test_handle_error_with_code(self):
         app = Flask(__name__)
-        api = flask_restful.Api(app)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
 
         exception = Mock()
         exception.code = "JSONResponseError"
@@ -368,7 +382,7 @@ class APITestCase(unittest.TestCase):
 
     def test_handle_auth(self):
         app = Flask(__name__)
-        api = flask_restful.Api(app)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
 
         exception = Mock(spec=HTTPException)
         exception.code = 401
@@ -541,7 +555,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
 
         with app.test_request_context("/foo", headers={
-            'Accept': 'application/json; q=1; application/xml; q=.5'
+            'Accept': 'application/json; q=1, application/xml; q=.5'
         }):
             self.assertEquals(api.mediatypes(),
                               ['application/json', 'application/xml'])
@@ -636,6 +650,26 @@ class APITestCase(unittest.TestCase):
         app.add_url_rule.assert_called_with('/foo',
                                             view_func=api.output(),
                                             defaults={"bar": "baz"})
+
+    def test_add_resource_forward_resource_class_parameters(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class Foo(flask_restful.Resource):
+            def __init__(self, *args, **kwargs):
+                self.one = args[0]
+                self.two = kwargs['secret_state']
+
+            def get(self):
+                return "{0} {1}".format(self.one, self.two)
+
+        api.add_resource(Foo, '/foo',
+                resource_class_args=('wonderful',),
+                resource_class_kwargs={'secret_state': 'slurm'})
+
+        with app.test_client() as client:
+            foo = client.get('/foo')
+            self.assertEquals(foo.data, b'"wonderful slurm"')
 
     def test_output_unpack(self):
 
@@ -753,6 +787,18 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/foo'):
             self.assertEqual(api.url_for(HelloWorld, id=123), '/ids/123')
 
+    def test_url_for_with_blueprint(self):
+        """Verify that url_for works when an Api object is mounted on a
+        Blueprint.
+        """
+        api_bp = Blueprint('api', __name__)
+        app = Flask(__name__)
+        api = flask_restful.Api(api_bp)
+        api.add_resource(HelloWorld, '/foo/<string:bar>')
+        app.register_blueprint(api_bp)
+        with app.test_request_context('/foo'):
+            self.assertEqual(api.url_for(HelloWorld, bar='baz'), '/foo/baz')
+
     def test_fr_405(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
@@ -806,7 +852,7 @@ class APITestCase(unittest.TestCase):
         #   1. Set the settings dict() with some value
         #   2. Patch the json.dumps function in the module with a Mock object.
 
-        from flask.ext.restful.representations import json as json_rep
+        from flask_restful.representations import json as json_rep
         json_dumps_mock = Mock(return_value='bar')
         new_settings = {'indent': 123}
 

@@ -1,5 +1,8 @@
-from inspect import isfunction
+from datetime import datetime
+from calendar import timegm
+import pytz
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
+from email.utils import formatdate
 import six
 try:
     from urlparse import urlparse, urlunparse
@@ -34,7 +37,7 @@ def get_value(key, obj, default=None):
     """Helper for pulling a keyed value off various types of objects"""
     if type(key) == int:
         return _get_value_for_key(key, obj, default)
-    elif isfunction(key):
+    elif callable(key):
         return key(obj)
     else:
         return _get_value_for_keys(key.split('.'), obj, default)
@@ -76,7 +79,13 @@ class Raw(object):
     """Raw provides a base field class from which others should extend. It
     applies no formatting by default, and should only be used in cases where
     data does not need to be formatted before being serialized. Fields should
-    throw a MarshallingException in case of parsing problem.
+    throw a :class:`MarshallingException` in case of parsing problem.
+
+    :param default: The default value for the field, if no value is
+        specified.
+    :param attribute: If the public facing value differs from the internal
+        value, use this to retrieve a different attribute from the response
+        than the publicly named value.
     """
 
     def __init__(self, default=None, attribute=None):
@@ -124,10 +133,10 @@ class Nested(Raw):
     :param dict nested: The dictionary to nest
     :param bool allow_null: Whether to return None instead of a dictionary
         with null keys, if a nested dictionary has all-null keys
-    :param kwargs: if ``default`` keyword argument is present, a nested dictionary
-        will be marshaled as its value if nested dictionary is all-null keys
-        (e.g. lets you return an empty JSON object instead of null)
-    :keyword default
+    :param kwargs: If ``default`` keyword argument is present, a nested
+        dictionary will be marshaled as its value if nested dictionary is
+        all-null keys (e.g. lets you return an empty JSON object instead of
+        null)
     """
 
     def __init__(self, nested, allow_null=False, **kwargs):
@@ -175,10 +184,12 @@ class List(Raw):
 
         return [
             self.container.output(idx,
-                                  val if isinstance(val, dict) and
-                                         not isinstance(self.container, Nested)
-                                  and not type(self.container) is Raw
-                                  else value)
+                val if (isinstance(val, dict)
+                        or (self.container.attribute
+                            and hasattr(val, self.container.attribute)))
+                        and not isinstance(self.container, Nested)
+                        and not type(self.container) is Raw
+                    else value)
             for idx, val in enumerate(value)
         ]
 
@@ -196,8 +207,8 @@ class List(Raw):
 
 class String(Raw):
     """
-    Marshal a value as a string. Uses :py:class:`six.text_type` so values will
-    be converted to :py:class:`unicode` in python2 and :py:class:`str` in
+    Marshal a value as a string. Uses ``six.text_type`` so values will
+    be converted to :class:`unicode` in python2 and :class:`str` in
     python3.
     """
     def format(self, value):
@@ -212,10 +223,6 @@ class Integer(Raw):
 
     :param int default: The default value for the field, if no value is
         specified.
-
-    :param attribute: If the public facing value differs from the internal
-        value, use this to retrieve a different attribute from the response
-        than the publicly named value.
     """
     def __init__(self, default=0, **kwargs):
         super(Integer, self).__init__(default=default, **kwargs)
@@ -244,7 +251,8 @@ class FormattedString(Raw):
     """
     FormattedString is used to interpolate other values from
     the response into this field. The syntax for the source string is
-    the same as the string `format` method from the python stdlib.
+    the same as the string :meth:`~str.format` method from the python
+    stdlib.
 
     Ex::
 
@@ -276,6 +284,15 @@ class FormattedString(Raw):
 class Url(Raw):
     """
     A string representation of a Url
+
+    :param endpoint: Endpoint name. If endpoint is ``None``,
+        ``request.endpoint`` is used instead
+    :type endpoint: str
+    :param absolute: If ``True``, ensures that the generated urls will have the
+        hostname included
+    :type absolute: bool
+    :param scheme: URL scheme specifier (e.g. ``http``, ``https``)
+    :type scheme: str
     """
     def __init__(self, endpoint=None, absolute=False, scheme=None):
         super(Url, self).__init__()
@@ -299,7 +316,8 @@ class Url(Raw):
 class Float(Raw):
     """
     A double as IEEE-754 double precision.
-    ex : 3.141592653589793 3.1415926535897933e-06 3.141592653589793e+24 nan inf -inf
+    ex : 3.141592653589793 3.1415926535897933e-06 3.141592653589793e+24 nan inf
+    -inf
     """
 
     def format(self, value):
@@ -324,7 +342,13 @@ class DateTime(Raw):
     Return a formatted datetime string in UTC. Supported formats are RFC 822
     and ISO 8601.
 
-    :param: str dt_format: rfc822 or iso8601
+    See :func:`email.utils.formatdate` for more info on the RFC 822 format.
+
+    See :meth:`datetime.datetime.isoformat` for more info on the ISO 8601
+    format.
+
+    :param dt_format: ``'rfc822'`` or ``'iso8601'``
+    :type dt_format: str
     """
     def __init__(self, dt_format='rfc822', **kwargs):
         super(DateTime, self).__init__(**kwargs)
@@ -333,9 +357,9 @@ class DateTime(Raw):
     def format(self, value):
         try:
             if self.dt_format == 'rfc822':
-                return inputs.rfc822(value)
+                return _rfc822(value)
             elif self.dt_format == 'iso8601':
-                return inputs.iso8601(value)
+                return _iso8601(value)
             else:
                 raise MarshallingException(
                     'Unsupported date format %s' % self.dt_format
@@ -361,5 +385,33 @@ class Fixed(Raw):
         return six.text_type(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
 
-"""Alias for :py:class:`~fields.Fixed`"""
+"""Alias for :class:`~fields.Fixed`"""
 Price = Fixed
+
+
+def _rfc822(dt):
+    """Turn a datetime object into a formatted date.
+
+    Example::
+
+        fields._rfc822(datetime(2011, 1, 1)) => "Sat, 01 Jan 2011 00:00:00 -0000"
+
+    :param dt: The datetime to transform
+    :type dt: datetime
+    :return: A RFC 822 formatted date string
+    """
+    return formatdate(timegm(dt.utctimetuple()))
+
+
+def _iso8601(dt):
+    """Turn a datetime object into an ISO8601 formatted date.
+
+    Example::
+
+        fields._iso8601(datetime(2012, 1, 1, 0, 0)) => "2012-01-01T00:00:00"
+
+    :param dt: The datetime to transform
+    :type dt: datetime
+    :return: A ISO 8601 formatted date string
+    """
+    return dt.isoformat()

@@ -3,30 +3,31 @@
 Request Parsing
 ===============
 
-.. currentmodule:: flask.ext.restful
+.. currentmodule:: flask_restful
 
-Flask-RESTful's request parsing interface is modeled after the ``argparse``
-interface.  It's designed to provide simple and uniform access to any
-variable on the :py:class:`flask.request` object in Flask.
+Flask-RESTful's request parsing interface, :mod:`reqparse`, is modeled after
+the `argparse <http://docs.python.org/dev/library/argparse.html>`_ interface.
+It's designed to provide simple and uniform access to any variable on the
+:class:`flask.request` object in Flask.
 
 Basic Arguments
 ---------------
 
 Here's a simple example of the request parser. It looks for two arguments in
-the :py:attr:`flask.Request.values` dict. One of type ``int``, and the other of
+the :attr:`flask.Request.values` dict: one of type ``int``, and the other of
 type ``str`` ::
 
-    from flask.ext.restful import reqparse
+    from flask_restful import reqparse
 
     parser = reqparse.RequestParser()
     parser.add_argument('rate', type=int, help='Rate cannot be converted')
     parser.add_argument('name', type=str)
     args = parser.parse_args()
 
-If you specify the help value, it will be rendered as the error message
-when a type error is raised while parsing it.  If you do not
-specify a help message, the default behavior is to return the message from the
-type error itself.
+If you specify the ``help`` value, it will be rendered as the error message
+when a type error is raised while parsing it.  If you do not specify a help
+message, the default behavior is to return the message from the type error
+itself.
 
 By default, arguments are **not** required.  Also, arguments supplied in the
 request that are not part of the RequestParser will be ignored.
@@ -38,7 +39,7 @@ Required Arguments
 ------------------
 
 To require a value be passed for an argument, just add ``required=True`` to
-the call to :py:meth:`~reqparse.RequestParser.add_argument`. ::
+the call to :meth:`~reqparse.RequestParser.add_argument`. ::
 
     parser.add_argument('name', type=str, required=True,
     help="Name cannot be blank!")
@@ -53,7 +54,7 @@ If you want to accept multiple values for a key as a list, you can pass
 
 This will let you make queries like ::
 
-    curl http://api.example.com -d "Name=bob" -d "Name=sue" -d "Name=joe"
+    curl http://api.example.com -d "name=bob" -d "name=sue" -d "name=joe"
 
 And your args will look like this ::
 
@@ -64,7 +65,7 @@ Other Destinations
 ------------------
 
 If for some reason you'd like your argument stored under a different name once
-it's parsed, you can use the ``dest`` kwarg. ::
+it's parsed, you can use the ``dest`` keyword argument. ::
 
     parser.add_argument('name', type=str, dest='public_name')
 
@@ -74,12 +75,12 @@ it's parsed, you can use the ``dest`` kwarg. ::
 Argument Locations
 ------------------
 
-By default, the :py:class:`~reqparse.RequestParser` tries to parse values
-from :py:attr:`flask.Request.values`, and :py:attr:`flask.Request.json`.
+By default, the :class:`~reqparse.RequestParser` tries to parse values from
+:attr:`flask.Request.values`, and :attr:`flask.Request.json`.
 
-Use the ``location`` argument to :py:meth:`~reqparse.RequestParser.add_argument`
+Use the ``location`` argument to :meth:`~reqparse.RequestParser.add_argument`
 to specify alternate locations to pull the values from. Any variable on the
-:py:class:`flask.Request` can be used. For example: ::
+:class:`flask.Request` can be used. For example: ::
 
     # Look only in the POST body
     parser.add_argument('name', type=int, location='form')
@@ -103,21 +104,20 @@ Multiple argument locations can be specified by passing a list to ``location``::
 
     parser.add_argument('text', location=['headers', 'values'])
 
-The last location listed takes precedence in the result set.
+The last ``location`` listed takes precedence in the result set.
 
 Parser Inheritance
 ------------------
 
-Often you will make a different parser for each resource you write.
-The problem with this is if parsers have arguments in common. Instead of
-rewriting arguments you can write a parent parser containing all the
-shared arguments and then extend the parser with
-:py:meth:`~reqparse.RequestParser.copy`. You can also overwrite any argument
-in the parent with :py:meth:`~reqparse.RequestParser.replace_argument`, or remove
-it completely with :py:meth:`~reqparse.RequestParser.remove_argument`.
-For example: ::
+Often you will make a different parser for each resource you write. The problem
+with this is if parsers have arguments in common. Instead of rewriting
+arguments you can write a parent parser containing all the shared arguments and
+then extend the parser with :meth:`~reqparse.RequestParser.copy`. You can
+also overwrite any argument in the parent with
+:meth:`~reqparse.RequestParser.replace_argument`, or remove it completely
+with :meth:`~reqparse.RequestParser.remove_argument`. For example: ::
 
-    from flask.ext.restful import RequestParser
+    from flask_restful import RequestParser
 
     parser = RequestParser()
     parser.add_argument('foo', type=int)
@@ -133,3 +133,52 @@ For example: ::
 
     parser_copy.remove_argument('foo')
     # parser_copy no longer has 'foo' argument
+
+Error Handling
+--------------
+
+The default way errors are handled by the RequestParser is to abort on the
+first error that occurred.  This can be beneficial when you have arguments that
+might take some time to process.  However, often it is nice to have the errors
+bundled together and sent back to the client all at once.  This behavior can be
+specified either at the Flask application level or on the specific RequestParser
+instance.  To invoke a RequestParser with the bundling errors option, pass in the
+argument ``bundle_errors``.  For example ::
+
+    from flask_restful import RequestParser
+
+    parser = RequestParser(bundle_errors=True)
+    parser.add_argument('foo', type=int, required=True)
+    parser.add_argument('bar', type=int, required=True)
+
+    # If a request comes in not containing both 'foo' and 'bar', the error that
+    # will come back will look something like this.
+
+    {
+     "message":  {
+        "foo": "foo error message",
+        "bar": "bar error message"
+        }
+    }
+
+    # The default behavior would only return the first error
+
+    parser = RequestParser()
+    parser.add_argument('foo', type=int, required=True)
+    parser.add_argument('bar', type=int, required=True)
+
+    {
+         "message":  {
+                 "foo": "foo error message"
+            }
+    }
+
+The application configuration key is "BUNDLE_ERRORS". For example ::
+
+    from flask import Flask
+
+    app = Flask(__name__)
+    app.config['BUNDLE_ERRRORS] = True
+
+Note: If ``BUNDLE_ERRORS`` is set on the application, setting ``bundle_errors``
+to ``False`` in the RequestParser keyword argument will not work.

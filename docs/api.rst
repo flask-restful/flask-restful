@@ -3,7 +3,7 @@
 API Docs
 ========
 
-.. module:: flask.ext.restful
+.. module:: flask_restful
 
 
 .. autofunction:: marshal
@@ -42,12 +42,6 @@ Fields
 
 Inputs
 ------
-
-.. module:: flask.ext.restful.inputs
-.. autofunction:: url
-.. autoclass:: regex
-.. autofunction:: date
-.. autofunction:: iso8601interval
-.. autofunction:: natural
-.. autofunction:: boolean
-.. autofunction:: rfc822
+.. automodule:: inputs
+   :members:
+   :undoc-members:

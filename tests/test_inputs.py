@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, tzinfo
 import unittest
+import pytz
 import re
 
 #noinspection PyUnresolvedReferences
@@ -8,70 +9,12 @@ import six
 
 from flask_restful import inputs
 
-# http://docs.python.org/library/datetime.html?highlight=datetime#datetime.tzinfo.fromutc
-ZERO = timedelta(0)
-HOUR = timedelta(hours=1)
-
-
-class UTC(tzinfo):
-    """UTC"""
-
-    def utcoffset(self, dt):
-        return ZERO
-
-    def tzname(self, dt):
-        return "UTC"
-
-    def dst(self, dt):
-        return ZERO
-
-
-class CET(tzinfo):
-    """CET"""
-
-    def utcoffset(self, dt):
-        return HOUR
-
-    def tzname(self, dt):
-        return "CET"
-
-    def dst(self, dt):
-        return ZERO
-
-
-def test_rfc822_datetime_formatters():
-    dates = [
-        (datetime(2011, 1, 1), "Sat, 01 Jan 2011 00:00:00 -0000"),
-        (datetime(2011, 1, 1, 23, 59, 59),
-         "Sat, 01 Jan 2011 23:59:59 -0000"),
-        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC()),
-         "Sat, 01 Jan 2011 23:59:59 -0000"),
-        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=CET()),
-         "Sat, 01 Jan 2011 22:59:59 -0000")
-    ]
-    for date_obj, expected in dates:
-        yield assert_equal, inputs.rfc822(date_obj), expected
-
-
-def test_iso8601_datetime_formatters():
-    dates = [
-        (datetime(2011, 1, 1), "2011-01-01T00:00:00+00:00"),
-        (datetime(2011, 1, 1, 23, 59, 59),
-         "2011-01-01T23:59:59+00:00"),
-        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC()),
-         "2011-01-01T23:59:59+00:00"),
-        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=CET()),
-         "2011-01-01T22:59:59+00:00")
-    ]
-    for date_obj, expected in dates:
-        yield assert_equal, inputs.iso8601(date_obj), expected
-
 
 def test_reverse_rfc822_datetime():
     dates = [
-        ("Sat, 01 Jan 2011 00:00:00 -0000", datetime(2011, 1, 1, tzinfo=UTC())),
-        ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
-        ("Sat, 01 Jan 2011 21:59:59 -0200", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
+        ("Sat, 01 Jan 2011 00:00:00 -0000", datetime(2011, 1, 1, tzinfo=pytz.utc)),
+        ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+        ("Sat, 01 Jan 2011 21:59:59 -0200", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
     ]
 
     for date_string, expected in dates:
@@ -80,9 +23,10 @@ def test_reverse_rfc822_datetime():
 
 def test_reverse_iso8601_datetime():
     dates = [
-        ("2011-01-01T00:00:00+00:00", datetime(2011, 1, 1, tzinfo=UTC())),
-        ("2011-01-01T23:59:59+00:00", datetime(2011, 1, 1, 23, 59, 59, tzinfo=UTC())),
-        ("2011-01-01T23:59:59+02:00", datetime(2011, 1, 1, 21, 59, 59, tzinfo=UTC())),
+        ("2011-01-01T00:00:00+00:00", datetime(2011, 1, 1, tzinfo=pytz.utc)),
+        ("2011-01-01T23:59:59+00:00", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+        ("2011-01-01T23:59:59.001000+00:00", datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc)),
+        ("2011-01-01T23:59:59+02:00", datetime(2011, 1, 1, 21, 59, 59, tzinfo=pytz.utc))
     ]
 
     for date_string, expected in dates:
@@ -229,9 +173,6 @@ class TypesTestCase(unittest.TestCase):
     def test_date_later_than_1900(self):
         assert_equal(inputs.date("1900-01-01"), datetime(1900, 1, 1))
 
-    def test_date_too_early(self):
-        assert_raises(ValueError, lambda: inputs.date("0001-01-01"))
-
     def test_date_input_error(self):
         assert_raises(ValueError, lambda: inputs.date("2008-13-13"))
 
@@ -276,64 +217,64 @@ def test_isointerval():
             # Full precision with explicit UTC.
             "2013-01-01T12:30:00Z/P1Y2M3DT4H5M6S",
             (
-                datetime(2013, 1, 1, 12, 30, 0, tzinfo=UTC()),
-                datetime(2014, 3, 5, 16, 35, 6, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, 30, 0, tzinfo=pytz.utc),
+                datetime(2014, 3, 5, 16, 35, 6, tzinfo=pytz.utc),
             ),
         ),
         (
             # Full precision with alternate UTC indication
             "2013-01-01T12:30+00:00/P2D",
             (
-                datetime(2013, 1, 1, 12, 30, 0, tzinfo=UTC()),
-                datetime(2013, 1, 3, 12, 30, 0, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, 30, 0, tzinfo=pytz.utc),
+                datetime(2013, 1, 3, 12, 30, 0, tzinfo=pytz.utc),
             ),
         ),
         (
             # Implicit UTC with time
             "2013-01-01T15:00/P1M",
             (
-                datetime(2013, 1, 1, 15, 0, 0, tzinfo=UTC()),
-                datetime(2013, 1, 31, 15, 0, 0, tzinfo=UTC()),
+                datetime(2013, 1, 1, 15, 0, 0, tzinfo=pytz.utc),
+                datetime(2013, 1, 31, 15, 0, 0, tzinfo=pytz.utc),
             ),
         ),
         (
             # TZ conversion
             "2013-01-01T17:00-05:00/P2W",
             (
-                datetime(2013, 1, 1, 22, 0, 0, tzinfo=UTC()),
-                datetime(2013, 1, 15, 22, 0, 0, tzinfo=UTC()),
+                datetime(2013, 1, 1, 22, 0, 0, tzinfo=pytz.utc),
+                datetime(2013, 1, 15, 22, 0, 0, tzinfo=pytz.utc),
             ),
         ),
         (
             # Date upgrade to midnight-midnight period
             "2013-01-01/P3D",
             (
-                datetime(2013, 1, 1, 0, 0, 0, tzinfo=UTC()),
-                datetime(2013, 1, 4, 0, 0, 0, 0, tzinfo=UTC()),
+                datetime(2013, 1, 1, 0, 0, 0, tzinfo=pytz.utc),
+                datetime(2013, 1, 4, 0, 0, 0, 0, tzinfo=pytz.utc),
             ),
         ),
         (
             # Start/end with UTC
             "2013-01-01T12:00:00Z/2013-02-01T12:00:00Z",
             (
-                datetime(2013, 1, 1, 12, 0, 0, tzinfo=UTC()),
-                datetime(2013, 2, 1, 12, 0, 0, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime(2013, 2, 1, 12, 0, 0, tzinfo=pytz.utc),
             ),
         ),
         (
             # Start/end with time upgrade
             "2013-01-01/2013-06-30",
             (
-                datetime(2013, 1, 1, tzinfo=UTC()),
-                datetime(2013, 6, 30, tzinfo=UTC()),
+                datetime(2013, 1, 1, tzinfo=pytz.utc),
+                datetime(2013, 6, 30, tzinfo=pytz.utc),
             ),
         ),
         (
             # Start/end with TZ conversion
             "2013-02-17T12:00:00-07:00/2013-02-28T15:00:00-07:00",
             (
-                datetime(2013, 2, 17, 19, 0, 0, tzinfo=UTC()),
-                datetime(2013, 2, 28, 22, 0, 0, tzinfo=UTC()),
+                datetime(2013, 2, 17, 19, 0, 0, tzinfo=pytz.utc),
+                datetime(2013, 2, 28, 22, 0, 0, tzinfo=pytz.utc),
             ),
         ),
         # Resolution expansion for single date(time)
@@ -341,72 +282,72 @@ def test_isointerval():
             # Second with UTC
             "2013-01-01T12:30:45Z",
             (
-                datetime(2013, 1, 1, 12, 30, 45, tzinfo=UTC()),
-                datetime(2013, 1, 1, 12, 30, 46, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, 30, 45, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 12, 30, 46, tzinfo=pytz.utc),
             ),
         ),
         (
             # Second with tz conversion
             "2013-01-01T12:30:45+02:00",
             (
-                datetime(2013, 1, 1, 10, 30, 45, tzinfo=UTC()),
-                datetime(2013, 1, 1, 10, 30, 46, tzinfo=UTC()),
+                datetime(2013, 1, 1, 10, 30, 45, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 10, 30, 46, tzinfo=pytz.utc),
             ),
         ),
         (
             # Second with implicit UTC
             "2013-01-01T12:30:45",
             (
-                datetime(2013, 1, 1, 12, 30, 45, tzinfo=UTC()),
-                datetime(2013, 1, 1, 12, 30, 46, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, 30, 45, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 12, 30, 46, tzinfo=pytz.utc),
             ),
         ),
         (
             # Minute with UTC
             "2013-01-01T12:30+00:00",
             (
-                datetime(2013, 1, 1, 12, 30, tzinfo=UTC()),
-                datetime(2013, 1, 1, 12, 31, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, 30, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 12, 31, tzinfo=pytz.utc),
             ),
         ),
         (
             # Minute with conversion
             "2013-01-01T12:30+04:00",
             (
-                datetime(2013, 1, 1, 8, 30, tzinfo=UTC()),
-                datetime(2013, 1, 1, 8, 31, tzinfo=UTC()),
+                datetime(2013, 1, 1, 8, 30, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 8, 31, tzinfo=pytz.utc),
             ),
         ),
         (
             # Minute with implicit UTC
             "2013-01-01T12:30",
             (
-                datetime(2013, 1, 1, 12, 30, tzinfo=UTC()),
-                datetime(2013, 1, 1, 12, 31, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, 30, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 12, 31, tzinfo=pytz.utc),
             ),
         ),
         (
             # Hour, explicit UTC
             "2013-01-01T12Z",
             (
-                datetime(2013, 1, 1, 12, tzinfo=UTC()),
-                datetime(2013, 1, 1, 13, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 13, tzinfo=pytz.utc),
             ),
         ),
         (
             # Hour with offset
             "2013-01-01T12-07:00",
             (
-                datetime(2013, 1, 1, 19, tzinfo=UTC()),
-                datetime(2013, 1, 1, 20, tzinfo=UTC()),
+                datetime(2013, 1, 1, 19, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 20, tzinfo=pytz.utc),
             ),
         ),
         (
             # Hour with implicit UTC
             "2013-01-01T12",
             (
-                datetime(2013, 1, 1, 12, tzinfo=UTC()),
-                datetime(2013, 1, 1, 13, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 13, tzinfo=pytz.utc),
             ),
         ),
         (
@@ -414,8 +355,8 @@ def test_isointerval():
             # be accepted.
             "2013-01-01T12:00:00.0/2013-01-01T12:30:00.000000",
             (
-                datetime(2013, 1, 1, 12, tzinfo=UTC()),
-                datetime(2013, 1, 1, 12, 30, tzinfo=UTC()),
+                datetime(2013, 1, 1, 12, tzinfo=pytz.utc),
+                datetime(2013, 1, 1, 12, 30, tzinfo=pytz.utc),
             ),
         ),
     ]

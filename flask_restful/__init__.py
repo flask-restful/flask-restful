@@ -4,16 +4,18 @@ from functools import wraps, partial
 import re
 from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
+from flask import make_response as original_flask_make_response
 from flask.views import MethodView
 from flask.signals import got_request_exception
-from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
-from flask.ext.restful.utils import error_data, unpack, OrderedDict
-from flask.ext.restful.representations.json import output_json
+from flask_restful.utils import error_data, unpack, OrderedDict
+from flask_restful.representations.json import output_json
 import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
+import operator
 
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
@@ -55,6 +57,9 @@ class Api(object):
     :type decorators: list
     :param catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
+    :param serve_challenge_on_401: Whether to serve a challenge response to
+        clients on receiving 401. This usually leads to a username/password
+        popup in web browers.
     :param url_part_order: A string that controls the order that the pieces
         of the url are concatenated when the full url is constructed.  'b'
         is the blueprint (or blueprint registration) prefix, 'a' is the api
@@ -68,13 +73,15 @@ class Api(object):
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False, url_part_order='bae', errors=None):
+                 catch_all_404s=False, serve_challenge_on_401=False,
+                 url_part_order='bae', errors=None):
         self.representations = dict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
         self.decorators = decorators if decorators else []
         self.catch_all_404s = catch_all_404s
+        self.serve_challenge_on_401 = serve_challenge_on_401
         self.url_part_order = url_part_order
         self.errors = errors or {}
         self.blueprint_setup = None
@@ -326,7 +333,21 @@ class Api(object):
             code = custom_data.get('status', 500)
             data.update(custom_data)
 
-        resp = self.make_response(data, code, headers)
+        if code == 406 and self.default_mediatype is None:
+            # if we are handling NotAcceptable (406), make sure that
+            # make_response uses a representation we support as the
+            # default mediatype (so that make_response doesn't throw
+            # another NotAcceptable error).
+            supported_mediatypes = list(self.representations.keys())
+            fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else "text/plain"
+            resp = self.make_response(
+                data,
+                code,
+                headers,
+                fallback_mediatype = fallback_mediatype
+            )
+        else:
+            resp = self.make_response(data, code, headers)
 
         if code == 401:
             resp = self.unauthorized(resp)
@@ -351,6 +372,14 @@ class Api(object):
             Can be used to reference this route in :class:`fields.Url` fields
         :type endpoint: str
 
+        :param resource_class_args: args to be forwarded to the constructor of
+            the resource.
+        :type resource_class_args: tuple
+
+        :param resource_class_kwargs: kwargs to be forwarded to the constructor
+            of the resource.
+        :type resource_class_kwargs: dict
+
         Additional keyword arguments not specified above will be passed as-is
         to :meth:`flask.Flask.add_url_rule`.
 
@@ -367,8 +396,8 @@ class Api(object):
             self.resources.append((resource, urls, kwargs))
 
     def resource(self, *urls, **kwargs):
-        """Wraps a :class:`~flask.ext.restful.Resource` class, adding it to the
-        api. Parameters are the same as :meth:`~flask.ext.restful.Api.add_resource`.
+        """Wraps a :class:`~flask_restful.Resource` class, adding it to the
+        api. Parameters are the same as :meth:`~flask_restful.Api.add_resource`.
 
         Example::
 
@@ -389,6 +418,8 @@ class Api(object):
     def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
+        resource_class_args = kwargs.pop('resource_class_args', ())
+        resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
 
         if endpoint in app.view_functions.keys():
             previous_view_class = app.view_functions[endpoint].__dict__['view_class']
@@ -399,7 +430,8 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
-        resource_func = self.output(resource.as_view(endpoint))
+        resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
+            **resource_class_kwargs))
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
@@ -442,26 +474,45 @@ class Api(object):
         return wrapper
 
     def url_for(self, resource, **values):
-        """Generates a URL to the given resource."""
-        return url_for(resource.endpoint, **values)
+        """Generates a URL to the given resource.
+
+        Works like :func:`flask.url_for`."""
+        endpoint = resource.endpoint
+        if self.blueprint:
+            endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
+        return url_for(endpoint, **values)
 
     def make_response(self, data, *args, **kwargs):
         """Looks up the representation transformer for the requested media
         type, invoking the transformer to create a response object. This
-        defaults to (application/json) if no transformer is found for the
-        requested mediatype.
+        defaults to default_mediatype if no transformer is found for the
+        requested mediatype. If default_mediatype is None, a 406 Not
+        Acceptable response will be sent as per RFC 2616 section 14.1
 
         :param data: Python object containing response data to be transformed
         """
-        for mediatype in self.mediatypes() + [self.default_mediatype]:
-            if mediatype in self.representations:
-                resp = self.representations[mediatype](data, *args, **kwargs)
-                resp.headers['Content-Type'] = mediatype
-                return resp
+        default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
+        mediatype = request.accept_mimetypes.best_match(
+            self.representations,
+            default=default_mediatype,
+        )
+        if mediatype is None:
+            raise NotAcceptable()
+        if mediatype in self.representations:
+            resp = self.representations[mediatype](data, *args, **kwargs)
+            resp.headers['Content-Type'] = mediatype
+            return resp
+        elif mediatype == 'text/plain':
+            resp = original_flask_make_response(str(data), *args, **kwargs)
+            resp.headers['Content-Type'] = 'text/plain'
+            return resp
+        else:
+            raise InternalServerError()
 
     def mediatypes(self):
         """Returns a list of requested mediatypes sent in the Accept header"""
-        return [h for h, q in request.accept_mimetypes]
+        return [h for h, q in sorted(request.accept_mimetypes,
+                                     key=operator.itemgetter(1), reverse=True)]
 
     def representation(self, mediatype):
         """Allows additional representation transformers to be declared for the
@@ -492,10 +543,11 @@ class Api(object):
     def unauthorized(self, response):
         """ Given a response, change it to ask for credentials """
 
-        realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
-        challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+        if self.serve_challenge_on_401:
+            realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
+            challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
 
-        response.headers['WWW-Authenticate'] = challenge
+            response.headers['WWW-Authenticate'] = challenge
         return response
 
 
@@ -507,7 +559,7 @@ class Resource(MethodView):
     the API will return a response with status 405 Method Not Allowed.
     Otherwise the appropriate method is called and passed all arguments
     from the url rule used when adding the resource to an Api instance. See
-    :meth:`~flask.ext.restful.Api.add_resource` for details.
+    :meth:`~flask_restful.Api.add_resource` for details.
     """
     representations = None
     method_decorators = []
@@ -532,12 +584,12 @@ class Resource(MethodView):
         representations = self.representations or {}
 
         #noinspection PyUnresolvedReferences
-        for mediatype in self.mediatypes():
-            if mediatype in representations:
-                data, code, headers = unpack(resp)
-                resp = representations[mediatype](data, code, headers)
-                resp.headers['Content-Type'] = mediatype
-                return resp
+        mediatype = request.accept_mimetypes.best_match(representations, default=None)
+        if mediatype in representations:
+            data, code, headers = unpack(resp)
+            resp = representations[mediatype](data, code, headers)
+            resp.headers['Content-Type'] = mediatype
+            return resp
 
         return resp
 
@@ -553,7 +605,7 @@ def marshal(data, fields, envelope=None):
                      response
 
 
-    >>> from flask.ext.restful import fields, marshal
+    >>> from flask_restful import fields, marshal
     >>> data = { 'a': 100, 'b': 'foo' }
     >>> mfields = { 'a': fields.Raw }
 
@@ -583,7 +635,7 @@ def marshal(data, fields, envelope=None):
 class marshal_with(object):
     """A decorator that apply marshalling to the return values of your methods.
 
-    >>> from flask.ext.restful import fields, marshal_with
+    >>> from flask_restful import fields, marshal_with
     >>> mfields = { 'a': fields.Raw }
     >>> @marshal_with(mfields)
     ... def get():
@@ -601,7 +653,7 @@ class marshal_with(object):
     >>> get()
     OrderedDict([('data', OrderedDict([('a', 100)]))])
 
-    see :meth:`flask.ext.restful.marshal`
+    see :meth:`flask_restful.marshal`
     """
     def __init__(self, fields, envelope=None):
         """
@@ -629,7 +681,7 @@ class marshal_with_field(object):
     """
     A decorator that formats the return values of your methods with a single field.
 
-    >>> from flask.ext.restful import marshal_with_field, fields
+    >>> from flask_restful import marshal_with_field, fields
     >>> @marshal_with_field(fields.List(fields.Integer))
     ... def get():
     ...     return ['1', 2, 3.0]
@@ -637,7 +689,7 @@ class marshal_with_field(object):
     >>> get()
     [1, 2, 3]
 
-    see :meth:`flask.ext.restful.marshal_with`
+    see :meth:`flask_restful.marshal_with`
     """
     def __init__(self, field):
         """
