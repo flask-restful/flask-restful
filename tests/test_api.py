@@ -8,6 +8,7 @@ except:
     from unittest.mock import Mock, patch
 import flask
 import werkzeug
+from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest
 from flask_restful.utils import http_status_message, error_data, unpack
 import flask_restful
 import flask_restful.fields
@@ -16,6 +17,7 @@ from json import dumps, loads
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
 import six
+
 
 
 def check_unpack(expected, value):
@@ -74,7 +76,7 @@ class APITestCase(unittest.TestCase):
     def test_handle_error_401_no_challenge_by_default(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -86,7 +88,7 @@ class APITestCase(unittest.TestCase):
     def test_handle_error_401_sends_challege_default_realm(self):
         app = Flask(__name__)
         api = flask_restful.Api(app, serve_challenge_on_401=True)
-        exception = Mock()
+        exception = HTTPException()
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -99,8 +101,8 @@ class APITestCase(unittest.TestCase):
     def test_handle_error_401_sends_challege_configured_realm(self):
         app = Flask(__name__)
         app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
+        exception = Mock(spec=HTTPException)
         api = flask_restful.Api(app, serve_challenge_on_401=True)
-        exception = Mock()
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
@@ -354,29 +356,33 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
-        exception.code = 500
+        with app.test_request_context("/foo"):
+            resp = api.handle_error(Exception())
+            self.assertEquals(resp.status_code, 500)
+            self.assertEquals(resp.data.decode(), dumps({"status": 500, "message": "Internal Server Error"}))
+
+    def test_handle_error_with_code(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app, serve_challenge_on_401=True)
+
+        exception = Exception()
+        exception.code = "Not an integer"
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context("/foo"):
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.data.decode(), dumps({
-                'foo': 'bar',
-            }))
+            self.assertEquals(resp.data.decode(), dumps({"foo": "bar"}))
 
     def test_handle_auth(self):
         app = Flask(__name__)
         api = flask_restful.Api(app, serve_challenge_on_401=True)
 
-        exception = Mock()
-        exception.code = 401
-        exception.data = {'foo': 'bar'}
-
         with app.test_request_context("/foo"):
-            resp = api.handle_error(exception)
+            resp = api.handle_error(Unauthorized())
             self.assertEquals(resp.status_code, 401)
-            self.assertEquals(resp.data.decode(), dumps({'foo': 'bar'}))
+            expected_data = dumps({'status': 401, 'message': 'Unauthorized'})
+            self.assertEquals(resp.data.decode(), expected_data)
 
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
@@ -423,9 +429,7 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
-        exception.code = 400
-        exception.data = {'foo': 'bar'}
+        exception = BadRequest()
 
         recorded = []
 
@@ -445,15 +449,12 @@ class APITestCase(unittest.TestCase):
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
-        exception = Mock()
-        exception.code = 400
-        exception.data = {'foo': 'bar'}
-
         with app.test_request_context("/foo"):
-            resp = api.handle_error(exception)
+            resp = api.handle_error(BadRequest())
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.data.decode(), dumps({
-                'foo': 'bar',
+                'status': 400,
+                'message': 'Bad Request',
             }))
 
     def test_handle_smart_errors(self):
@@ -461,7 +462,7 @@ class APITestCase(unittest.TestCase):
         api = flask_restful.Api(app)
         view = flask_restful.Resource
 
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
         exception.code = 404
         exception.data = {"status": 404, "message": "Not Found"}
         api.add_resource(view, '/foo', endpoint='bor')
@@ -476,29 +477,19 @@ class APITestCase(unittest.TestCase):
             }))
 
         with app.test_request_context("/fOo"):
+            del exception.data["message"]
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data.decode(), dumps({
                 "status": 404, "message": "Not Found. You have requested this URI [/fOo] but did you mean /foo ?",
             }))
 
-        with app.test_request_context("/fOo"):
-            del exception.data["message"]
-            resp = api.handle_error(exception)
-            self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data.decode(), dumps({
-                "status": 404, "message": "You have requested this URI [/fOo] but did you mean /foo ?",
-            }))
-
         app.config['ERROR_404_HELP'] = False
 
         with app.test_request_context("/fOo"):
-            del exception.data["message"]
             resp = api.handle_error(exception)
             self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data.decode(), dumps({
-                "status": 404
-            }))
+            self.assertEquals(resp.data.decode(), dumps({"status": 404, "message": "Not Found"}))
 
     def test_error_router_falls_back_to_original(self):
         """Verify that if an exception occurs in the Flask-RESTful error handler,
@@ -509,7 +500,7 @@ class APITestCase(unittest.TestCase):
         app.handle_exception = Mock()
         api.handle_error = Mock(side_effect=Exception())
         api._has_fr_route = Mock(return_value=True)
-        exception = Mock()
+        exception = Mock(spec=HTTPException)
 
         with app.test_request_context('/foo'):
             api.error_router(exception, app.handle_exception)
