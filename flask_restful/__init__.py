@@ -57,14 +57,16 @@ class Api(object):
     :type decorators: list
     :param catch_all_404s: Use :meth:`handle_error`
         to handle 404 errors throughout your app
+    :type catch_all_404s: bool
     :param serve_challenge_on_401: Whether to serve a challenge response to
         clients on receiving 401. This usually leads to a username/password
         popup in web browers.
+    :type serve_challenge_on_401: bool
     :param url_part_order: A string that controls the order that the pieces
         of the url are concatenated when the full url is constructed.  'b'
         is the blueprint (or blueprint registration) prefix, 'a' is the api
         prefix, and 'e' is the path component the endpoint is added with
-    :type catch_all_404s: bool
+    :type url_part_order: str
     :param errors: A dictionary to define a custom response for each
         exception or error raised during a request
     :type errors: dict
