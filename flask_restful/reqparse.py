@@ -34,8 +34,7 @@ text_type = lambda x: six.text_type(x)
 class Argument(object):
 
     """
-    :param name: Either a name or a list of option strings, e.g. foo or
-        -f, --foo.
+    :param name: The name of this argument, as specified in the HTTP request.
     :param default: The value produced if the argument is absent from the
         request.
     :param dest: The name of the attribute to be added to the object
