@@ -301,8 +301,8 @@ class RequestParser(object):
             flask_restful.abort(400, message=errors)
 
         if strict and req.unparsed_arguments:
-            raise exceptions.BadRequest('Unknown arguments: %s'
-                                        % ', '.join(req.unparsed_arguments.keys()))
+            errors = {arg: 'Unknown argument' for arg in req.unparsed_arguments}
+            flask_restful.abort(400, message=errors)
 
         return namespace
 
