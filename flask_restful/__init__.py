@@ -428,6 +428,7 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
+        resource.api = self
         resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
             **resource_class_kwargs))
 
