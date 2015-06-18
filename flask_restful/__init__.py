@@ -5,7 +5,10 @@ import re
 from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
 from flask import make_response as original_flask_make_response
-from flask.views import MethodView
+try:
+    from flask.views import MethodView
+except ImportError:       # can happen for old flask's
+    MethodView = object   # (you can't use Resource with such an old flask)
 from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
