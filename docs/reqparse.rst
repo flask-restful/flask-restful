@@ -117,9 +117,9 @@ also overwrite any argument in the parent with
 :meth:`~reqparse.RequestParser.replace_argument`, or remove it completely
 with :meth:`~reqparse.RequestParser.remove_argument`. For example: ::
 
-    from flask_restful import RequestParser
+    from flask_restful import reqparse
 
-    parser = RequestParser()
+    parser = reqparse.RequestParser()
     parser.add_argument('foo', type=int)
 
     parser_copy = parser.copy()
@@ -145,9 +145,9 @@ specified either at the Flask application level or on the specific RequestParser
 instance.  To invoke a RequestParser with the bundling errors option, pass in the
 argument ``bundle_errors``.  For example ::
 
-    from flask_restful import RequestParser
+    from flask_restful import reqparse
 
-    parser = RequestParser(bundle_errors=True)
+    parser = reqparse.RequestParser(bundle_errors=True)
     parser.add_argument('foo', type=int, required=True)
     parser.add_argument('bar', type=int, required=True)
 
