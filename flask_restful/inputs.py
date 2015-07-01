@@ -242,6 +242,9 @@ def boolean(value):
     if type(value) == bool:
         return value
 
+    if value == '':
+        return None
+
     if not value:
         raise ValueError("boolean type must be non-null")
     value = value.lower()
