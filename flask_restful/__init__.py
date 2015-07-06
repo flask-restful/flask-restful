@@ -10,7 +10,7 @@ from flask.signals import got_request_exception
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
-from flask_restful.utils import error_data, unpack, OrderedDict
+from flask_restful.utils import http_status_message, unpack, OrderedDict
 from flask_restful.representations.json import output_json
 import sys
 from flask.helpers import _endpoint_from_view_func
@@ -288,11 +288,16 @@ class Api(object):
 
         if isinstance(e, HTTPException):
             code = e.code
-            data = error_data(code)
+            default_data = {
+                'message': getattr(e, 'description', http_status_message(code))
+            }
         else:
             code = 500
-            data = getattr(e, 'data', error_data(code))
+            default_data = {
+                'message': http_status_message(code),
+            }
 
+        data = getattr(e, 'data', default_data)
         headers = {}
 
         if code >= 500:
@@ -304,15 +309,14 @@ class Api(object):
                 current_app.logger.exception("Internal Error")
 
         help_on_404 = current_app.config.get("ERROR_404_HELP", True)
-        if code == 404 and help_on_404 and ('message' not in data or
-                                            data['message'] == HTTP_STATUS_CODES[404]):
+        if code == 404 and help_on_404:
             rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
                           for rule in current_app.url_map.iter_rules()])
             close_matches = difflib.get_close_matches(request.path, rules.keys())
             if close_matches:
                 # If we already have a message, add punctuation and continue it.
                 if "message" in data:
-                    data["message"] += ". "
+                    data["message"] = data["message"].rstrip('.') + '. '
                 else:
                     data["message"] = ""
 
