@@ -31,6 +31,11 @@ _friendly_location = {
 text_type = lambda x: six.text_type(x)
 
 
+class _ParseError(Exception):
+    """An internal error object used to communicate errors from Argument."""
+    pass
+
+
 class Argument(object):
 
     """
@@ -140,7 +145,7 @@ class Argument(object):
             msg = {self.name: "%s" % (error_msg)}
             return error, msg
         msg = {self.name: "%s" % (error_msg)}
-        flask_restful.abort(400, message=msg)
+        raise _ParseError(msg)
 
     def parse(self, request, bundle_errors=False):
         """Parses argument value(s) from the request, converting according to
@@ -275,11 +280,16 @@ class RequestParser(object):
 
         return self
 
-    def parse_args(self, req=None, strict=False):
+    def parse_args(self, req=None, strict=False,
+                   error_fn=flask_restful.abort):
         """Parse all arguments from the provided request and return the results
         as a Namespace
 
         :param strict: if req includes args not in parser, throw 400 BadRequest exception
+        :param function error_fn: A function to call when there's a parse
+            error.  It takes one arg, the response code to return, and one
+            kwarg 'message', the message to send with that response code
+            (probably a dict).
         """
         if req is None:
             req = request
@@ -291,19 +301,22 @@ class RequestParser(object):
         req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
         errors = {}
         for arg in self.args:
-            value, found = arg.parse(req, self.bundle_errors)
+            try:
+                value, found = arg.parse(req, self.bundle_errors)
+            except _ParseError, e:
+                error_fn(400, message=e.message)
             if isinstance(value, ValueError):
                 errors.update(found)
                 found = None
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
         if errors:
-            flask_restful.abort(400, message=errors)
+            error_fn(400, message=errors)
 
         if strict and req.unparsed_arguments:
             errors = dict([(arg, 'Unknown argument')
                            for arg in req.unparsed_arguments])
-            flask_restful.abort(400, message=errors)
+            error_fn(400, message=errors)
 
         return namespace
 
