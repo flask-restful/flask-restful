@@ -1,7 +1,6 @@
 import unittest
 from flask import Flask
 import flask_restful
-from werkzeug import exceptions
 from nose.tools import assert_equals
 
 

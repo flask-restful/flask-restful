@@ -1,5 +1,4 @@
 import unittest
-import json
 from flask import Flask, Blueprint, redirect, views
 from flask.signals import got_request_exception, signals_available
 try:
@@ -8,7 +7,6 @@ except:
     # python3
     from unittest.mock import Mock
 import flask
-import werkzeug
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
 from flask_restful.utils import http_status_message, unpack
 import flask_restful

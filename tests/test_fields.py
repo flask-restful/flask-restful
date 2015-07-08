@@ -6,7 +6,7 @@ from mock import Mock
 from flask_restful.fields import MarshallingException
 from flask_restful.utils import OrderedDict
 from flask_restful import fields
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime
 from flask import Flask, Blueprint
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals  # you need it for tests in form of continuations
