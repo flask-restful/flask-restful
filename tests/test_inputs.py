@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime
 import unittest
 import pytz
 import re
@@ -140,7 +140,6 @@ def test_regex_bad_pattern():
     assert_raises(re.error, inputs.regex, '[')
 
 
-
 class TypesTestCase(unittest.TestCase):
 
     def test_boolean_false(self):
@@ -160,6 +159,13 @@ class TypesTestCase(unittest.TestCase):
 
     def test_boolean(self):
         assert_equal(inputs.boolean("FaLSE"), False)
+
+    def test_boolean_for_python_int(self):
+        assert_equal(inputs.boolean(0), False)
+        assert_equal(inputs.boolean(1), True)
+
+    def test_boolean_for_python_none(self):
+        assert_raises(ValueError, lambda: inputs.boolean(None))
 
     def test_boolean_with_python_bool(self):
         """Input that is already a native python `bool` should be passed through

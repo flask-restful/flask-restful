@@ -1,4 +1,3 @@
-from calendar import timegm
 from datetime import datetime, time, timedelta
 from email.utils import parsedate_tz, mktime_tz
 import re
@@ -234,21 +233,25 @@ class int_range(object):
 
 def boolean(value):
     """Parse the string ``"true"`` or ``"false"`` as a boolean (case
-    insensitive). Also accepts ``"1"`` and ``"0"`` as ``True``/``False``
-    (respectively). If the input is from the request JSON body, the type is
+    insensitive). Also accepts ``"1"`` or ``1`` as ``True`` and ``"0"`` or ``0`` as ``False``.
+    If the input is from the request JSON body, the type is
     already a native python boolean, and will be passed through without
     further parsing.
     """
+    if value is None:
+        raise ValueError("boolean type must be non-null")
+
     if type(value) == bool:
         return value
 
-    if not value:
-        raise ValueError("boolean type must be non-null")
-    value = value.lower()
-    if value in ('true', '1',):
+    if isinstance(value, basestring):
+        value = value.lower()
+
+    if value in ('true', '1', 1):
         return True
-    if value in ('false', '0',):
+    if value in ('false', '0', 0):
         return False
+
     raise ValueError("Invalid literal for boolean(): {}".format(value))
 
 
