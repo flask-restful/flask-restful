@@ -141,7 +141,7 @@ class Argument(object):
         """
         help_str = '(%s) ' % self.help if self.help else ''
         error_msg = ' '.join([help_str, str(error)]) if help_str else str(error)
-        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+        if bundle_errors:
             msg = {self.name: "%s" % (error_msg)}
             return error, msg
         msg = {self.name: "%s" % (error_msg)}
@@ -191,7 +191,7 @@ class Argument(object):
                         return self.handle_validation_error(error, bundle_errors)
 
                     if self.choices and value not in self.choices:
-                        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+                        if bundle_errors:
                             return self.handle_validation_error(
                                 ValueError(u"{0} is not a valid choice".format(
                                     value)), bundle_errors)
@@ -214,7 +214,7 @@ class Argument(object):
                 error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
-            if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+            if bundle_errors:
                 return self.handle_validation_error(ValueError(error_msg), bundle_errors)
             self.handle_validation_error(ValueError(error_msg), bundle_errors)
 
