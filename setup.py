@@ -22,6 +22,12 @@ setup(
     author_email='help@twilio.com',
     description='Simple framework for creating REST APIs',
     packages=find_packages(exclude=['tests']),
+    classifiers=[
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+    ],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
