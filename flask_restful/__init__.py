@@ -596,7 +596,7 @@ class Resource(MethodView):
         return resp
 
 
-def marshal(data, fields, envelope=None):
+def marshal(data, fields, envelope=None, skip_none=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
@@ -605,6 +605,7 @@ def marshal(data, fields, envelope=None):
                    response output
     :param envelope: optional key that will be used to envelop the serialized
                      response
+    :param skip_none: optional key that will skip serialize null data. Default: False
 
 
     >>> from flask_restful import fields, marshal
@@ -619,16 +620,19 @@ def marshal(data, fields, envelope=None):
 
     """
 
+    if skip_none and data is None:
+        return None
+
     def make(cls):
         if isinstance(cls, type):
             return cls()
         return cls
 
     if isinstance(data, (list, tuple)):
-        return (OrderedDict([(envelope, [marshal(d, fields) for d in data])])
-                if envelope else [marshal(d, fields) for d in data])
+        return (OrderedDict([(envelope, [marshal(d, fields, skip_none=skip_none) for d in data])])
+                if envelope else [marshal(d, fields, skip_none=skip_none) for d in data])
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
+    items = ((k, marshal(data, v, skip_none=skip_none) if isinstance(v, dict)
               else make(v).output(k, data))
              for k, v in fields.items())
     return OrderedDict([(envelope, OrderedDict(items))]) if envelope else OrderedDict(items)
@@ -657,15 +661,17 @@ class marshal_with(object):
 
     see :meth:`flask_restful.marshal`
     """
-    def __init__(self, fields, envelope=None):
+    def __init__(self, fields, envelope=None, skip_none=None):
         """
         :param fields: a dict of whose keys will make up the final
                        serialized response output
         :param envelope: optional key that will be used to envelop the serialized
                          response
+        :param skip_none: optional key that will skip serialize null data. Default: False
         """
         self.fields = fields
         self.envelope = envelope
+        self.skip_none = skip_none
 
     def __call__(self, f):
         @wraps(f)
@@ -673,11 +679,10 @@ class marshal_with(object):
             resp = f(*args, **kwargs)
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return marshal(data, self.fields, self.envelope), code, headers
+                return marshal(data, self.fields, self.envelope, self.skip_none), code, headers
             else:
-                return marshal(resp, self.fields, self.envelope)
+                return marshal(resp, self.fields, self.envelope, self.skip_none)
         return wrapper
-
 
 class marshal_with_field(object):
     """
