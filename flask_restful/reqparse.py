@@ -311,6 +311,8 @@ class RequestParser(object):
         """ Creates a copy of this RequestParser with the same set of arguments """
         parser_copy = self.__class__(self.argument_class, self.namespace_class)
         parser_copy.args = deepcopy(self.args)
+        parser_copy.trim = self.trim
+        parser_copy.bundle_errors = self.bundle_errors
         return parser_copy
 
     def replace_argument(self, name, *args, **kwargs):
