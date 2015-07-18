@@ -820,6 +820,12 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], 1)
 
+    def test_trim_request_parser_override_by_argument(self):
+        parser = RequestParser(trim=True)
+        parser.add_argument('foo', trim=False)
+
+        self.assertFalse(parser.args[0].trim)
+
     def test_trim_request_parser_json(self):
         app = Flask(__name__)
 

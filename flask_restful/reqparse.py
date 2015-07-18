@@ -272,7 +272,7 @@ class RequestParser(object):
         #Do not know what other argument classes are out there
         if self.trim and self.argument_class is Argument:
             #enable trim for appended element
-            self.args[-1].trim = True
+            self.args[-1].trim = kwargs.get('trim', self.trim)
 
         return self
 
