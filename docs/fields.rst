@@ -148,6 +148,23 @@ pass the ``scheme`` keyword argument::
         'https_uri': fields.Url('todo_resource', absolute=True, scheme='https')
     }
 
+It is possible to pass additional arguments resource uri
+synthetisation, for example::
+
+    # somewhere else ...
+    rest.add_resource('/resource/<id>/<action>', endpoint='action_resource')
+
+    # fields
+    fields = {
+        'actions: {
+	    'hello': fields.Url('action_resource', extra={'action': 'hello'}),
+	    'grunt': fields.Url('action_resource', extra={'action': 'grunt'})
+        }
+    }
+
+This decouples the uri syntax from the view as the view does not have
+to know how to add additional path parameters to the resource uri.
+
 Complex Structures
 ------------------
 
