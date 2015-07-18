@@ -4,7 +4,6 @@ from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
 import flask_restful
 import decimal
-import inspect
 import six
 
 
