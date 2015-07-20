@@ -711,6 +711,13 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(args['foo'], 101)
         self.assertEquals(args['bar'], u'baz')
 
+    def test_request_parse_copy_including_settings(self):
+        parser = RequestParser(trim=True, bundle_errors=True)
+        parser_copy = parser.copy()
+
+        self.assertEqual(parser.trim, parser_copy.trim)
+        self.assertEqual(parser.bundle_errors, parser_copy.bundle_errors)
+
     def test_request_parser_replace_argument(self):
         req = Request.from_values("/bubble?foo=baz")
         parser = RequestParser()
@@ -812,6 +819,12 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument('foo', type=int)
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], 1)
+
+    def test_trim_request_parser_override_by_argument(self):
+        parser = RequestParser(trim=True)
+        parser.add_argument('foo', trim=False)
+
+        self.assertFalse(parser.args[0].trim)
 
     def test_trim_request_parser_json(self):
         app = Flask(__name__)

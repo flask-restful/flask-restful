@@ -4,7 +4,6 @@ from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
 import flask_restful
 import decimal
-import inspect
 import six
 
 
@@ -272,7 +271,7 @@ class RequestParser(object):
         #Do not know what other argument classes are out there
         if self.trim and self.argument_class is Argument:
             #enable trim for appended element
-            self.args[-1].trim = True
+            self.args[-1].trim = kwargs.get('trim', self.trim)
 
         return self
 
@@ -311,6 +310,8 @@ class RequestParser(object):
         """ Creates a copy of this RequestParser with the same set of arguments """
         parser_copy = self.__class__(self.argument_class, self.namespace_class)
         parser_copy.args = deepcopy(self.args)
+        parser_copy.trim = self.trim
+        parser_copy.bundle_errors = self.bundle_errors
         return parser_copy
 
     def replace_argument(self, name, *args, **kwargs):
