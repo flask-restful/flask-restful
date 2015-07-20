@@ -229,3 +229,15 @@ instead of the original ``data`` object. In other words:
 ``data.billing_address.addr1`` is in scope here, whereas in the previous
 example ``data.addr1`` was the location attribute. Remember: ``Nested`` and
 ``List`` objects create a new scope for attributes.
+
+Use :class:`~fields.Nested` with :class:`~fields.List` to marshal lists of more
+complex objects: ::
+
+    user_fields = {
+        'id': fields.Integer,
+        'name': fields.String,
+    }
+
+    user_list_fields = {
+        fields.List(fields.Nested(user_fields)),
+    }
