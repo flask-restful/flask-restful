@@ -10,8 +10,6 @@ understanding of `Flask <http://flask.pocoo.org>`_, and that you have already
 installed both Flask and Flask-RESTful.  If not, then follow the steps in the
 :ref:`installation` section.
 
-
-
 A Minimal API
 -------------
 
@@ -32,7 +30,6 @@ A minimal Flask-RESTful API looks like this: ::
     if __name__ == '__main__':
         app.run(debug=True)
 
-
 Save this as api.py and run it using your Python interpreter. Note that we've
 enabled `Flask debugging <http://flask.pocoo.org/docs/quickstart/#debug-mode>`_
 mode to provide code reloading and better error messages. ::
@@ -45,13 +42,10 @@ mode to provide code reloading and better error messages. ::
 
     Debug mode should never be used in a production environment!
 
-
 Now open up a new prompt to test out your API using curl ::
 
     $ curl http://127.0.0.1:5000/
     {"hello": "world"}
-
-
 
 Resourceful Routing
 -------------------
@@ -143,6 +137,13 @@ You can also match parts of the path as variables to your resource methods. ::
 
     api.add_resource(Todo,
         '/todo/<int:todo_id>', endpoint='todo_ep')
+
+.. note ::
+
+    If a request does not match any of your application's endpoints,
+    Flask-RESTful will return a 404 error message with suggestions of other
+    endpoints that closesly match the requested endpoint. This can be disabled
+    by setting ``ERROR_404_HELP`` to ``False`` in your application config.
 
 Argument Parsing
 ----------------
