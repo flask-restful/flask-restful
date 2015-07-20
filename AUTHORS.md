@@ -3,8 +3,6 @@ Authors
 
 A huge thanks to all of our contributors:
 
-
-- Alec Reiter
 - Alex Gaynor
 - Alex M
 - Alex Morken
@@ -17,11 +15,13 @@ A huge thanks to all of our contributors:
 - Axel Haustant
 - Belousow Makc
 - Bennett, Bryan
+- Bohan Zhang
 - Bryan Bennett
 - Bulat Bochkariov
 - Cameron Brandon White
 - Catherine Devlin
 - Dan Quirk
+- Daniele Esposti
 - David Arnold
 - David Baumgold
 - David Boucha
@@ -38,6 +38,7 @@ A huge thanks to all of our contributors:
 - Jacob Magnusson
 - James Booth
 - James Ogura
+- James Turk
 - Joakim Ekberg
 - Johannes
 - Jordan Yelloz
@@ -60,6 +61,7 @@ A huge thanks to all of our contributors:
 - Max Peterson
 - Maxim
 - Michael Hwang
+- Michael Newman
 - Miguel Grinberg
 - Mihai Tomescu
 - Pavel Tyslyatsky
@@ -68,6 +70,7 @@ A huge thanks to all of our contributors:
 - Piotr Husiatyński
 - Prasanna Swaminathan
 - Robert Warner
+- Rod Cloutier
 - Ryan Horn
 - Sam Kimbrel
 - Sander Sink
@@ -80,6 +83,7 @@ A huge thanks to all of our contributors:
 - WooParadog
 - Yaniv Aknin
 - bret barker
+- justanr
 - k-funk
 - kelvinhammond
 - kenjones
@@ -88,6 +92,7 @@ A huge thanks to all of our contributors:
 - mniebla
 - mozillazg
 - muchosalsa
+- nachinius
 - nixdata
 - papaeye
 - pingz

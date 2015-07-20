@@ -3,6 +3,16 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3.4
+-------------
+
+Released July 20, 2015
+
+- Fixed issue where `abort()` and `raise Exception` were not equivalent ([#205](https://github.com/flask-restful/flask-restful/issues/205))
+- Fixed `RequestParser` settings not being copied properly ([#483](https://github.com/flask-restful/flask-restful/pull/483))
+- Add ability to configure json serializer settings from application config ([#458](https://github.com/flask-restful/flask-restful/pull/458))
+- Project metadata, tests, and examples are now included in source distributions ([#475](https://github.com/flask-restful/flask-restful/issues/475))
+- Various documentation improvements
 
 Version 0.3.3
 -------------
