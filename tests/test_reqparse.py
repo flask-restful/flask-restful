@@ -184,7 +184,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values()
         req.view_args = {"foo": "bar"}
         parser = RequestParser()
-        parser.add_argument("foo", location=["view_args"], type=str)
+        parser.add_argument("foo", location=["view_args"])
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], "bar")
 
@@ -193,7 +193,7 @@ class ReqParseTestCase(unittest.TestCase):
         req.json = None
         req.view_args = {"foo": "bar"}
         parser = RequestParser()
-        parser.add_argument("foo", type=str, store_missing=True)
+        parser.add_argument("foo", store_missing=True)
         args = parser.parse_args(req)
         self.assertEquals(args["foo"], None)
 
@@ -571,7 +571,7 @@ class ReqParseTestCase(unittest.TestCase):
         app = Flask(__name__)
 
         parser = RequestParser()
-        parser.add_argument("foo", type=str, location="json")
+        parser.add_argument("foo", location="json")
         with app.test_request_context('/bubble', method="post",
                                       data=json.dumps({"foo": None}),
                                       content_type='application/json'):
@@ -654,7 +654,7 @@ class ReqParseTestCase(unittest.TestCase):
     def test_passing_arguments_object(self):
         req = Request.from_values("/bubble?foo=bar")
         parser = RequestParser()
-        parser.add_argument(Argument("foo", type=str))
+        parser.add_argument(Argument("foo"))
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], u"bar")
@@ -716,7 +716,7 @@ class ReqParseTestCase(unittest.TestCase):
         parser = RequestParser()
         parser.add_argument('foo', type=int)
         parser_copy = parser.copy()
-        parser_copy.replace_argument('foo', type=str)
+        parser_copy.replace_argument('foo')
 
         args = parser_copy.parse_args(req)
         self.assertEquals(args['foo'], u'baz')

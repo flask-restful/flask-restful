@@ -158,10 +158,10 @@ has built-in support for request data validation using a library similar to
     parser.add_argument('rate', type=int, help='Rate to charge for this resource')
     args = parser.parse_args()
 
+.. note ::
 
-Note that unlike the argparse module,
-:meth:`reqparse.RequestParser.parse_args` returns a Python dictionary
-instead of a custom data structure.
+    Unlike the argparse module, :meth:`reqparse.RequestParser.parse_args`
+    returns a Python dictionary instead of a custom data structure.
 
 Using the :class:`reqparse` module also gives you sane error messages for
 free. If an argument fails to pass validation, Flask-RESTful will respond with
@@ -241,7 +241,7 @@ Save this example in api.py ::
             abort(404, message="Todo {} doesn't exist".format(todo_id))
 
     parser = reqparse.RequestParser()
-    parser.add_argument('task', type=str)
+    parser.add_argument('task')
 
 
     # Todo

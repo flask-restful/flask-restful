@@ -48,12 +48,14 @@ The decorator :class:`marshal_with` is what actually takes your data object and
 applies the field filtering.  The marshalling can work on single objects,
 dicts, or lists of objects.
 
-Note: :class:`marshal_with` is a convenience decorator, that is functionally
-equivalent to ::
+.. note ::
 
-    class Todo(Resource):
-        def get(self, **kwargs):
-            return marshal(db_get_todo(), resource_fields), 200
+    :class:`marshal_with` is a convenience decorator, that is functionally
+    equivalent to ::
+
+        class Todo(Resource):
+            def get(self, **kwargs):
+                return marshal(db_get_todo(), resource_fields), 200
 
 This explicit expression can be used to return HTTP status codes other than 200
 along with a successful response (see :func:`abort` for errors).
@@ -168,9 +170,10 @@ transform to a nested structure ::
     >>> json.dumps(marshal(data, resource_fields))
     '{"name": "bob", "address": {"line 1": "123 fake street", "line 2": "", "state": "NY", "zip": "10468", "city": "New York"}}'
 
-Note: the address field doesn't actually exist on the data object, but any of
-the sub-fields can access attributes directly from the object as if they were
-not nested.
+.. note ::
+    The address field doesn't actually exist on the data object, but any of
+    the sub-fields can access attributes directly from the object as if they
+    were not nested.
 
 .. _list-field:
 

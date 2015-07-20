@@ -95,9 +95,11 @@ up to a :class:`~flask.Blueprint`. ::
     api.add_resource(TodoItem, '/todos/<int:id>')
     app.register_blueprint(api_bp)
 
-Note that calling :meth:`Api.init_app` is not required here because registering
-the blueprint with the app takes care of setting up the routing for the
-application.
+.. note ::
+
+    Calling :meth:`Api.init_app` is not required here because registering the
+    blueprint with the app takes care of setting up the routing for the
+    application.
 
 Full Parameter Parsing Example
 ------------------------------
@@ -118,8 +120,8 @@ exercise a larger amount of options. We'll define a resource named "User". ::
     post_parser = reqparse.RequestParser()
     post_parser.add_argument(
         'username', dest='username',
-        type=str, location='form',
-        required=True, help='The user\'s username',
+        location='form', equired=True,
+        help='The user\'s username',
     )
     post_parser.add_argument(
         'email', dest='email',
@@ -166,8 +168,8 @@ argument. ::
 
     post_parser.add_argument(
         'username', dest='username',
-        type=str, location='form',
-        required=True, help='The user\'s username',
+        location='form', required=True,
+        help='The user\'s username',
     )
 
 The ``username`` field is the most normal out of all of them. It takes
