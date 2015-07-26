@@ -3,6 +3,16 @@
 Request Parsing
 ===============
 
+.. warning ::
+
+    The whole request parser part of Flask-RESTful is slated for removal and
+    will be replaced by documentation on how to integrate with other packages
+    that do the input/output stuff better
+    (such as `marshmallow <http://marshmallow.readthedocs.org>`_).
+    This means that it will be maintained until 2.0 but consider it deprecated.
+    Don't worry, if you have code using that now and wish to continue doing so,
+    it's not going to go away any time too soon.
+
 .. currentmodule:: flask_restful
 
 Flask-RESTful's request parsing interface, :mod:`reqparse`, is modeled after
