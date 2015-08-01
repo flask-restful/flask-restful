@@ -111,6 +111,11 @@ to specify alternate locations to pull the values from. Any variable on the
     # From file uploads
     parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
 
+.. note ::
+
+    Only use ``type=list`` when ``location='json'``. `See this issue for more
+    details <https://github.com/flask-restful/flask-restful/issues/380>`_
+
 Multiple Locations
 ------------------
 
