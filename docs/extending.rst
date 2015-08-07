@@ -40,6 +40,22 @@ object.
     application needs these customizations, you can replace the default JSON
     representation with one using the Flask JSON module as described above.
 
+It is possible to configue how the default Flask-RESTful JSON representation
+will format JSON by providing a ``RESTFUL_JSON`` attribute on the application
+configuration. This setting is a dictionary with keys that correspond to the
+keyword arguments of :py:func:`json.dumps`. ::
+
+    class MyConfig(object):
+        RESTFUL_JSON = {'separators': (', ', ': '),
+                        'indent': 2,
+                        'cls': MyCustomEncoder}
+
+.. Note ::
+
+    If the application is running in debug mode (``app.debug = True``) and
+    either ``sort_keys`` or ``indent`` are not declared in the ``RESTFUL_JSON``
+    configuration setting, Flask-RESTful will provide defaults of ``True`` and
+    ``4`` respectively.
 
 Custom Fields & Inputs
 ----------------------
