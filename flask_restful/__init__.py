@@ -298,7 +298,7 @@ class Api(object):
             }
 
         data = getattr(e, 'data', default_data)
-        headers = {}
+        headers = getattr(e, 'headers', {})
 
         if code >= 500:
             # There's currently a bug in Python3 that disallows calling
