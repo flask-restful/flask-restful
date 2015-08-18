@@ -3,6 +3,7 @@ from calendar import timegm
 import pytz
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
 from email.utils import formatdate
+import strict_rfc3339
 import six
 try:
     from urlparse import urlparse, urlunparse
@@ -347,7 +348,10 @@ class DateTime(Raw):
     See :meth:`datetime.datetime.isoformat` for more info on the ISO 8601
     format.
 
-    :param dt_format: ``'rfc822'`` or ``'iso8601'``
+    See `strict_rfc3339 <https://pypi.python.org/pypi/strict-rfc3339/>`_ package
+    for more info on the RFC 3339 format.
+
+    :param dt_format: ``'rfc822'`` or ``'iso8601'`` or ```'rfc3339'```
     :type dt_format: str
     """
     def __init__(self, dt_format='rfc822', **kwargs):
@@ -360,6 +364,8 @@ class DateTime(Raw):
                 return _rfc822(value)
             elif self.dt_format == 'iso8601':
                 return _iso8601(value)
+            elif self.dt_format == 'rfc3339':
+                return _rfc3339(value)
             else:
                 raise MarshallingException(
                     'Unsupported date format %s' % self.dt_format
@@ -415,3 +421,24 @@ def _iso8601(dt):
     :return: A ISO 8601 formatted date string
     """
     return dt.isoformat()
+
+
+def _rfc3339(dt):
+    """Turn a datetime object into an RFC3339 formatted date at UTC.
+
+    Example::
+
+        fields._rfc3339(datetime(2012, 1, 1, 0, 0, tzinfo=pytz.utc)) => "2012-01-01T00:00:00Z"
+
+    :param dt: The datetime to transform
+    :type dt: datetime
+    :return: A RFC 3339 formatted date string
+    """
+    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+        raise MarshallingException(
+            'Naive datetime %s not supported by RFC 3339.' % dt
+        )
+    d = dt.astimezone(pytz.utc)
+    ts = timegm(d.timetuple())
+    ts += d.microsecond / 10e5
+    return strict_rfc3339.timestamp_to_rfc3339_utcoffset(ts)
