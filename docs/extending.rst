@@ -40,7 +40,7 @@ object.
     application needs these customizations, you can replace the default JSON
     representation with one using the Flask JSON module as described above.
 
-It is possible to configue how the default Flask-RESTful JSON representation
+It is possible to configure how the default Flask-RESTful JSON representation
 will format JSON by providing a ``RESTFUL_JSON`` attribute on the application
 configuration. This setting is a dictionary with keys that correspond to the
 keyword arguments of :py:func:`json.dumps`. ::
