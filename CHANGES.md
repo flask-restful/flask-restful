@@ -3,6 +3,9 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+
+- Use Flask's exception log method in `handle_error(e)` method instead of directly logging the exception notice.
+
 Version 0.3.4
 -------------
 
