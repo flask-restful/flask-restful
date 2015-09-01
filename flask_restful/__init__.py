@@ -301,12 +301,10 @@ class Api(object):
         headers = {}
 
         if code >= 500:
-            # There's currently a bug in Python3 that disallows calling
-            # logging.exception() when an exception hasn't actually be raised
-            if sys.exc_info() == (None, None, None):
-                current_app.logger.error("Internal Error")
-            else:
-                current_app.logger.exception("Internal Error")
+            exc_info = sys.exc_info()
+            if exc_info[1] is None:
+                exc_info = None
+            current_app.log_exception(exc_info)
 
         help_on_404 = current_app.config.get("ERROR_404_HELP", True)
         if code == 404 and help_on_404:
