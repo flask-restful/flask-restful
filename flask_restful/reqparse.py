@@ -196,6 +196,9 @@ class Argument(object):
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
+
+                    if value is None and self.required:
+                        continue
                     results.append(value)
 
         if not results and self.required:
