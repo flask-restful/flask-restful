@@ -139,12 +139,13 @@ class Argument(object):
             dict with the name of the argument and the error message to be
             bundled
         """
-        help_str = '(%s) ' % self.help if self.help else ''
-        error_msg = ' '.join([help_str, str(error)]) if help_str else str(error)
+        msg = {
+            "parameter_name": self.name,
+            "parameter_doc": self.help or '',
+            "error": str(error),
+        }
         if bundle_errors:
-            msg = {self.name: "%s" % (error_msg)}
             return error, msg
-        msg = {self.name: "%s" % (error_msg)}
         raise _ParseError(msg)
 
     def parse(self, request, bundle_errors=False):
@@ -288,8 +289,9 @@ class RequestParser(object):
         :param strict: if req includes args not in parser, throw 400 BadRequest exception
         :param function error_fn: A function to call when there's a parse
             error.  It takes one arg, the response code to return, and one
-            kwarg 'message', the message to send with that response code
-            (probably a dict).
+            kwarg 'message', the message to send with that response code,
+            which should be a list of dicts, each dict containing
+            information about one error.
         """
         if req is None:
             req = request
@@ -299,14 +301,14 @@ class RequestParser(object):
         # A record of arguments not yet parsed; as each is found
         # among self.args, it will be popped out
         req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
-        errors = {}
+        errors = []
         for arg in self.args:
             try:
                 value, found = arg.parse(req, self.bundle_errors)
             except _ParseError, e:
-                error_fn(400, message=e.message)
+                error_fn(400, message=[e.message])
             if isinstance(value, ValueError):
-                errors.update(found)
+                errors.append(found)
                 found = None
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
@@ -314,8 +316,10 @@ class RequestParser(object):
             error_fn(400, message=errors)
 
         if strict and req.unparsed_arguments:
-            errors = dict([(arg, 'Unknown argument')
-                           for arg in req.unparsed_arguments])
+            errors = [{'parameter_name': arg,
+                       'parameter_doc': '',
+                       'error': 'Unknown argument',
+                      } for arg in req.unparsed_arguments]
             error_fn(400, message=errors)
 
         return namespace
