@@ -239,7 +239,7 @@ def boolean(value):
     already a native python boolean, and will be passed through without
     further parsing.
     """
-    if type(value) == bool:
+    if isinstance(value, bool):
         return value
 
     if not value:
