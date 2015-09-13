@@ -35,7 +35,7 @@ def is_indexable_but_not_string(obj):
 
 def get_value(key, obj, default=None):
     """Helper for pulling a keyed value off various types of objects"""
-    if type(key) == int:
+    if isinstance(key, int):
         return _get_value_for_key(key, obj, default)
     elif callable(key):
         return key(obj)
@@ -188,7 +188,7 @@ class List(Raw):
                         or (self.container.attribute
                             and hasattr(val, self.container.attribute)))
                         and not isinstance(self.container, Nested)
-                        and not type(self.container) is Raw
+                        and not type(self.container) is Raw 
                     else value)
             for idx, val in enumerate(value)
         ]
