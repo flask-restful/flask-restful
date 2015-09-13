@@ -188,7 +188,7 @@ class List(Raw):
                         or (self.container.attribute
                             and hasattr(val, self.container.attribute)))
                         and not isinstance(self.container, Nested)
-                        and not type(self.container) is Raw 
+                        and not type(self.container) is Raw
                     else value)
             for idx, val in enumerate(value)
         ]
