@@ -140,8 +140,8 @@ class Argument(object):
             bundled
         """
         msg = {
-            "parameter_name": self.name,
-            "parameter_doc": self.help or '',
+            "parameterName": self.name,
+            "parameterDoc": self.help or '',
             "error": str(error),
         }
         if bundle_errors:
@@ -316,8 +316,8 @@ class RequestParser(object):
             error_fn(400, message=errors)
 
         if strict and req.unparsed_arguments:
-            errors = [{'parameter_name': arg,
-                       'parameter_doc': '',
+            errors = [{'parameterName': arg,
+                       'parameterDoc': '',
                        'error': 'Unknown argument',
                       } for arg in req.unparsed_arguments]
             error_fn(400, message=errors)
