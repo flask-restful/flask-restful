@@ -79,6 +79,13 @@ A lambda (or any callable) can also be specified as the ``attribute`` ::
         'address': fields.String,
     }
 
+Nested properties can also be accessed with ``attribute``:
+
+    fields = {
+        'name': fields.String(attribute='people_list.0.person_dictionary.name'),
+        'address': fields.String,
+    }
+
 
 Default Values
 --------------
