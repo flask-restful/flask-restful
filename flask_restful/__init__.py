@@ -421,7 +421,8 @@ class Api(object):
         resource_class_args = kwargs.pop('resource_class_args', ())
         resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
 
-        if endpoint in app.view_functions.keys():
+        # NOTE: 'view_functions' is cleaned up from Blueprint class in Flask 1.0
+        if endpoint in getattr(app, 'view_functions', {}):
             previous_view_class = app.view_functions[endpoint].__dict__['view_class']
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
