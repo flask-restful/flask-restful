@@ -176,7 +176,7 @@ The :class:`inputs` module provides a number of included common conversion
 functions such as :meth:`inputs.date` and :meth:`inputs.url`.
 
 Calling ``parse_args`` with ``strict=True`` ensures that an error is thrown if
-the request includes arguments your parser does not define.
+the request includes arguments your parser does not define. ::
 
     args = parser.parse_args(strict=True)
 
