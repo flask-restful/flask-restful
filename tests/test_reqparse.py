@@ -18,15 +18,27 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(arg.help, None)
 
     @patch('flask_restful.abort')
-    def test_help(self, abort):
+    def test_help_with_error_msg(self, abort):
         app = Flask(__name__)
         with app.app_context():
             parser = RequestParser()
-            parser.add_argument('foo', choices=['one', 'two'], help='Bad choice')
+            parser.add_argument('foo', choices=('one', 'two'), help='Bad choice: {error_msg}')
             req = Mock(['values'])
             req.values = MultiDict([('foo', 'three')])
             parser.parse_args(req)
-            expected = {'foo': '(Bad choice)  three is not a valid choice'}
+            expected = {'foo': 'Bad choice: three is not a valid choice'}
+            abort.assert_called_with(400, message=expected)
+
+    @patch('flask_restful.abort')
+    def test_help_no_error_msg(self, abort):
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument('foo', choices=['one', 'two'], help='Please select a valid choice')
+            req = Mock(['values'])
+            req.values = MultiDict([('foo', 'three')])
+            parser.parse_args(req)
+            expected = {'foo': 'Please select a valid choice'}
             abort.assert_called_with(400, message=expected)
 
     @patch('flask_restful.abort', side_effect=exceptions.BadRequest('Bad Request'))
