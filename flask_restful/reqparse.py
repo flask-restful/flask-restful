@@ -135,7 +135,7 @@ class Argument(object):
             dict with the name of the argument and the error message to be
             bundled
         """
-        error_str = str(error)
+        error_str = six.text_type(error)
         error_msg = self.help.format(error_msg=error_str) if self.help else error_str
         msg = {self.name: "{0}".format(error_msg)}
 
