@@ -41,7 +41,7 @@ the :attr:`flask.Request.values` dict: an integer and a string ::
 If you specify the ``help`` value, it will be rendered as the error message
 when a type error is raised while parsing it.  If you do not specify a help
 message, the default behavior is to return the message from the type error
-itself.
+itself. See :ref:`error-messages` for more details.
 
 By default, arguments are **not** required.  Also, arguments supplied in the
 request that are not part of the RequestParser will be ignored.
@@ -203,3 +203,37 @@ The application configuration key is "BUNDLE_ERRORS". For example ::
 
     ``BUNDLE_ERRORS`` is a global setting that overrides the ``bundle_errors``
     option in individual :class:`~reqparse.RequestParser` instances.
+
+
+.. _error-messages:
+Error Messages
+--------------
+
+Error messages for each field may be customized using the ``help`` parameter
+to ``Argument`` (and also ``RequestParser.add_argument``).
+
+If no help parameter is provided, the error message for the field will be
+the string representation of the type error itself. If ``help`` is provided,
+then the error message will be the value of ``help``.
+
+``help`` may include an interpolation token, ``{error_msg}``, that will be
+replaced with the string representation of the type error. This allows the
+message to be customized while preserving the original error:
+
+    from flask_restful import reqparse
+
+
+    parser = reqparse.RequestParser()
+    parser.add_argument(
+        'foo',
+        choices=('one', 'two'),
+        help='Bad choice: {error_msg}'
+    )
+
+    # If a request comes in with a value of "three" for `foo`:
+
+    {
+        "message":  {
+            "foo": "Bad choice: three is not a valid choice",
+        }
+    }
