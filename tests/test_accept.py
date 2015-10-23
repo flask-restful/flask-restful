@@ -5,6 +5,7 @@ from werkzeug import exceptions
 from nose.tools import assert_equals
 
 
+
 class AcceptTestCase(unittest.TestCase):
 
     def test_accept_default_application_json(self):
@@ -54,6 +55,28 @@ class AcceptTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'text/plain')])
+            assert_equals(res.status_code, 200)
+            assert_equals(res.content_type, 'application/json')
+
+
+    def test_accept_default_any_pick_first(self):
+
+        class Foo(flask_restful.Resource):
+            def get(self):
+                return "data"
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        @api.representation('text/plain')
+        def text_rep(data, status_code, headers=None):
+            resp = app.make_response((str(data), status_code, headers))
+            return resp
+
+        api.add_resource(Foo, '/')
+
+        with app.test_client() as client:
+            res = client.get('/', headers=[('Accept', '*/*')])
             assert_equals(res.status_code, 200)
             assert_equals(res.content_type, 'application/json')
 
@@ -216,7 +239,3 @@ class AcceptTestCase(unittest.TestCase):
         with app.test_client() as client:
             res = client.get('/', headers=[('Accept', 'text/plain')])
             assert_equals(res.status_code, 500)
-
-
-
-
