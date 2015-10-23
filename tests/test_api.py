@@ -1,6 +1,6 @@
 import unittest
 import json
-from flask import Flask, Blueprint, redirect, views
+from flask import Flask, Blueprint, redirect, views, abort as flask_abort
 from flask.signals import got_request_exception, signals_available
 try:
     from mock import Mock
@@ -10,6 +10,7 @@ except:
 import flask
 import werkzeug
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
+from werkzeug.http import quote_etag, unquote_etag
 from flask_restful.utils import http_status_message, unpack
 import flask_restful
 import flask_restful.fields
@@ -779,8 +780,40 @@ class APITestCase(unittest.TestCase):
         resp = app.post('/ids/3')
         self.assertEquals(resp.status_code, 405)
         self.assertEquals(resp.content_type, api.default_mediatype)
-        self.assertEquals(set(resp.headers.get_all('Allow')),
+        # Allow can be of the form 'GET, PUT, POST'
+        allow = ', '.join(set(resp.headers.get_all('Allow')))
+        allow = set(method.strip() for method in allow.split(','))
+        self.assertEquals(allow,
                           set(['HEAD', 'OPTIONS'] + HelloWorld.methods))
+
+    def test_exception_header_forwarded(self):
+        """Test that HTTPException's headers are extended properly"""
+        app = Flask(__name__)
+        app.config['DEBUG'] = True
+        api = flask_restful.Api(app)
+
+        class NotModified(HTTPException):
+            code = 304
+
+            def __init__(self, etag, *args, **kwargs):
+                super(NotModified, self).__init__(*args, **kwargs)
+                self.etag = quote_etag(etag)
+
+            def get_headers(self, *args, **kwargs):
+                """Get a list of headers."""
+                return [('ETag', self.etag)]
+
+        class Foo1(flask_restful.Resource):
+            def get(self):
+                flask_abort(304, etag='myETag')
+
+        api.add_resource(Foo1, '/foo')
+        flask_abort.mapping.update({304: NotModified})
+
+        with app.test_client() as client:
+            foo = client.get('/foo')
+            self.assertEquals(foo.get_etag(),
+                              unquote_etag(quote_etag('myETag')))
 
     def test_will_prettyprint_json_in_debug_mode(self):
         app = Flask(__name__)

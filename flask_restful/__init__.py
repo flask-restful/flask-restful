@@ -7,6 +7,7 @@ from flask import abort as original_flask_abort
 from flask import make_response as original_flask_make_response
 from flask.views import MethodView
 from flask.signals import got_request_exception
+from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
@@ -286,11 +287,13 @@ class Api(object):
             else:
                 raise e
 
+        headers = Headers()
         if isinstance(e, HTTPException):
             code = e.code
             default_data = {
                 'message': getattr(e, 'description', http_status_message(code))
             }
+            headers = e.get_response().headers
         else:
             code = 500
             default_data = {
@@ -298,7 +301,6 @@ class Api(object):
             }
 
         data = getattr(e, 'data', default_data)
-        headers = {}
 
         if code >= 500:
             exc_info = sys.exc_info()
@@ -323,9 +325,6 @@ class Api(object):
                                    ' or '.join((
                                        rules[match] for match in close_matches)
                                    ) + ' ?'
-
-        if code == 405:
-            headers['Allow'] = e.valid_methods
 
         error_cls_name = type(e).__name__
         if error_cls_name in self.errors:
