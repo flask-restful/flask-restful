@@ -33,7 +33,7 @@ def abort(http_status_code, **kwargs):
             e.data = kwargs
         raise
 
-DEFAULT_REPRESENTATIONS = {'application/json': output_json}
+DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
 
 
 class Api(object):
