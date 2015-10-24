@@ -34,7 +34,7 @@ def abort(http_status_code, **kwargs):
             e.data = kwargs
         raise
 
-DEFAULT_REPRESENTATIONS = {'application/json': output_json}
+DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
 
 
 class Api(object):
@@ -76,7 +76,7 @@ class Api(object):
                  default_mediatype='application/json', decorators=None,
                  catch_all_404s=False, serve_challenge_on_401=False,
                  url_part_order='bae', errors=None):
-        self.representations = dict(DEFAULT_REPRESENTATIONS)
+        self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
         self.default_mediatype = default_mediatype
@@ -581,7 +581,7 @@ class Resource(MethodView):
         if isinstance(resp, ResponseBase):  # There may be a better way to test
             return resp
 
-        representations = self.representations or {}
+        representations = self.representations or OrderedDict()
 
         #noinspection PyUnresolvedReferences
         mediatype = request.accept_mimetypes.best_match(representations, default=None)
