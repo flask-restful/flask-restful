@@ -53,7 +53,7 @@ class APITestCase(unittest.TestCase):
         response.headers = {}
         with app.test_request_context('/foo'):
             response = api.unauthorized(response)
-        assert_false('WWW-Autheneticate' in response.headers)
+        assert_false('WWW-Authenticate' in response.headers)
 
     def test_unauthorized(self):
         app = Flask(__name__)
