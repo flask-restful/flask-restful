@@ -61,7 +61,7 @@ class regex(object):
 
     def __call__(self, value):
         if not self.re.search(value):
-            message = 'Value does not match pattern: "{}"'.format(self.pattern)
+            message = 'Value does not match pattern: "{0}"'.format(self.pattern)
             raise ValueError(message)
         return value
 
@@ -192,7 +192,7 @@ def _get_integer(value):
     try:
         return int(value)
     except (TypeError, ValueError):
-        raise ValueError('{} is not a valid integer'.format(value))
+        raise ValueError('{0} is not a valid integer'.format(value))
 
 
 def natural(value, argument='argument'):
@@ -249,7 +249,7 @@ def boolean(value):
         return True
     if value in ('false', '0',):
         return False
-    raise ValueError("Invalid literal for boolean(): {}".format(value))
+    raise ValueError("Invalid literal for boolean(): {0}".format(value))
 
 
 def datetime_from_rfc822(datetime_str):
