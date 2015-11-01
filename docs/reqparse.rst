@@ -123,7 +123,15 @@ Multiple argument locations can be specified by passing a list to ``location``::
 
     parser.add_argument('text', location=['headers', 'values'])
 
+
+When multiple locations are specified, the arguments from all locations
+specified are combined into a single :class:`~werkzeug.datastructures.MultiDict`.
 The last ``location`` listed takes precedence in the result set.
+
+If the argument location list includes the :attr:`~flask.Request.headers`
+location the argument names will no longer be case insensitive and must match
+their title case names (see :meth:`str.title`). Specifying
+``location='headers'`` (not as a list) will retain case insensitivity.
 
 Parser Inheritance
 ------------------
