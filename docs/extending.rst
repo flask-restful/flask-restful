@@ -189,6 +189,29 @@ instance, if you want to build custom authentication into every request. ::
     class Resource(restful.Resource):
         method_decorators = [authenticate]   # applies to all inherited resources
 
+Alternatively, you can specify a dictionary of iterables that map to HTTP methods
+and the decorators will only apply to matching requests.
+
+.. code-block:: python
+
+    def cache(f):
+        @wraps(f)
+        def cacher(*args, **kwargs):
+            # caching stuff
+        return cacher
+
+    class MyResource(restful.Resource):
+        method_decorators = {'get': [cache]}
+
+         def get(self, *args, **kwargs):
+            return something_interesting(*args, **kwargs)
+
+         def post(self, *args, **kwargs):
+            return create_something(*args, **kwargs)
+
+In this case, the caching decorator would only apply to the `GET` request and not
+the `POST` request.
+
 Since Flask-RESTful Resources are actually Flask view objects, you can also
 use standard `flask view decorators <http://flask.pocoo.org/docs/views/#decorating-views>`_.
 
