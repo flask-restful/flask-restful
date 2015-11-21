@@ -197,7 +197,7 @@ invalid. ::
 
 The ``user_priority`` type takes advantage of the ``choices`` argument. This
 means that if the provided `user_priority` value doesn't fall in the range
-specified by the ``choices`` argument (in this case ``[1, 2, 3, 4]``),
+specified by the ``choices`` argument (in this case ``[0, 1, 2, 3, 4]``),
 Flask-RESTful will automatically respond with a 400 and a descriptive error
 message.
 
