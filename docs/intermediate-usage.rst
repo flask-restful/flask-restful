@@ -120,7 +120,7 @@ exercise a larger amount of options. We'll define a resource named "User". ::
     post_parser = reqparse.RequestParser()
     post_parser.add_argument(
         'username', dest='username',
-        location='form', equired=True,
+        location='form', required=True,
         help='The user\'s username',
     )
     post_parser.add_argument(
