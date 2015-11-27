@@ -62,12 +62,14 @@ class Argument(object):
     :param bool store_missing: Whether the arguments default value should
         be stored if the argument is missing from the request.
     :param bool trim: If enabled, trims whitespace around the argument.
+    :param bool nullable: If enabled, allows null value in argument.
     """
 
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True, store_missing=True, trim=False):
+                 case_sensitive=True, store_missing=True, trim=False,
+                 nullable=True):
         self.name = name
         self.default = default
         self.dest = dest
@@ -82,6 +84,7 @@ class Argument(object):
         self.operators = operators
         self.store_missing = store_missing
         self.trim = trim
+        self.nullable = nullable
 
     def source(self, request):
         """Pulls values off the request in the provided location
@@ -108,7 +111,10 @@ class Argument(object):
     def convert(self, value, op):
         # Don't cast None
         if value is None:
-            return None
+            if self.nullable:
+                return None
+            else:
+                raise ValueError('Must not be null!')
 
         # and check if we're expecting a filestorage and haven't overridden `type`
         # (required because the below instantiation isn't valid for FileStorage)
