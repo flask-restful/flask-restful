@@ -8,7 +8,8 @@ from flask import make_response as original_flask_make_response
 from flask.views import MethodView
 from flask.signals import got_request_exception
 from werkzeug.datastructures import Headers
-from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, \
+        InternalServerError, default_exceptions
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
 from flask_restful.utils import http_status_message, unpack, OrderedDict
@@ -17,6 +18,7 @@ import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
+import six
 
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
@@ -85,6 +87,7 @@ class Api(object):
         self.serve_challenge_on_401 = serve_challenge_on_401
         self.url_part_order = url_part_order
         self.errors = errors or {}
+        self.errorhandlers = []
         self.blueprint_setup = None
         self.endpoints = set()
         self.resources = []
@@ -287,6 +290,13 @@ class Api(object):
             else:
                 raise e
 
+        for typecheck, handler in self.errorhandlers:
+            if isinstance(e, typecheck):
+                # unpack(None) -> (None, _, _)
+                data, code, headers = unpack(handler(e))
+                if data:
+                    return self.make_response(data, code, headers)
+
         headers = Headers()
         if isinstance(e, HTTPException):
             code = e.code
@@ -351,6 +361,26 @@ class Api(object):
         if code == 401:
             resp = self.unauthorized(resp)
         return resp
+
+    def errorhandler(self, exc_class_or_code):
+        """A decorator that is used to register a function for a given exception.
+        Example::
+
+            @api.errorhandler(IntegrityError)
+            def handle_integrity_error(exception):
+                return {'message': 'Integrity Error!'}, 500
+
+        :param exc_class_or_code: the Exception class or HTTP code
+        :type exc_class_or_code: Exception or int
+        """
+        def wrapper(func):
+            if isinstance(exc_class_or_code, six.integer_types):
+                exc_class = default_exceptions[exc_class_or_code]
+            else:
+                exc_class = exc_class_or_code
+            self.errorhandlers.insert(0, (exc_class, func))
+            return func
+        return wrapper
 
     def mediatypes_method(self):
         """Return a method that returns a list of mediatypes

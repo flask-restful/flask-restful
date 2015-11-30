@@ -458,6 +458,39 @@ class APITestCase(unittest.TestCase):
                 'message': BadRequest.description,
             }) + "\n")
 
+    def test_errorhandler_exception(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class CustomException(Exception):
+            pass
+
+        @api.errorhandler(CustomException)
+        def custom_error_response(e):
+            return {"My Field": "My Message"}, 503
+
+        with app.test_request_context("/foo"):
+            resp = api.handle_error(CustomException())
+            self.assertEquals(resp.status_code, 503)
+            self.assertEquals(resp.data.decode(), dumps({
+                'My Field': 'My Message',
+            }) + "\n")
+
+    def test_errorhandler_code(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        @api.errorhandler(400)
+        def custom_error_response(e):
+            return {"message": "Custom Message"}, 400
+
+        with app.test_request_context("/foo"):
+            resp = api.handle_error(BadRequest())
+            self.assertEquals(resp.status_code, 400)
+            self.assertEquals(resp.data.decode(), dumps({
+                'message': 'Custom Message',
+            }) + "\n")
+
     def test_handle_smart_errors(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
