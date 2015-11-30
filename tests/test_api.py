@@ -587,6 +587,33 @@ class APITestCase(unittest.TestCase):
 
         self.assertRaises(ValueError, api.register_error_handler, 42, Mock())
 
+    def test_default_exception_handler(self):
+        """always returns tuple, never None"""
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        with app.test_request_context("/foo"):
+            rv = api.default_exception_handler(ValueError())
+            self.assertFalse(rv is None)
+            self.assertTrue(isinstance(rv, tuple))
+            self.assertEqual(len(rv), 3)
+
+    def test_default_http_exception_handler(self):
+        """pass headers from exception to response"""
+
+        class MyException(HTTPException):
+            def get_headers(self, *args, **kwargs):
+                return [('foo', 'bar')]
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        with app.test_request_context("/foo"):
+            rv = api.default_http_exception_handler(MyException())
+            self.assertTrue(isinstance(rv, tuple))
+            self.assertEqual(len(rv), 3)
+            headers = rv[2]
+            self.assertTrue('foo' in headers)
+            self.assertEqual(headers['foo'], 'bar')
+
     def test_handle_smart_errors(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)

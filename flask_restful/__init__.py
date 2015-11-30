@@ -94,6 +94,8 @@ class Api(object):
         self.app = None
         self.blueprint = None
 
+        self.register_error_handler(Exception, self.custom_errors_handlers)
+
         if app is not None:
             self.app = app
             self.init_app(app)
@@ -336,12 +338,6 @@ class Api(object):
                                        rules[match] for match in close_matches)
                                    ) + ' ?'
 
-        error_cls_name = type(e).__name__
-        if error_cls_name in self.errors:
-            custom_data = self.errors.get(error_cls_name, {})
-            code = custom_data.get('status', 500)
-            data.update(custom_data)
-
         if code == 406 and self.default_mediatype is None:
             # if we are handling NotAcceptable (406), make sure that
             # make_response uses a representation we support as the
@@ -361,6 +357,50 @@ class Api(object):
         if code == 401:
             resp = self.unauthorized(resp)
         return resp
+
+    def default_exception_handler(self, e):
+        """Default response for an unhandled Exception
+
+        :param e: the exception raised while handling the request
+        :type e: Exception
+        :return: (data, code, headers) tuple
+        """
+        code = 500
+        default_data = { 'message': http_status_message(code), }
+        data = getattr(e, 'data', default_data)
+        return data, code, Headers()
+
+    def default_http_exception_handler(self, e):
+        """Default response for a HTTPException
+
+        :param e: the exception raised while handling the request
+        :type e: werkzeug.exceptions.HTTPException
+        :return: (data, code, headers) tuple
+        """
+        code = e.code
+        data = { 'message': getattr(e, 'description', http_status_message(code)), }
+        return data, code, e.get_response().headers
+
+    def custom_errors_handlers(self, e):
+        """Process custom error handlers passed by `errors` argument
+
+        :param e: the exception raised while handling the request
+        :type e: Exception
+        :return: (data, code, headers) tuple or None if no match was found
+        """
+        error_cls_name = type(e).__name__
+        if error_cls_name in self.errors:
+            if isinstance(e, HTTPException):
+                data, code, headers = self.default_http_exception_handler(e)
+            else:
+                data, code, headers = self.default_exception_handler(e)
+            custom_data = self.errors.get(error_cls_name, {})
+            code = custom_data.get('status', code)
+            if isinstance(data, dict):
+                data.update(custom_data)
+            else:
+                data = custom_data
+            return data, code, headers
 
     def register_error_handler(self, exc_class_or_code, func):
         """Register error handling `func` for a given exception or HTTP code
