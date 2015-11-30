@@ -3,10 +3,10 @@ import json
 from flask import Flask, Blueprint, redirect, views, abort as flask_abort
 from flask.signals import got_request_exception, signals_available
 try:
-    from mock import Mock
+    from mock import call, Mock
 except:
     # python3
-    from unittest.mock import Mock
+    from unittest.mock import call, Mock
 import flask
 import werkzeug
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
@@ -490,6 +490,102 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.data.decode(), dumps({
                 'message': 'Custom Message',
             }) + "\n")
+
+    def test_errorhandler_order(self):
+        """handlers called in reverse register order"""
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.errorhandlers = []
+
+        mock = Mock()
+        mock.a.return_value = None
+        mock.b.return_value = None
+        mock.c.return_value = None
+        api.register_error_handler(Exception, mock.a)
+        api.register_error_handler(Exception, mock.b)
+        api.register_error_handler(Exception, mock.c)
+
+        with app.test_request_context("/foo"):
+            exc = Exception()
+            resp = api.handle_error(exc)
+            self.assertEquals(mock.mock_calls,
+                [call.c(exc), call.b(exc), call.a(exc)])
+
+    def test_errorhandler_subclass(self):
+        """base class handler called for subclass"""
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.errorhandlers = []
+
+        mock = Mock(return_value=None)
+        api.register_error_handler(HTTPException, mock)
+
+        with app.test_request_context("/foo"):
+            exc = BadRequest()
+            resp = api.handle_error(exc)
+            mock.assert_called_once_with(exc)
+
+    def test_errorhandler_first_non_none(self):
+        """first non-None stops processing"""
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.errorhandlers = []
+
+        mock = Mock()
+        mock.a.return_value = None
+        mock.b.return_value = ({ 'message': 'foo', }, 400, )
+        mock.c.return_value = None
+        api.register_error_handler(Exception, mock.a)
+        api.register_error_handler(Exception, mock.b)
+        api.register_error_handler(Exception, mock.c)
+
+        with app.test_request_context("/foo"):
+            exc = Exception()
+            resp = api.handle_error(exc)
+            self.assertEquals(mock.mock_calls,
+                [call.c(exc), call.b(exc)])
+
+    def test_errorhandler_order_over_better_match(self):
+        """register order wins over better class match"""
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.errorhandlers = []
+
+        mock = Mock()
+        mock.a.return_value = ('a', 400, )
+        mock.b.return_value = ('b', 400, )
+        api.register_error_handler(BadRequest, mock.a)
+        api.register_error_handler(HTTPException, mock.b)
+
+        with app.test_request_context("/foo"):
+            exc = BadRequest()
+            resp = api.handle_error(exc)
+            self.assertEquals(mock.mock_calls, [call.b(exc), ])
+            self.assertEquals(resp.status_code, 400)
+            self.assertEquals(resp.data.decode(), dumps('b')+'\n')
+
+    def test_errorhandler_register_by_code(self):
+        """register by code is same as class reference"""
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.errorhandlers = []
+
+        mock = Mock(return_value=('by-code', 400, ))
+        api.register_error_handler(400, mock)
+
+        with app.test_request_context("/foo"):
+            exc = BadRequest()
+            resp = api.handle_error(exc)
+            mock.assert_called_once_with(exc)
+            self.assertEquals(resp.status_code, 400)
+            self.assertEquals(resp.data.decode(), dumps('by-code')+'\n')
+
+    def test_errorhandler_register_by_invalid_code(self):
+        """register invalid code raises ValueError"""
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        self.assertRaises(ValueError, api.register_error_handler, 42, Mock())
 
     def test_handle_smart_errors(self):
         app = Flask(__name__)

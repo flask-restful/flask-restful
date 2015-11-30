@@ -362,6 +362,33 @@ class Api(object):
             resp = self.unauthorized(resp)
         return resp
 
+    def register_error_handler(self, exc_class_or_code, func):
+        """Register error handling `func` for a given exception or HTTP code
+
+        Example::
+
+            from jsonschema.exceptions import ValidationError
+
+            def json_invalid(e):
+                return {'message': 'json schema invalid: {0.message}'
+                        .format(e), }, 400
+
+            api.register_error_handler(ValidationError, json_invalid)
+
+        :param exc_class_or_code: the Exception class or HTTP code
+        :type exc_class_or_code: Exception or int
+        :param func: error handler function with single parameter
+        :type func: callable
+        """
+        if isinstance(exc_class_or_code, six.integer_types):
+            code = exc_class_or_code
+            if code not in default_exceptions:
+                raise ValueError('Unrecognized HTTP code "{0}"'.format(code))
+            exc_class = default_exceptions[code]
+        else:
+            exc_class = exc_class_or_code
+        self.errorhandlers.insert(0, (exc_class, func))
+
     def errorhandler(self, exc_class_or_code):
         """A decorator that is used to register a function for a given exception.
         Example::
@@ -374,11 +401,7 @@ class Api(object):
         :type exc_class_or_code: Exception or int
         """
         def wrapper(func):
-            if isinstance(exc_class_or_code, six.integer_types):
-                exc_class = default_exceptions[exc_class_or_code]
-            else:
-                exc_class = exc_class_or_code
-            self.errorhandlers.insert(0, (exc_class, func))
+            self.register_error_handler(exc_class_or_code, func)
             return func
         return wrapper
 
