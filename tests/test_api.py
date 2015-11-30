@@ -1,6 +1,6 @@
 import unittest
 import json
-from flask import Flask, Blueprint, redirect, views, abort as flask_abort
+from flask import Flask, Blueprint, redirect, views, abort as flask_abort, current_app
 from flask.signals import got_request_exception, signals_available
 try:
     from mock import call, Mock
@@ -9,7 +9,7 @@ except:
     from unittest.mock import call, Mock
 import flask
 import werkzeug
-from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
+from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound, InternalServerError
 from werkzeug.http import quote_etag, unquote_etag
 from flask_restful.utils import http_status_message, unpack
 import flask_restful
@@ -613,6 +613,22 @@ class APITestCase(unittest.TestCase):
             headers = rv[2]
             self.assertTrue('foo' in headers)
             self.assertEqual(headers['foo'], 'bar')
+
+    def test_log_above_500_handler(self):
+        """log root cause exception, not http exception"""
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        with app.test_request_context("/foo"):
+            current_app.log_exception = Mock()
+            try:
+                raise ValueError()
+            except ValueError as e:
+                rv = api.log_above_500_handler(InternalServerError())
+            self.assertTrue(rv is None)
+            self.assertEqual(current_app.log_exception.call_count, 1)
+            first_call = current_app.log_exception.call_args[0]
+            exc_info = first_call[0]
+            self.assertTrue(exc_info[0] is ValueError)
 
     def test_handle_smart_errors(self):
         app = Flask(__name__)

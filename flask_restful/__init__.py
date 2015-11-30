@@ -95,6 +95,7 @@ class Api(object):
         self.blueprint = None
 
         # the order is important, first registered is at the bottom
+        self.register_error_handler(HTTPException, self.log_above_500_handler)
         self.register_error_handler(NotFound, self.http_404_helper_handler)
         self.register_error_handler(Exception, self.custom_errors_handlers)
 
@@ -316,12 +317,6 @@ class Api(object):
 
         data = getattr(e, 'data', default_data)
 
-        if code >= 500:
-            exc_info = sys.exc_info()
-            if exc_info[1] is None:
-                exc_info = None
-            current_app.log_exception(exc_info)
-
         if code == 406 and self.default_mediatype is None:
             # if we are handling NotAcceptable (406), make sure that
             # make_response uses a representation we support as the
@@ -413,6 +408,19 @@ class Api(object):
                                        rules[match] for match in close_matches)
                                    ) + ' ?'
                 return data, code, headers
+
+    def log_above_500_handler(self, e):
+        """An error handler to log exceptions with http code >=500
+
+        :param e: the exception raised while handling the request
+        :type e: werkzeug.exceptions.HTTPException
+        :return: None (pass-through error handler)
+        """
+        if e.code >= 500:
+            exc_info = sys.exc_info()
+            if exc_info[1] is None:
+                exc_info = None
+            current_app.log_exception(exc_info)
 
     def register_error_handler(self, exc_class_or_code, func):
         """Register error handling `func` for a given exception or HTTP code
