@@ -94,6 +94,8 @@ class Api(object):
         self.app = None
         self.blueprint = None
 
+        # the order is important, first registered is at the bottom
+        self.register_error_handler(NotFound, self.http_404_helper_handler)
         self.register_error_handler(Exception, self.custom_errors_handlers)
 
         if app is not None:
@@ -320,24 +322,6 @@ class Api(object):
                 exc_info = None
             current_app.log_exception(exc_info)
 
-        help_on_404 = current_app.config.get("ERROR_404_HELP", True)
-        if code == 404 and help_on_404:
-            rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
-                          for rule in current_app.url_map.iter_rules()])
-            close_matches = difflib.get_close_matches(request.path, rules.keys())
-            if close_matches:
-                # If we already have a message, add punctuation and continue it.
-                if "message" in data:
-                    data["message"] = data["message"].rstrip('.') + '. '
-                else:
-                    data["message"] = ""
-
-                data['message'] += 'You have requested this URI [' + request.path + \
-                                   '] but did you mean ' + \
-                                   ' or '.join((
-                                       rules[match] for match in close_matches)
-                                   ) + ' ?'
-
         if code == 406 and self.default_mediatype is None:
             # if we are handling NotAcceptable (406), make sure that
             # make_response uses a representation we support as the
@@ -401,6 +385,34 @@ class Api(object):
             else:
                 data = custom_data
             return data, code, headers
+
+    def http_404_helper_handler(self, e):
+        """Helper for NotFound (404) exceptions.
+        It extends the response with suggestions for closely matching URIs.
+
+        :param e: the exception raised while handling the request
+        :type e: werkzeug.exceptions.NotFound
+        :return: (data, code, headers) tuple or None if 404 helper is disabled
+        """
+        help_on_404 = current_app.config.get("ERROR_404_HELP", True)
+        if help_on_404:
+            rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
+                          for rule in current_app.url_map.iter_rules()])
+            close_matches = difflib.get_close_matches(request.path, rules.keys())
+            if close_matches:
+                data, code, headers = self.default_http_exception_handler(e)
+                # If we already have a message, add punctuation and continue it.
+                if "message" in data:
+                    data["message"] = data["message"].rstrip('.') + '. '
+                else:
+                    data["message"] = ""
+
+                data['message'] += 'You have requested this URI [' + request.path + \
+                                   '] but did you mean ' + \
+                                   ' or '.join((
+                                       rules[match] for match in close_matches)
+                                   ) + ' ?'
+                return data, code, headers
 
     def register_error_handler(self, exc_class_or_code, func):
         """Register error handling `func` for a given exception or HTTP code
