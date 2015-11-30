@@ -9,7 +9,7 @@ from flask.views import MethodView
 from flask.signals import got_request_exception
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, \
-        InternalServerError, default_exceptions
+        InternalServerError, Unauthorized, default_exceptions
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
 from flask_restful.utils import http_status_message, unpack, OrderedDict
@@ -96,6 +96,7 @@ class Api(object):
 
         # the order is important, first registered is at the bottom
         self.register_error_handler(HTTPException, self.log_above_500_handler)
+        self.register_error_handler(Unauthorized, self.unauthorized)
         self.register_error_handler(NotFound, self.http_404_helper_handler)
         self.register_error_handler(Exception, self.custom_errors_handlers)
 
@@ -333,8 +334,6 @@ class Api(object):
         else:
             resp = self.make_response(data, code, headers)
 
-        if code == 401:
-            resp = self.unauthorized(resp)
         return resp
 
     def default_exception_handler(self, e):
@@ -653,15 +652,20 @@ class Api(object):
             return func
         return wrapper
 
-    def unauthorized(self, response):
-        """ Given a response, change it to ask for credentials """
+    def unauthorized(self, e):
+        """Default error handler for 401 Unauthorized exceptions
 
+        :param e: the exception raised while handling the request
+        :type e: werkzeug.exceptions.Unauthorized
+        :return: (data, code, headers) tuple or None if `serve_challenge_on_401` is False
+        """
         if self.serve_challenge_on_401:
+            data, code, headers = self.default_http_exception_handler(e)
             realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
             challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
 
-            response.headers['WWW-Authenticate'] = challenge
-        return response
+            headers['WWW-Authenticate'] = challenge
+            return data, code, headers
 
 
 class Resource(MethodView):

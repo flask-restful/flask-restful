@@ -49,31 +49,26 @@ class APITestCase(unittest.TestCase):
     def test_unauthorized_no_challenge_by_default(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
-        response = Mock()
-        response.headers = {}
         with app.test_request_context('/foo'):
-            response = api.unauthorized(response)
-        assert_false('WWW-Authenticate' in response.headers)
+            data, code, headers = unpack(api.unauthorized(Unauthorized()))
+        # error handler not triggered
+        self.assertEquals(data, None)
 
     def test_unauthorized(self):
         app = Flask(__name__)
         api = flask_restful.Api(app, serve_challenge_on_401=True)
-        response = Mock()
-        response.headers = {}
         with app.test_request_context('/foo'):
-            response = api.unauthorized(response)
-        self.assertEquals(response.headers['WWW-Authenticate'],
+            data, code, headers = unpack(api.unauthorized(Unauthorized()))
+        self.assertEquals(headers['WWW-Authenticate'],
                           'Basic realm="flask-restful"')
 
     def test_unauthorized_custom_realm(self):
         app = Flask(__name__)
         app.config['HTTP_BASIC_AUTH_REALM'] = 'Foo'
         api = flask_restful.Api(app, serve_challenge_on_401=True)
-        response = Mock()
-        response.headers = {}
         with app.test_request_context('/foo'):
-            response = api.unauthorized(response)
-        self.assertEquals(response.headers['WWW-Authenticate'], 'Basic realm="Foo"')
+            data, code, headers = unpack(api.unauthorized(Unauthorized()))
+        self.assertEquals(headers['WWW-Authenticate'], 'Basic realm="Foo"')
 
     def test_handle_error_401_no_challenge_by_default(self):
         app = Flask(__name__)
@@ -87,8 +82,7 @@ class APITestCase(unittest.TestCase):
     def test_handle_error_401_sends_challege_default_realm(self):
         app = Flask(__name__)
         api = flask_restful.Api(app, serve_challenge_on_401=True)
-        exception = HTTPException()
-        exception.code = 401
+        exception = Unauthorized()
         exception.data = {'foo': 'bar'}
 
         with app.test_request_context('/foo'):
