@@ -472,7 +472,7 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.status_code, 503)
             self.assertEquals(resp.data.decode(), dumps({
                 'My Field': 'My Message',
-            }))
+            }) + "\n")
 
 
     def test_handle_smart_errors(self):
