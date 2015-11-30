@@ -8,7 +8,8 @@ from flask import make_response as original_flask_make_response
 from flask.views import MethodView
 from flask.signals import got_request_exception
 from werkzeug.datastructures import Headers
-from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, \
+        InternalServerError, default_exceptions
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
 from flask_restful.utils import http_status_message, unpack, OrderedDict
@@ -17,6 +18,7 @@ import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
+import six
 
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
@@ -359,7 +361,7 @@ class Api(object):
 
         return resp
 
-    def errorhandler(self, exception_type):
+    def errorhandler(self, exc_class_or_code):
         """A decorator that is used to register a function for a given exception.
         Example::
 
@@ -367,11 +369,15 @@ class Api(object):
             def handle_integrity_error(exception):
                 return {'message': 'Integrity Error!'}, 500
 
-        :param exception_type: the Exception class/type to handle
-        :type exception_type: Type
+        :param exc_class_or_code: the Exception class or HTTP code
+        :type exc_class_or_code: Exception or int
         """
         def wrapper(func):
-            self.errorhandlers.append((exception_type, func))
+            if isinstance(exc_class_or_code, six.integer_types):
+                exc_class = default_exceptions[exc_class_or_code]
+            else:
+                exc_class = exc_class_or_code
+            self.errorhandlers.append((exc_class, func))
             return func
         return wrapper
 
