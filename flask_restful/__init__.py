@@ -318,21 +318,7 @@ class Api(object):
 
         data = getattr(e, 'data', default_data)
 
-        if code == 406 and self.default_mediatype is None:
-            # if we are handling NotAcceptable (406), make sure that
-            # make_response uses a representation we support as the
-            # default mediatype (so that make_response doesn't throw
-            # another NotAcceptable error).
-            supported_mediatypes = list(self.representations.keys())
-            fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else "text/plain"
-            resp = self.make_response(
-                data,
-                code,
-                headers,
-                fallback_mediatype = fallback_mediatype
-            )
-        else:
-            resp = self.make_response(data, code, headers)
+        resp = self.make_response(data, code, headers)
 
         return resp
 
@@ -603,7 +589,16 @@ class Api(object):
 
         :param data: Python object containing response data to be transformed
         """
-        default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
+        code = args[0] if args else None
+        default_mediatype = self.default_mediatype
+        if code == 406 and default_mediatype not in self.representations:
+            # if we are handling NotAcceptable (406), make sure that
+            # make_response uses a representation we support as the
+            # default mediatype (so that make_response doesn't throw
+            # another NotAcceptable error).
+            supported_mediatypes = list(self.representations.keys())
+            default_mediatype = supported_mediatypes[0] if supported_mediatypes else 'text/plain'
+
         mediatype = request.accept_mimetypes.best_match(
             self.representations,
             default=default_mediatype,
