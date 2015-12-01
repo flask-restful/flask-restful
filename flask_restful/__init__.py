@@ -299,9 +299,16 @@ class Api(object):
 
         for typecheck, handler in self.errorhandlers:
             if isinstance(e, typecheck):
-                # unpack(None) -> (None, _, _)
-                data, code, headers = unpack(handler(e))
-                if data:
+                try:
+                    # unpack(None) -> (None, _, _)
+                    data, code, headers = unpack(handler(e))
+                    if data:
+                        break
+                except Exception:
+                    # log exception and return http 500
+                    current_app.log_exception(sys.exc_info())
+                    data, code, headers = self.default_http_exception_handler(
+                        InternalServerError('Exception in error handler!'))
                     break
         else:
             # `default_exception_handler` is always at the bottom, even if no

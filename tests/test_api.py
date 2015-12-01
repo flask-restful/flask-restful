@@ -624,6 +624,24 @@ class APITestCase(unittest.TestCase):
             exc_info = first_call[0]
             self.assertTrue(exc_info[0] is ValueError)
 
+    def test_exception_inside_error_handler(self):
+        """log exception raised by error handler, return 500"""
+
+        def my_buggy_handler(e):
+            1/0
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.register_error_handler(NotFound, my_buggy_handler)
+        with app.test_request_context("/foo"):
+            current_app.log_exception = Mock()
+            resp = api.handle_error(NotFound())
+            self.assertEquals(resp.status_code, 500)
+            self.assertEquals(current_app.log_exception.call_count, 1)
+            first_call = current_app.log_exception.call_args[0]
+            exc_info = first_call[0]
+            self.assertTrue(exc_info[0] is ZeroDivisionError)
+
     def test_handle_smart_errors(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
