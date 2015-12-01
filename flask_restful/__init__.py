@@ -95,6 +95,7 @@ class Api(object):
         self.blueprint = None
 
         # the order is important, first registered is at the bottom
+        self.register_error_handler(HTTPException, self.default_http_exception_handler)
         self.register_error_handler(HTTPException, self.log_above_500_handler)
         self.register_error_handler(Unauthorized, self.unauthorized)
         self.register_error_handler(NotFound, self.http_404_helper_handler)
@@ -301,26 +302,13 @@ class Api(object):
                 # unpack(None) -> (None, _, _)
                 data, code, headers = unpack(handler(e))
                 if data:
-                    return self.make_response(data, code, headers)
-
-        headers = Headers()
-        if isinstance(e, HTTPException):
-            code = e.code
-            default_data = {
-                'message': getattr(e, 'description', http_status_message(code))
-            }
-            headers = e.get_response().headers
+                    break
         else:
-            code = 500
-            default_data = {
-                'message': http_status_message(code),
-            }
+            # `default_exception_handler` is always at the bottom, even if no
+            # error handler was registered
+            data, code, headers = self.default_exception_handler(e)
 
-        data = getattr(e, 'data', default_data)
-
-        resp = self.make_response(data, code, headers)
-
-        return resp
+        return self.make_response(data, code, headers)
 
     def default_exception_handler(self, e):
         """Default response for an unhandled Exception
