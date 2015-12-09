@@ -16,7 +16,7 @@ if PY26:
 
 setup(
     name='Flask-RESTful',
-    version='0.3.4',
+    version='0.3.5',
     license='BSD',
     url='https://www.github.com/flask-restful/flask-restful/',
     author='Twilio API Team',
