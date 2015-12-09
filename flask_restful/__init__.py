@@ -300,6 +300,14 @@ class Api(object):
                 'message': http_status_message(code),
             }
 
+        # Werkzeug exceptions generate a content-length header which is added
+        # to the response in addition to the actual content-length header
+        # https://github.com/flask-restful/flask-restful/issues/534
+        remove_headers = ('Content-Length',)
+
+        for header in remove_headers:
+            headers.pop(header, None)
+
         data = getattr(e, 'data', default_data)
 
         if code >= 500:
