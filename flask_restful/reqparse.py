@@ -282,12 +282,21 @@ class RequestParser(object):
 
         return self
 
-    def parse_args(self, req=None, strict=False):
+    def parse_args(self, req=None, strict=None):
         """Parse all arguments from the provided request and return the results
         as a Namespace
 
         :param strict: if req includes args not in parser, throw 400 BadRequest exception
         """
+        if strict is None:
+            try:
+                strict = current_app.config.get('REQPARSE_STRICT', False)
+            except RuntimeError as e:
+                if str(e) == 'working outside of application context':
+                    strict = False
+                else:
+                    raise e
+
         if req is None:
             req = request
 
