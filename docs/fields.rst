@@ -103,7 +103,7 @@ Custom Fields & Multiple Values
 -------------------------------
 
 Sometimes you have your own custom formatting needs.  You can subclass the
-:class`fields.Raw` class and implement the format function.  This is especially
+:class:`fields.Raw` class and implement the format function.  This is especially
 useful when an attribute stores multiple pieces of information. e.g. a
 bit-field whose individual bits represent distinct values.  You can use fields
 to multiplex a single attribute to multiple output values.
