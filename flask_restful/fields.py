@@ -349,17 +349,21 @@ class DateTime(Raw):
 
     :param dt_format: ``'rfc822'`` or ``'iso8601'``
     :type dt_format: str
+    :param iso8601_sep: A one-character separator, placed between the date
+        and time portions of the result if ``dt_format`` is ``'iso8601'``
+    :type iso8601_sep: str
     """
-    def __init__(self, dt_format='rfc822', **kwargs):
+    def __init__(self, dt_format='rfc822', iso8601_sep='T', **kwargs):
         super(DateTime, self).__init__(**kwargs)
         self.dt_format = dt_format
+        self.iso8601_sep = iso8601_sep
 
     def format(self, value):
         try:
             if self.dt_format == 'rfc822':
                 return _rfc822(value)
             elif self.dt_format == 'iso8601':
-                return _iso8601(value)
+                return _iso8601(value,self.iso8601_sep)
             else:
                 raise MarshallingException(
                     'Unsupported date format %s' % self.dt_format
@@ -403,7 +407,7 @@ def _rfc822(dt):
     return formatdate(timegm(dt.utctimetuple()))
 
 
-def _iso8601(dt):
+def _iso8601(dt, sep='T'):
     """Turn a datetime object into an ISO8601 formatted date.
 
     Example::
@@ -412,6 +416,9 @@ def _iso8601(dt):
 
     :param dt: The datetime to transform
     :type dt: datetime
+    :param sep: A one-character separator, placed between the date and time
+        portions of the result
+    :type sep: str
     :return: A ISO 8601 formatted date string
     """
-    return dt.isoformat()
+    return dt.isoformat(sep)
