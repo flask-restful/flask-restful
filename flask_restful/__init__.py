@@ -602,7 +602,7 @@ class Resource(MethodView):
         return resp
 
 
-def marshal(data, fields, envelope=None):
+def marshal(data, fields, envelope=None, strip_none=False):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
@@ -611,6 +611,7 @@ def marshal(data, fields, envelope=None):
                    response output
     :param envelope: optional key that will be used to envelop the serialized
                      response
+    :param strip_none: optional key that will strip serialized None data. Default: False
 
 
     >>> from flask_restful import fields, marshal
@@ -631,13 +632,30 @@ def marshal(data, fields, envelope=None):
         return cls
 
     if isinstance(data, (list, tuple)):
-        return (OrderedDict([(envelope, [marshal(d, fields) for d in data])])
-                if envelope else [marshal(d, fields) for d in data])
+        return (OrderedDict([(envelope, [marshal(d, fields, strip_none=strip_none) for d in data])])
+                if envelope else [marshal(d, fields, strip_none=strip_none) for d in data])
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
+    if isinstance(data, (float, int, str)):
+        return (OrderedDict([(envelope, data)])
+                if envelope else data)
+
+    items = ((k, marshal(data, v, strip_none=strip_none) if isinstance(v, dict)
               else make(v).output(k, data))
              for k, v in fields.items())
-    return OrderedDict([(envelope, OrderedDict(items))]) if envelope else OrderedDict(items)
+
+    if strip_none == True or (current_app and current_app.config.get("RESTFUL_MARSHAL_STRIP_NONE", False) == True):
+        # strip None values
+        newItems = OrderedDict()
+        allItems = OrderedDict(items)
+        for k in allItems:
+            if allItems[k] is not None:
+                newItems[k] = allItems[k]
+        items = newItems
+    else:
+        items = OrderedDict(items)
+
+    return (OrderedDict([(envelope, items)])
+            if envelope else items)
 
 
 class marshal_with(object):
@@ -663,15 +681,17 @@ class marshal_with(object):
 
     see :meth:`flask_restful.marshal`
     """
-    def __init__(self, fields, envelope=None):
+    def __init__(self, fields, envelope=None, strip_none=False):
         """
         :param fields: a dict of whose keys will make up the final
                        serialized response output
         :param envelope: optional key that will be used to envelop the serialized
                          response
+        :param strip_none: optional key that will strip serialized None data. Default: False
         """
         self.fields = fields
         self.envelope = envelope
+        self.strip_none = strip_none
 
     def __call__(self, f):
         @wraps(f)
@@ -679,9 +699,9 @@ class marshal_with(object):
             resp = f(*args, **kwargs)
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return marshal(data, self.fields, self.envelope), code, headers
+                return marshal(data, self.fields, self.envelope, self.strip_none), code, headers
             else:
-                return marshal(resp, self.fields, self.envelope)
+                return marshal(resp, self.fields, self.envelope, self.strip_none)
         return wrapper
 
 
