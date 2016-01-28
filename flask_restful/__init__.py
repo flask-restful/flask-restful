@@ -370,6 +370,7 @@ class Api(object):
 
         :param resource: the class name of your resource
         :type resource: :class:`Resource`
+
         :param urls: one or more url routes to match for the resource, standard
                      flask routing rules apply.  Any url variables will be
                      passed to the resource method as args.
