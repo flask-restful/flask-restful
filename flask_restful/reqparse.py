@@ -143,7 +143,7 @@ class Argument(object):
         """
         error_str = six.text_type(error)
         error_msg = self.help.format(error_msg=error_str) if self.help else error_str
-        msg = {self.name: "{0}".format(error_msg)}
+        msg = {self.name: u"{0}".format(error_msg)}
 
         if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
             return error, msg
