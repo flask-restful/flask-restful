@@ -138,6 +138,11 @@ You can also match parts of the path as variables to your resource methods. ::
     api.add_resource(Todo,
         '/todo/<int:todo_id>', endpoint='todo_ep')
 
+You can limit which HTTP methods your API exposes by adding the methods argument. ::
+
+    api.add_resource(Todo,
+        '/todo/<int:todo_id>', endpoint='todo_ep', methods=['GET', 'PUT'])
+
 .. note ::
 
     If a request does not match any of your application's endpoints,

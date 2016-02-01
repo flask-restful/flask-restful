@@ -396,6 +396,7 @@ class Api(object):
             api.add_resource(HelloWorld, '/', '/hello')
             api.add_resource(Foo, '/foo', endpoint="foo")
             api.add_resource(FooSpecial, '/special/foo', endpoint="foo")
+            api.add_resource(FooGetPutOnly, '/foo/<string:foo_id>, endpoint='foogp', methods=['GET', 'PUT'])
 
         """
         if self.app is not None:
