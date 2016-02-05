@@ -578,7 +578,7 @@ class Resource(MethodView):
         # Taken from flask
         #noinspection PyUnresolvedReferences
         meth = getattr(self, request.method.lower(), None)
-        if meth is None and request.method == 'HEAD':
+        if meth is None or request.method == 'HEAD':
             meth = getattr(self, 'get', None)
         assert meth is not None, 'Unimplemented method %r' % request.method
 
