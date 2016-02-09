@@ -30,6 +30,19 @@ class ReqParseTestCase(unittest.TestCase):
             abort.assert_called_with(400, message=expected)
 
     @patch('flask_restful.abort')
+    def test_help_with_unicode_error_msg(self, abort):
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument('foo', choices=('one', 'two'), help=u'Bad choice: {error_msg}')
+            req = Mock(['values'])
+            req.values = MultiDict([('foo', u'\xf0\x9f\x8d\x95')])
+            parser.parse_args(req)
+            expected = {'foo': u'Bad choice: \xf0\x9f\x8d\x95 is not a valid choice'}
+            abort.assert_called_with(400, message=expected)
+
+
+    @patch('flask_restful.abort')
     def test_help_no_error_msg(self, abort):
         app = Flask(__name__)
         with app.app_context():
