@@ -570,7 +570,7 @@ class Resource(MethodView):
     from the url rule used when adding the resource to an Api instance. See
     :meth:`~flask_restful.Api.add_resource` for details.
     """
-    representations = None
+    representations = OrderedDict(DEFAULT_REPRESENTATIONS)
     method_decorators = []
 
     def dispatch_request(self, *args, **kwargs):
