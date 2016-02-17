@@ -118,6 +118,9 @@ class Api(object):
             self._init_app(app)
         else:
             self.blueprint = app
+        if not hasattr(app, 'extensions'):
+            app.extensions = {}
+        app.extensions['Restful'] = self
 
     def _complete_url(self, url_part, registration_prefix):
         """This method is used to defer the construction of the final url in
