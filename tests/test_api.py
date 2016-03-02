@@ -323,6 +323,7 @@ class APITestCase(unittest.TestCase):
 
     def test_api_representation(self):
         app = Mock()
+        app.extensions = {}
         api = flask_restful.Api(app)
 
         @api.representation('foo')
@@ -333,6 +334,7 @@ class APITestCase(unittest.TestCase):
 
     def test_api_base(self):
         app = Mock()
+        app.extensions = {}
         app.configure_mock(**{'record.side_effect': AttributeError})
         api = flask_restful.Api(app)
         self.assertEquals(api.urls, {})
@@ -349,6 +351,7 @@ class APITestCase(unittest.TestCase):
 
     def test_api_prefix(self):
         app = Mock()
+        app.extensions = {}
         app.configure_mock(**{'record.side_effect': AttributeError})
         api = flask_restful.Api(app, prefix='/foo')
         self.assertEquals(api.prefix, '/foo')
@@ -550,6 +553,7 @@ class APITestCase(unittest.TestCase):
     def test_add_resource_endpoint(self):
         app = Mock()
         app.view_functions = {}
+        app.extensions = {}
         view = Mock()
 
         api = flask_restful.Api(app)
