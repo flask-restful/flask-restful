@@ -182,11 +182,11 @@ instance, if you want to build custom authentication into every request. ::
             if acct:
                 return func(*args, **kwargs)
 
-            restful.abort(401)
+            flask_restful.abort(401)
         return wrapper
 
 
-    class Resource(restful.Resource):
+    class Resource(flask_restful.Resource):
         method_decorators = [authenticate]   # applies to all inherited resources
 
 Since Flask-RESTful Resources are actually Flask view objects, you can also
