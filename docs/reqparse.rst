@@ -38,6 +38,12 @@ the :attr:`flask.Request.values` dict: an integer and a string ::
     The default argument type is a unicode string. This will be ``str`` in
     python3 and ``unicode`` in python2.
 
+.. note ::
+
+    If you're building custom types that can be useful to add custom validation
+    rules, make sure that you raise a ``ValueError`` if you encounter some
+    problem with the input data.
+
 If you specify the ``help`` value, it will be rendered as the error message
 when a type error is raised while parsing it.  If you do not specify a help
 message, the default behavior is to return the message from the type error
