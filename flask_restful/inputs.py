@@ -40,7 +40,7 @@ def url(value):
     return value
 
 
-class regex(object):
+class Regex(object):
     """Validate a string based on a regular expression.
 
     Example::
@@ -66,7 +66,7 @@ class regex(object):
         return value
 
     def __deepcopy__(self, memo):
-        return regex(self.pattern)
+        return Regex(self.pattern)
 
 
 def _normalize_interval(start, end, value):
