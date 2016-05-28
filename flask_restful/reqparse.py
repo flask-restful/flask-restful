@@ -126,9 +126,11 @@ class Argument(object):
         except TypeError:
             try:
                 if self.type is decimal.Decimal:
-                    return self.type(str(value), self.name)
+                    return self.type(str(value))
                 else:
                     return self.type(value, self.name)
+            except decimal.InvalidOperation as d:
+                raise ValueError(d.message)
             except TypeError:
                 return self.type(value)
 
@@ -187,19 +189,19 @@ class Argument(object):
 
                     try:
                         value = self.convert(value, operator)
-                    except Exception as error:
+                    except ValueError as error:
                         if self.ignore:
                             continue
                         return self.handle_validation_error(error, bundle_errors)
+                    except Exception:
+                        if self.ignore:
+                            continue
+                        raise
 
                     if self.choices and value not in self.choices:
-                        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
-                            return self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
-                        self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
+                        return self.handle_validation_error(
+                            ValueError(u"{0} is not a valid choice".format(
+                                value)), bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -216,9 +218,7 @@ class Argument(object):
                 error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
-            if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
-                return self.handle_validation_error(ValueError(error_msg), bundle_errors)
-            self.handle_validation_error(ValueError(error_msg), bundle_errors)
+            return self.handle_validation_error(ValueError(error_msg), bundle_errors)
 
         if not results:
             if callable(self.default):
@@ -302,6 +302,8 @@ class RequestParser(object):
             if isinstance(value, ValueError):
                 errors.update(found)
                 found = None
+            elif isinstance(value, Exception):
+                raise value
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
         if errors:

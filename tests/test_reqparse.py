@@ -17,7 +17,7 @@ class ReqParseTestCase(unittest.TestCase):
         arg = Argument("foo")
         self.assertEquals(arg.help, None)
 
-    @patch('flask_restful.abort')
+    @patch('flask_restful.abort', side_effect=exceptions.BadRequest('Bad Request'))
     def test_help_with_error_msg(self, abort):
         app = Flask(__name__)
         with app.app_context():
@@ -25,11 +25,11 @@ class ReqParseTestCase(unittest.TestCase):
             parser.add_argument('foo', choices=('one', 'two'), help='Bad choice: {error_msg}')
             req = Mock(['values'])
             req.values = MultiDict([('foo', 'three')])
-            parser.parse_args(req)
+            self.assertRaises(exceptions.BadRequest, parser.parse_args, req)
             expected = {'foo': 'Bad choice: three is not a valid choice'}
             abort.assert_called_with(400, message=expected)
 
-    @patch('flask_restful.abort')
+    @patch('flask_restful.abort', side_effect=exceptions.BadRequest('Bad Request'))
     def test_help_with_unicode_error_msg(self, abort):
         app = Flask(__name__)
         with app.app_context():
@@ -37,12 +37,12 @@ class ReqParseTestCase(unittest.TestCase):
             parser.add_argument('foo', choices=('one', 'two'), help=u'Bad choice: {error_msg}')
             req = Mock(['values'])
             req.values = MultiDict([('foo', u'\xf0\x9f\x8d\x95')])
-            parser.parse_args(req)
+            self.assertRaises(exceptions.BadRequest, parser.parse_args, req)
             expected = {'foo': u'Bad choice: \xf0\x9f\x8d\x95 is not a valid choice'}
             abort.assert_called_with(400, message=expected)
 
 
-    @patch('flask_restful.abort')
+    @patch('flask_restful.abort', side_effect=exceptions.BadRequest('Bad Request'))
     def test_help_no_error_msg(self, abort):
         app = Flask(__name__)
         with app.app_context():
@@ -50,7 +50,7 @@ class ReqParseTestCase(unittest.TestCase):
             parser.add_argument('foo', choices=['one', 'two'], help='Please select a valid choice')
             req = Mock(['values'])
             req.values = MultiDict([('foo', 'three')])
-            parser.parse_args(req)
+            self.assertRaises(exceptions.BadRequest, parser.parse_args, req)
             expected = {'foo': 'Please select a valid choice'}
             abort.assert_called_with(400, message=expected)
 
@@ -610,7 +610,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble?foo=1")
 
         parser = RequestParser()
-        parser.add_argument("foo", type=lambda x: x, required=False),
+        parser.add_argument("foo", type=lambda x: x, required=False)
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], "1")
@@ -619,7 +619,7 @@ class ReqParseTestCase(unittest.TestCase):
         app = Flask(__name__)
 
         parser = RequestParser()
-        parser.add_argument("foo", type=lambda x: x, location="json", required=False),
+        parser.add_argument("foo", type=lambda x: x, location="json", required=False)
 
         with app.test_request_context('/bubble', method="post",
                                       data=json.dumps({"foo": None}),
@@ -630,17 +630,71 @@ class ReqParseTestCase(unittest.TestCase):
             except exceptions.BadRequest:
                 self.fail()
 
+    def test_type_callable_valueerror(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+
+        def bad_value_type(x):
+            raise ValueError(x)
+
+        parser.add_argument("bad_value", type=bad_value_type,
+                            location="json", required=False)
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"bad_value": "bad"}),
+                                      content_type='application/json'):
+            message = ''
+            try:
+                parser.parse_args()
+            except exceptions.BadRequest as e:
+                message = e.data['message']
+            error_message = {'bad_value': 'bad'}
+            self.assertEquals(message, error_message)
+
+    def test_type_callable_broken(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("broken", type=lambda x: x.bad_attribute,
+                            location="json", required=False)
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"broken": "broken"}),
+                                      content_type='application/json'):
+             self.assertRaises(AttributeError, parser.parse_args)
+
     def test_type_decimal(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=decimal.Decimal, location="json")
+        parser.add_argument("bar", type=decimal.Decimal, location="json")
+
+        with app.test_request_context('/bubble', method='post',
+                                      data=json.dumps({"foo": "1.0025",
+                                                       "bar": 1.0025}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], decimal.Decimal("1.0025"))
+            self.assertEquals(args['bar'], decimal.Decimal("1.0025"))
+
+    def test_type_decimal_error(self):
         app = Flask(__name__)
 
         parser = RequestParser()
         parser.add_argument("foo", type=decimal.Decimal, location="json")
 
         with app.test_request_context('/bubble', method='post',
-                                      data=json.dumps({"foo": "1.0025"}),
+                                      data=json.dumps({"foo": "1.0a025"}),
                                       content_type='application/json'):
-            args = parser.parse_args()
-            self.assertEquals(args['foo'], decimal.Decimal("1.0025"))
+            message = ''
+            try:
+                parser.parse_args()
+            except exceptions.BadRequest as e:
+                message = e.data['message']
+            error_message = {'foo': "Invalid literal for Decimal: '1.0a025'"}
+            self.assertEquals(message, error_message)
 
     def test_type_filestorage(self):
         app = Flask(__name__)
