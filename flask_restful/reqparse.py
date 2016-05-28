@@ -124,15 +124,16 @@ class Argument(object):
         try:
             return self.type(value, self.name, op)
         except TypeError:
-            try:
-                if self.type is decimal.Decimal:
+            if self.type is decimal.Decimal:
+                try:
                     return self.type(str(value))
-                else:
+                except decimal.InvalidOperation:
+                    raise ValueError("Invalid literal for Decimal: '%s'" % (value,))
+            else:
+                try:
                     return self.type(value, self.name)
-            except decimal.InvalidOperation as d:
-                raise ValueError(d.message)
-            except TypeError:
-                return self.type(value)
+                except TypeError:
+                    return self.type(value)
 
     def handle_validation_error(self, error, bundle_errors):
         """Called when an error is raised while parsing. Aborts the request
