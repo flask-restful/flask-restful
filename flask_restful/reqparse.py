@@ -194,10 +194,6 @@ class Argument(object):
                         if self.ignore:
                             continue
                         return self.handle_validation_error(error, bundle_errors)
-                    except Exception:
-                        if self.ignore:
-                            continue
-                        raise
 
                     if self.choices and value not in self.choices:
                         return self.handle_validation_error(
@@ -303,8 +299,6 @@ class RequestParser(object):
             if isinstance(value, ValueError):
                 errors.update(found)
                 found = None
-            elif isinstance(value, Exception):
-                raise value
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
         if errors:
