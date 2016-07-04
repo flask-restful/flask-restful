@@ -1,9 +1,9 @@
 import pickle
+
 from Crypto.Cipher import AES
 from base64 import b64encode, b64decode
 
-
-__all__ = "encrypt", "decrypt"
+__all__ = ("encrypt", "decrypt")
 
 BLOCK_SIZE = 16
 INTERRUPT = b'\0'  # something impossible to put in a string
@@ -27,7 +27,8 @@ def create_cipher(key, seed):
 
 
 def encrypt(plaintext_data, key, seed):
-    plaintext_data = pickle.dumps(plaintext_data, pickle.HIGHEST_PROTOCOL)  # whatever you give me I need to be able to restitute it
+    plaintext_data = pickle.dumps(plaintext_data,
+                                  pickle.HIGHEST_PROTOCOL)  # whatever you give me I need to be able to restitute it
     return b64encode(create_cipher(key, seed).encrypt(pad(plaintext_data)))
 
 

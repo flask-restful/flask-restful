@@ -1,10 +1,12 @@
+import decimal
+
+import six
 from copy import deepcopy
 from flask import current_app, request
-from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
+from werkzeug.datastructures import MultiDict, FileStorage
+
 import flask_restful
-import decimal
-import six
 
 
 class Namespace(dict):
@@ -16,6 +18,7 @@ class Namespace(dict):
 
     def __setattr__(self, name, value):
         self[name] = value
+
 
 _friendly_location = {
     u'json': u'the JSON body',
@@ -31,7 +34,6 @@ text_type = lambda x: six.text_type(x)
 
 
 class Argument(object):
-
     """
     :param name: Either a name or a list of option strings, e.g. foo or
         -f, --foo.
@@ -198,8 +200,8 @@ class Argument(object):
                                 ValueError(u"{0} is not a valid choice".format(
                                     value)), bundle_errors)
                         self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
+                            ValueError(u"{0} is not a valid choice".format(
+                                value)), bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -253,7 +255,7 @@ class RequestParser(object):
     """
 
     def __init__(self, argument_class=Argument, namespace_class=Namespace,
-            trim=False, bundle_errors=False):
+                 trim=False, bundle_errors=False):
         self.args = []
         self.argument_class = argument_class
         self.namespace_class = namespace_class
@@ -275,9 +277,9 @@ class RequestParser(object):
         else:
             self.args.append(self.argument_class(*args, **kwargs))
 
-        #Do not know what other argument classes are out there
+        # Do not know what other argument classes are out there
         if self.trim and self.argument_class is Argument:
-            #enable trim for appended element
+            # enable trim for appended element
             self.args[-1].trim = kwargs.get('trim', self.trim)
 
         return self
