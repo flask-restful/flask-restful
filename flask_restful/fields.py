@@ -293,16 +293,20 @@ class Url(Raw):
     :type absolute: bool
     :param scheme: URL scheme specifier (e.g. ``http``, ``https``)
     :type scheme: str
+    :param values: the variable arguments of the URL rule
     """
-    def __init__(self, endpoint=None, absolute=False, scheme=None):
+    def __init__(self, endpoint=None, absolute=False, scheme=None, **values):
         super(Url, self).__init__()
         self.endpoint = endpoint
         self.absolute = absolute
         self.scheme = scheme
+        self.values = values
 
     def output(self, key, obj):
         try:
             data = to_marshallable_type(obj)
+            if data is not None:
+                data.update(self.values)
             endpoint = self.endpoint if self.endpoint is not None else request.endpoint
             o = urlparse(url_for(endpoint, _external=self.absolute, **data))
             if self.absolute:
