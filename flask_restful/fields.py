@@ -306,6 +306,9 @@ class Url(Raw):
         try:
             data = to_marshallable_type(obj)
             if data is not None:
+                for key, value in self.values.items():
+                    if callable(value):
+                        self.values[key] = value(obj)
                 data.update(self.values)
             endpoint = self.endpoint if self.endpoint is not None else request.endpoint
             o = urlparse(url_for(endpoint, _external=self.absolute, **data))

@@ -283,15 +283,23 @@ class FieldsTestCase(unittest.TestCase):
     def test_url_values(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
-        field = fields.Url("foobar", name='felipe')
+        field = fields.Url("foobar", name='baz')
 
         with app.test_request_context("/"):
-            self.assertEquals("/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("/3/baz", field.output("hey", Foo()))
+
+    def test_url_values_with_callable(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>/<pow>", "foobar", view_func=lambda x: x)
+        field = fields.Url("foobar", pow=lambda x: x.hey ** 2)
+
+        with app.test_request_context("/"):
+            self.assertEquals("/3/9", field.output("hey", Foo()))
 
     def test_url_values_invalid_object(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
-        field = fields.Url(name='felipe')
+        field = fields.Url(name='baz')
 
         with app.test_request_context("/hey/name"):
             self.assertRaises(MarshallingException, lambda: field.output("hey", None))
@@ -299,73 +307,73 @@ class FieldsTestCase(unittest.TestCase):
     def test_url_absolute_values(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
-        field = fields.Url("foobar", absolute=True, name='felipe')
+        field = fields.Url("foobar", absolute=True, name='baz')
 
         with app.test_request_context("/"):
-            self.assertEquals("http://localhost/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("http://localhost/3/baz", field.output("hey", Foo()))
 
     def test_url_absolute_scheme_values(self):
         """Url.scheme should override current_request.scheme"""
         app = Flask(__name__)
         app.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
-        field = fields.Url("foobar", absolute=True, scheme='https', name='felipe')
+        field = fields.Url("foobar", absolute=True, scheme='https', name='baz')
 
         with app.test_request_context("/", base_url="http://localhost"):
-            self.assertEquals("https://localhost/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("https://localhost/3/baz", field.output("hey", Foo()))
 
     def test_url_without_endpoint_values(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
-        field = fields.Url(name='felipe')
+        field = fields.Url(name='baz')
 
         with app.test_request_context("/hey/name"):
-            self.assertEquals("/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("/3/baz", field.output("hey", Foo()))
 
     def test_url_without_endpoint_absolute_values(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
-        field = fields.Url(absolute=True, name='felipe')
+        field = fields.Url(absolute=True, name='baz')
 
         with app.test_request_context("/hey/name"):
-            self.assertEquals("http://localhost/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("http://localhost/3/baz", field.output("hey", Foo()))
 
     def test_url_without_endpoint_absolute_scheme_values(self):
         app = Flask(__name__)
         app.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
-        field = fields.Url(absolute=True, scheme='https', name='felipe')
+        field = fields.Url(absolute=True, scheme='https', name='baz')
 
         with app.test_request_context("/hey/name", base_url="http://localhost"):
-            self.assertEquals("https://localhost/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("https://localhost/3/baz", field.output("hey", Foo()))
 
     def test_url_with_blueprint_values(self):
         app = Flask(__name__)
         bp = Blueprint("foo", __name__, url_prefix="/foo")
         bp.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
         app.register_blueprint(bp)
-        field = fields.Url(name='felipe')
+        field = fields.Url(name='baz')
 
         with app.test_request_context("/foo/hey/name"):
-            self.assertEquals("/foo/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("/foo/3/baz", field.output("hey", Foo()))
 
     def test_url_with_blueprint_absolute_values(self):
         app = Flask(__name__)
         bp = Blueprint("foo", __name__, url_prefix="/foo")
         bp.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
         app.register_blueprint(bp)
-        field = fields.Url(absolute=True, name='felipe')
+        field = fields.Url(absolute=True, name='baz')
 
         with app.test_request_context("/foo/hey/name"):
-            self.assertEquals("http://localhost/foo/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("http://localhost/foo/3/baz", field.output("hey", Foo()))
 
     def test_url_with_blueprint_absolute_scheme_values(self):
         app = Flask(__name__)
         bp = Blueprint("foo", __name__, url_prefix="/foo")
         bp.add_url_rule("/<hey>/<name>", "foobar", view_func=lambda x: x)
         app.register_blueprint(bp)
-        field = fields.Url(absolute=True, scheme='https', name='felipe')
+        field = fields.Url(absolute=True, scheme='https', name='baz')
 
         with app.test_request_context("/foo/hey/name", base_url="http://localhost"):
-            self.assertEquals("https://localhost/foo/3/felipe", field.output("hey", Foo()))
+            self.assertEquals("https://localhost/foo/3/baz", field.output("hey", Foo()))
 
     def test_int(self):
         field = fields.Integer()
