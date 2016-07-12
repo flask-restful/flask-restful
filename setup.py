@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+import re
 import sys
+from os import path
+from setuptools import setup, find_packages
 
 PY26 = sys.version_info[:2] == (2, 6,)
 
@@ -14,9 +16,24 @@ requirements = [
 if PY26:
     requirements.append('ordereddict')
 
+
+version_file = path.join(
+    path.dirname(__file__),
+    'flask_restful',
+    '__version__.py'
+)
+with open(version_file, 'rb') as fp:
+    m = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]",
+        fp.read(),
+        re.M
+    )
+    version = m.groups(1)[0]
+
+
 setup(
     name='Flask-RESTful',
-    version='0.3.5',
+    version=version,
     license='BSD',
     url='https://www.github.com/flask-restful/flask-restful/',
     author='Twilio API Team',
