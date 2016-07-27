@@ -130,17 +130,19 @@ class Argument(object):
             except TypeError:
                 return self.type(value)
 
-    def handle_validation_error(self, error, bundle_errors):
+    def handle_validation_error(self, error, value, bundle_errors):
         """Called when an error is raised while parsing. Aborts the request
         with a 400 status and an error message
 
         :param error: the error that was raised
+        :param value: the parameter value that caused the error
         :param bundle_errors: do not abort when first error occurs, return a
             dict with the name of the argument and the error message to be
             bundled
         """
         msg = {
             "parameterName": self.name,
+            "parameterValue": value,
             "parameterDoc": self.help or '',
             "error": str(error),
         }
@@ -189,16 +191,17 @@ class Argument(object):
                     except Exception as error:
                         if self.ignore:
                             continue
-                        return self.handle_validation_error(error, bundle_errors)
+                        return self.handle_validation_error(error, value,
+                                                            bundle_errors)
 
                     if self.choices and value not in self.choices:
                         if bundle_errors:
                             return self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
+                                ValueError("Invalid choice"), value,
+                                bundle_errors)
                         self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
+                                ValueError("Invalid choice"), value,
+                                bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -216,8 +219,10 @@ class Argument(object):
                     ' or '.join(friendly_locations)
                 )
             if bundle_errors:
-                return self.handle_validation_error(ValueError(error_msg), bundle_errors)
-            self.handle_validation_error(ValueError(error_msg), bundle_errors)
+                return self.handle_validation_error(ValueError(error_msg), None,
+                                                    bundle_errors)
+            self.handle_validation_error(ValueError(error_msg), None,
+                                         bundle_errors)
 
         if not results:
             if callable(self.default):
