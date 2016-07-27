@@ -322,9 +322,10 @@ class RequestParser(object):
 
         if strict and req.unparsed_arguments:
             errors = [{'parameterName': arg,
+                       'parameterValue': value,
                        'parameterDoc': '',
                        'error': 'Unknown argument',
-                      } for arg in req.unparsed_arguments]
+                      } for (arg, value) in req.unparsed_arguments.iteritems()]
             error_fn(400, message=errors)
 
         return namespace
