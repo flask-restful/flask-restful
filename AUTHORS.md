@@ -46,6 +46,7 @@ A huge thanks to all of our contributors:
 - Jeff Widman
 - Joakim Ekberg
 - Johannes
+- John Richter
 - Jordan Yelloz
 - Josh Friend
 - Joshua C. Randall

@@ -118,7 +118,6 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.get_data(), b'{"message": "x"}\n')
 
-
     def test_marshal(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
@@ -719,6 +718,58 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo", method="HEAD"):
             self.assertRaises(AssertionError, lambda: resource.dispatch_request())
 
+    def test_resource_as_view(self):
+        class Foo(flask_restful.Resource):
+            init_count = 0
+
+            def __init__(self, test_case, arg, kwarg=None):
+                self.arg = arg
+                self.kwarg = kwarg
+                self.test_case = test_case
+                self.init_count += 1
+
+                self.test_case.assertTrue(self.arg is not None)
+                self.test_case.assertTrue(self.kwarg is not None)
+                self.test_case.assertTrue(self.init_count <= 1)
+
+            def get(self):
+                return [self.arg, self.kwarg]
+
+        foo = Foo(self, 'hello', kwarg='world')
+        app = Flask(__name__)
+
+        with app.test_request_context("/foo"):
+            # `as_View should not create another instance of the Foo class
+            resp = foo.as_view('foo', self, 'hello', kwarg='world')()
+            self.assertEqual(resp, ['hello', 'world'])
+
+    def test_resource_instantiated_once(self):
+        class Foo(flask_restful.Resource):
+            init_count = 0
+
+            def __init__(self, test_case, arg, kwarg=None):
+                self.arg = arg
+                self.kwarg = kwarg
+                self.test_case = test_case
+                self.init_count += 1
+
+                self.test_case.assertTrue(self.arg is not None)
+                self.test_case.assertTrue(self.kwarg is not None)
+                self.test_case.assertTrue(self.init_count <= 1)
+
+            def get(self):
+                return id(self)
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(Foo, '/foo',
+                         resource_class_args=(self, 'hello'),
+                         resource_class_kwargs={'kwarg': 'world'})
+        app = app.test_client()
+
+        instance_id = int(app.get('/foo').data)
+        self.assertEqual(int(app.get('/foo').data), instance_id)
+
     def test_abort_data(self):
         try:
             flask_restful.abort(404, foo='bar')
@@ -878,7 +929,6 @@ class APITestCase(unittest.TestCase):
         expected = b'{\n  "baz": "qux", \n  "foo": "bar"\n}\n'
 
         self.assertEquals(data, expected)
-
 
     def test_use_custom_jsonencoder(self):
         class CabageEncoder(JSONEncoder):
