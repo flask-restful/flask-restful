@@ -22,7 +22,7 @@ version_file = path.join(
     'flask_restful',
     '__version__.py'
 )
-with open(version_file, 'rb') as fp:
+with open(version_file, 'r') as fp:
     m = re.search(
         r"^__version__ = ['\"]([^'\"]*)['\"]",
         fp.read(),
