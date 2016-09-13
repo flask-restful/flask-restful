@@ -140,6 +140,30 @@ def test_regex_bad_pattern():
     assert_raises(re.error, inputs.regex, '[')
 
 
+def test_regex_flags_good_input():
+    cases = (
+        'abcd',
+        'ABCabc',
+        'ABC',
+    )
+
+    case_insensitive = inputs.regex(r'^[A-Z]+$', re.IGNORECASE)
+
+    for value in cases:
+        yield assert_equal, case_insensitive(value), value
+
+
+def test_regex_flags_bad_input():
+    cases = (
+        'abcd',
+        'ABCabc'
+    )
+
+    case_sensitive = inputs.regex(r'^[A-Z]+$')
+
+    for value in cases:
+        yield assert_raises, ValueError, lambda: case_sensitive(value)
+
 
 class TypesTestCase(unittest.TestCase):
 
