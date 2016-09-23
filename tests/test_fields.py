@@ -372,7 +372,7 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_unsupported_datetime_format(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
-        field = fields.DateTime(dt_format='raw')
+        field = fields.DateTime(dt_format='')
         self.assertRaises(MarshallingException, lambda: field.output('bar', obj))
 
     def test_to_dict(self):

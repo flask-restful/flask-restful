@@ -362,8 +362,10 @@ class DateTime(Raw):
                 return _rfc822(value)
             elif self.dt_format == 'iso8601':
                 return _iso8601(value)
-            else:
+            elif len(self.dt_format) > 0:
                 return _custom_format(value, self.dt_format)
+            else:
+                raise MarshallingException("Unsupported format")
         except AttributeError as ae:
             raise MarshallingException(ae)
 
