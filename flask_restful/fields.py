@@ -340,14 +340,16 @@ class Arbitrary(Raw):
 class DateTime(Raw):
     """
     Return a formatted datetime string in UTC. Supported formats are RFC 822
-    and ISO 8601.
+    and ISO 8601 and custom date format.
 
     See :func:`email.utils.formatdate` for more info on the RFC 822 format.
 
     See :meth:`datetime.datetime.isoformat` for more info on the ISO 8601
     format.
 
-    :param dt_format: ``'rfc822'`` or ``'iso8601'``
+    See :meth: `datetime.datetime.strftime` for more info on the custom format.
+
+    :param dt_format: ``'rfc822'`` or ``'iso8601'`` or ```strftime``` like format
     :type dt_format: str
     """
     def __init__(self, dt_format='rfc822', **kwargs):
@@ -361,9 +363,7 @@ class DateTime(Raw):
             elif self.dt_format == 'iso8601':
                 return _iso8601(value)
             else:
-                raise MarshallingException(
-                    'Unsupported date format %s' % self.dt_format
-                )
+                return _custom_format(value, self.dt_format)
         except AttributeError as ae:
             raise MarshallingException(ae)
 
@@ -415,3 +415,16 @@ def _iso8601(dt):
     :return: A ISO 8601 formatted date string
     """
     return dt.isoformat()
+
+def _custom_format(dt, fmt):
+    """Turn a datetime object into a custom formatted date.
+
+    Example::
+
+        fields._cusom_format(datetime(2012, 1, 1, 0, 0), "%Y-%m-%d %H:%M:%S") => "2012-01-01 00:00:00"
+
+    :param dt: The datetime to transform
+    :type dt: datetime
+    :return: A custom formatted date string
+    """
+    return dt.strftime(fmt)
