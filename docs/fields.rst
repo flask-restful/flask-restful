@@ -228,7 +228,7 @@ structures and render them appropriately. ::
     '{"billing_address": {"line 1": "123 fake street", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}, "name": "bob", "shipping_address": {"line 1": "555 nowhere", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}}'
 
 This example uses two ``Nested`` fields. The ``Nested`` constructor takes a
-dict of fields to render as sub-fields.input The important difference between
+dict of fields to render as sub-fields. The important difference between
 the ``Nested`` constructor and nested dicts (previous example), is the context
 for attributes. In this example, ``billing_address`` is a complex object that
 has its own fields and the context passed to the nested field is the sub-object
