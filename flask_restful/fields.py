@@ -395,6 +395,19 @@ class Fixed(Raw):
 """Alias for :class:`~fields.Fixed`"""
 Price = Fixed
 
+def _unix(dt):
+   """Turn a datetime object into a formatted date.
+
+   Example::
+
+       fields._unix(datetime(2011, 1, 1)) => 1293807600
+
+   :param dt: The datetime to transform
+   :type dt: datetime
+   :return: A UNIX foratted timestamp int
+   """
+
+   return int(dt.strftime('%s'))
 
 def _rfc822(dt):
     """Turn a datetime object into a formatted date.
