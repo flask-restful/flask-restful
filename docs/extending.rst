@@ -21,7 +21,7 @@ mediatypes to your API, you’ll need to declare your supported representations
 on the :class:`~Api` object. ::
 
     app = Flask(__name__)
-    api = restful.Api(app)
+    api = Api(app)
 
     @api.representation('application/json')
     def output_json(data, code, headers=None):
@@ -130,7 +130,7 @@ To support other representations (xml, csv, html), you can use the
 :meth:`~Api.representation` decorator.  You need to have a reference to your
 API. ::
 
-    api = restful.Api(app)
+    api = Api(app)
 
     @api.representation('text/csv')
     def output_csv(data, code, headers=None):
