@@ -316,24 +316,6 @@ class Api(object):
                 exc_info = None
             current_app.log_exception(exc_info)
 
-        help_on_404 = current_app.config.get("ERROR_404_HELP", True)
-        if code == 404 and help_on_404:
-            rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
-                          for rule in current_app.url_map.iter_rules()])
-            close_matches = difflib.get_close_matches(request.path, rules.keys())
-            if close_matches:
-                # If we already have a message, add punctuation and continue it.
-                if "message" in data:
-                    data["message"] = data["message"].rstrip('.') + '. '
-                else:
-                    data["message"] = ""
-
-                data['message'] += 'You have requested this URI [' + request.path + \
-                                   '] but did you mean ' + \
-                                   ' or '.join((
-                                       rules[match] for match in close_matches)
-                                   ) + ' ?'
-
         error_cls_name = type(e).__name__
         if error_cls_name in self.errors:
             custom_data = self.errors.get(error_cls_name, {})
