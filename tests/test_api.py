@@ -477,13 +477,6 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/fOo"):
             resp = api.handle_error(NotFound())
             self.assertEquals(resp.status_code, 404)
-            self.assertTrue('did you mean /foo ?' in resp.data.decode())
-
-        app.config['ERROR_404_HELP'] = False
-
-        with app.test_request_context("/fOo"):
-            resp = api.handle_error(NotFound())
-            self.assertEquals(resp.status_code, 404)
             self.assertEquals(resp.data.decode(), dumps({
                 "message": NotFound.description
             }) + "\n")
