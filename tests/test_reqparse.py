@@ -302,6 +302,27 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], ["bar"])
 
+    def test_parse_append_many(self):
+        req = Request.from_values("/bubble?foo=bar&foo=bar2")
+
+        parser = RequestParser()
+        parser.add_argument("foo", action="append"),
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], ["bar", "bar2"])
+
+    def test_parse_append_many_location_json(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", action='append', location="json")
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"foo": ["bar", "bar2"]}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], ['bar', 'bar2'])
+
     def test_parse_dest(self):
         req = Request.from_values("/bubble?foo=bar")
 

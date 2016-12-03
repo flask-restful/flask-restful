@@ -1,4 +1,6 @@
 from copy import deepcopy
+
+import collections
 from flask import current_app, request
 from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
@@ -173,7 +175,9 @@ class Argument(object):
                 if hasattr(source, "getlist"):
                     values = source.getlist(name)
                 else:
-                    values = [source.get(name)]
+                    values = source.get(name)
+                    if not isinstance(values, collections.MutableSequence):
+                        values = [values]
 
                 for value in values:
                     if hasattr(value, "strip") and self.trim:
