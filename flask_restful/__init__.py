@@ -1,23 +1,24 @@
 from __future__ import absolute_import
+
 import difflib
-from functools import wraps, partial
+import sys
+
+import operator
 import re
-from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
 from flask import make_response as original_flask_make_response
-from flask.views import MethodView
+from flask import request, url_for, current_app
+from flask.helpers import _endpoint_from_view_func
 from flask.signals import got_request_exception
+from flask.views import MethodView
+from functools import wraps, partial
+from types import MethodType
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
-from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
-from flask_restful.utils import http_status_message, unpack, OrderedDict
-from flask_restful.representations.json import output_json
-import sys
-from flask.helpers import _endpoint_from_view_func
-from types import MethodType
-import operator
 
+from flask_restful.representations.json import output_json
+from flask_restful.utils import http_status_message, unpack, OrderedDict
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
@@ -26,13 +27,14 @@ def abort(http_status_code, **kwargs):
     """Raise a HTTPException for the given http_status_code. Attach any keyword
     arguments to the exception for later processing.
     """
-    #noinspection PyUnresolvedReferences
+    # noinspection PyUnresolvedReferences
     try:
         original_flask_abort(http_status_code)
     except HTTPException as e:
         if len(kwargs):
             e.data = kwargs
         raise
+
 
 DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
 
@@ -352,7 +354,7 @@ class Api(object):
                 data,
                 code,
                 headers,
-                fallback_mediatype = fallback_mediatype
+                fallback_mediatype=fallback_mediatype
             )
         else:
             resp = self.make_response(data, code, headers)
@@ -419,9 +421,11 @@ class Api(object):
                     return 'Hello, World!'
 
         """
+
         def decorator(cls):
             self.add_resource(cls, *urls, **kwargs)
             return cls
+
         return decorator
 
     def _register_view(self, app, resource, *urls, **kwargs):
@@ -436,12 +440,13 @@ class Api(object):
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
             if previous_view_class != resource:
-                raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
+                raise ValueError(
+                    'This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
         resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
-            **resource_class_kwargs))
+                                                     **resource_class_kwargs))
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
@@ -474,6 +479,7 @@ class Api(object):
 
         :param resource: The resource as a flask view function
         """
+
         @wraps(resource)
         def wrapper(*args, **kwargs):
             resp = resource(*args, **kwargs)
@@ -481,6 +487,7 @@ class Api(object):
                 return resp
             data, code, headers = unpack(resp)
             return self.make_response(data, code, headers=headers)
+
         return wrapper
 
     def url_for(self, resource, **values):
@@ -545,9 +552,11 @@ class Api(object):
                 resp.headers.extend(headers)
                 return resp
         """
+
         def wrapper(func):
             self.representations[mediatype] = func
             return func
+
         return wrapper
 
     def unauthorized(self, response):
@@ -577,7 +586,7 @@ class Resource(MethodView):
     def dispatch_request(self, *args, **kwargs):
 
         # Taken from flask
-        #noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences
         meth = getattr(self, request.method.lower(), None)
         if meth is None and request.method == 'HEAD':
             meth = getattr(self, 'get', None)
@@ -593,7 +602,7 @@ class Resource(MethodView):
 
         representations = self.representations or OrderedDict()
 
-        #noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences
         mediatype = request.accept_mimetypes.best_match(representations, default=None)
         if mediatype in representations:
             data, code, headers = unpack(resp)
@@ -637,7 +646,7 @@ def marshal(data, fields, envelope=None):
                 if envelope else [marshal(d, fields) for d in data])
 
     items = ((k, marshal(data, v) if isinstance(v, dict)
-              else make(v).output(k, data))
+    else make(v).output(k, data))
              for k, v in fields.items())
     return OrderedDict([(envelope, OrderedDict(items))]) if envelope else OrderedDict(items)
 
@@ -665,6 +674,7 @@ class marshal_with(object):
 
     see :meth:`flask_restful.marshal`
     """
+
     def __init__(self, fields, envelope=None):
         """
         :param fields: a dict of whose keys will make up the final
@@ -684,6 +694,7 @@ class marshal_with(object):
                 return marshal(data, self.fields, self.envelope), code, headers
             else:
                 return marshal(resp, self.fields, self.envelope)
+
         return wrapper
 
 
@@ -701,6 +712,7 @@ class marshal_with_field(object):
 
     see :meth:`flask_restful.marshal_with`
     """
+
     def __init__(self, field):
         """
         :param field: a single field with which to marshal the output.

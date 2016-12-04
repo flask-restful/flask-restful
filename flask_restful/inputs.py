@@ -1,10 +1,9 @@
-from calendar import timegm
 from datetime import datetime, time, timedelta
 from email.utils import parsedate_tz, mktime_tz
-import re
 
 import aniso8601
 import pytz
+import re
 
 # Constants for upgrading date-based intervals to full datetimes.
 START_OF_DAY = time(0, 0, 0, tzinfo=pytz.UTC)
@@ -219,6 +218,7 @@ def positive(value, argument='argument'):
 
 class int_range(object):
     """ Restrict input to an integer in a range (inclusive) """
+
     def __init__(self, low, high, argument='argument'):
         self.low = low
         self.high = high

@@ -1,16 +1,17 @@
-from datetime import datetime
 from calendar import timegm
-import pytz
+from datetime import datetime
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
 from email.utils import formatdate
+
 import six
+
 try:
     from urlparse import urlparse, urlunparse
 except ImportError:
     # python3
     from urllib.parse import urlparse, urlunparse
 
-from flask_restful import inputs, marshal
+from flask_restful import marshal
 from flask import url_for, request
 
 __all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
@@ -184,14 +185,14 @@ class List(Raw):
 
         return [
             self.container.output(idx,
-                val if (isinstance(val, dict)
-                        or (self.container.attribute
-                            and hasattr(val, self.container.attribute)))
-                        and not isinstance(self.container, Nested)
-                        and not type(self.container) is Raw
-                    else value)
+                                  val if (isinstance(val, dict)
+                                          or (self.container.attribute
+                                              and hasattr(val, self.container.attribute)))
+                                         and not isinstance(self.container, Nested)
+                                         and not type(self.container) is Raw
+                                  else value)
             for idx, val in enumerate(value)
-        ]
+            ]
 
     def output(self, key, data):
         value = get_value(key if self.attribute is None else self.attribute, data)
@@ -211,6 +212,7 @@ class String(Raw):
     be converted to :class:`unicode` in python2 and :class:`str` in
     python3.
     """
+
     def format(self, value):
         try:
             return six.text_type(value)
@@ -224,6 +226,7 @@ class Integer(Raw):
     :param int default: The default value for the field, if no value is
         specified.
     """
+
     def __init__(self, default=0, **kwargs):
         super(Integer, self).__init__(default=default, **kwargs)
 
@@ -243,6 +246,7 @@ class Boolean(Raw):
     Empty collections such as ``""``, ``{}``, ``[]``, etc. will be converted to
     ``False``.
     """
+
     def format(self, value):
         return bool(value)
 
@@ -265,6 +269,7 @@ class FormattedString(Raw):
         }
         marshal(data, fields)
     """
+
     def __init__(self, src_str):
         """
         :param string src_str: the string to format with the other
@@ -294,6 +299,7 @@ class Url(Raw):
     :param scheme: URL scheme specifier (e.g. ``http``, ``https``)
     :type scheme: str
     """
+
     def __init__(self, endpoint=None, absolute=False, scheme=None):
         super(Url, self).__init__()
         self.endpoint = endpoint
@@ -350,6 +356,7 @@ class DateTime(Raw):
     :param dt_format: ``'rfc822'`` or ``'iso8601'``
     :type dt_format: str
     """
+
     def __init__(self, dt_format='rfc822', **kwargs):
         super(DateTime, self).__init__(**kwargs)
         self.dt_format = dt_format
@@ -367,6 +374,7 @@ class DateTime(Raw):
         except AttributeError as ae:
             raise MarshallingException(ae)
 
+
 ZERO = MyDecimal()
 
 
@@ -374,6 +382,7 @@ class Fixed(Raw):
     """
     A decimal number with a fixed precision.
     """
+
     def __init__(self, decimals=5, **kwargs):
         super(Fixed, self).__init__(**kwargs)
         self.precision = MyDecimal('0.' + '0' * (decimals - 1) + '1')
