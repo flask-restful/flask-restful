@@ -53,11 +53,13 @@ class regex(object):
 
     :param pattern: The regular expression the input must match
     :type pattern: str
+    :param flags: Flags to change expression behavior
+    :type flags: int
     """
 
-    def __init__(self, pattern):
+    def __init__(self, pattern, flags=0):
         self.pattern = pattern
-        self.re = re.compile(pattern)
+        self.re = re.compile(pattern, flags)
 
     def __call__(self, value):
         if not self.re.search(value):

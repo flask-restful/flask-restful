@@ -50,6 +50,7 @@ class Api(object):
 
     :param app: the Flask application object
     :type app: flask.Flask
+    :type app: flask.Blueprint
     :param prefix: Prefix all routes with a value, eg v1 or 2010-04-01
     :type prefix: str
     :param default_mediatype: The default media type to return
@@ -300,6 +301,14 @@ class Api(object):
                 'message': http_status_message(code),
             }
 
+        # Werkzeug exceptions generate a content-length header which is added
+        # to the response in addition to the actual content-length header
+        # https://github.com/flask-restful/flask-restful/issues/534
+        remove_headers = ('Content-Length',)
+
+        for header in remove_headers:
+            headers.pop(header, None)
+
         data = getattr(e, 'data', default_data)
 
         if code >= 500:
@@ -362,6 +371,7 @@ class Api(object):
 
         :param resource: the class name of your resource
         :type resource: :class:`Resource`
+
         :param urls: one or more url routes to match for the resource, standard
                      flask routing rules apply.  Any url variables will be
                      passed to the resource method as args.

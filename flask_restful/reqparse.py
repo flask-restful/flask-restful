@@ -1,4 +1,6 @@
 from copy import deepcopy
+
+import collections
 from flask import current_app, request
 from werkzeug.datastructures import MultiDict, FileStorage
 from werkzeug import exceptions
@@ -62,12 +64,14 @@ class Argument(object):
     :param bool store_missing: Whether the arguments default value should
         be stored if the argument is missing from the request.
     :param bool trim: If enabled, trims whitespace around the argument.
+    :param bool nullable: If enabled, allows null value in argument.
     """
 
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True, store_missing=True, trim=False):
+                 case_sensitive=True, store_missing=True, trim=False,
+                 nullable=True):
         self.name = name
         self.default = default
         self.dest = dest
@@ -82,6 +86,7 @@ class Argument(object):
         self.operators = operators
         self.store_missing = store_missing
         self.trim = trim
+        self.nullable = nullable
 
     def source(self, request):
         """Pulls values off the request in the provided location
@@ -108,7 +113,10 @@ class Argument(object):
     def convert(self, value, op):
         # Don't cast None
         if value is None:
-            return None
+            if self.nullable:
+                return None
+            else:
+                raise ValueError('Must not be null!')
 
         # and check if we're expecting a filestorage and haven't overridden `type`
         # (required because the below instantiation isn't valid for FileStorage)
@@ -137,7 +145,7 @@ class Argument(object):
         """
         error_str = six.text_type(error)
         error_msg = self.help.format(error_msg=error_str) if self.help else error_str
-        msg = {self.name: "{0}".format(error_msg)}
+        msg = {self.name: error_msg}
 
         if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
             return error, msg
@@ -167,7 +175,9 @@ class Argument(object):
                 if hasattr(source, "getlist"):
                     values = source.getlist(name)
                 else:
-                    values = [source.get(name)]
+                    values = source.get(name)
+                    if not isinstance(values, collections.MutableSequence):
+                        values = [values]
 
                 for value in values:
                     if hasattr(value, "strip") and self.trim:

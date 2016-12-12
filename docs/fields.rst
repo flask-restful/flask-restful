@@ -79,7 +79,7 @@ A lambda (or any callable) can also be specified as the ``attribute`` ::
         'address': fields.String,
     }
 
-Nested properties can also be accessed with ``attribute``:
+Nested properties can also be accessed with ``attribute`` ::
 
     fields = {
         'name': fields.String(attribute='people_list.0.person_dictionary.name'),
@@ -103,7 +103,7 @@ Custom Fields & Multiple Values
 -------------------------------
 
 Sometimes you have your own custom formatting needs.  You can subclass the
-:class`fields.Raw` class and implement the format function.  This is especially
+:class:`fields.Raw` class and implement the format function.  This is especially
 useful when an attribute stores multiple pieces of information. e.g. a
 bit-field whose individual bits represent distinct values.  You can use fields
 to multiplex a single attribute to multiple output values.
@@ -228,7 +228,7 @@ structures and render them appropriately. ::
     '{"billing_address": {"line 1": "123 fake street", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}, "name": "bob", "shipping_address": {"line 1": "555 nowhere", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}}'
 
 This example uses two ``Nested`` fields. The ``Nested`` constructor takes a
-dict of fields to render as sub-fields.input The important difference between
+dict of fields to render as sub-fields. The important difference between
 the ``Nested`` constructor and nested dicts (previous example), is the context
 for attributes. In this example, ``billing_address`` is a complex object that
 has its own fields and the context passed to the nested field is the sub-object

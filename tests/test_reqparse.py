@@ -30,6 +30,19 @@ class ReqParseTestCase(unittest.TestCase):
             abort.assert_called_with(400, message=expected)
 
     @patch('flask_restful.abort')
+    def test_help_with_unicode_error_msg(self, abort):
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument('foo', choices=('one', 'two'), help=u'Bad choice: {error_msg}')
+            req = Mock(['values'])
+            req.values = MultiDict([('foo', u'\xf0\x9f\x8d\x95')])
+            parser.parse_args(req)
+            expected = {'foo': u'Bad choice: \xf0\x9f\x8d\x95 is not a valid choice'}
+            abort.assert_called_with(400, message=expected)
+
+
+    @patch('flask_restful.abort')
     def test_help_no_error_msg(self, abort):
         app = Flask(__name__)
         with app.app_context():
@@ -165,9 +178,12 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(arg.source(req), MultiDict(req.headers))
 
     def test_convert_default_type_with_null_input(self):
-        """convert() should properly handle case where input is None"""
         arg = Argument('foo')
         self.assertEquals(arg.convert(None, None), None)
+
+    def test_convert_with_null_input_when_not_nullable(self):
+        arg = Argument('foo', nullable=False)
+        self.assertRaises(ValueError, lambda: arg.convert(None, None))
 
     def test_source_bad_location(self):
         req = Mock(['values'])
@@ -285,6 +301,27 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], ["bar"])
+
+    def test_parse_append_many(self):
+        req = Request.from_values("/bubble?foo=bar&foo=bar2")
+
+        parser = RequestParser()
+        parser.add_argument("foo", action="append"),
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], ["bar", "bar2"])
+
+    def test_parse_append_many_location_json(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", action='append', location="json")
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"foo": ["bar", "bar2"]}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], ['bar', 'bar2'])
 
     def test_parse_dest(self):
         req = Request.from_values("/bubble?foo=bar")

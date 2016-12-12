@@ -815,6 +815,20 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(foo.get_etag(),
                               unquote_etag(quote_etag('myETag')))
 
+    def test_exception_header_forwarding_doesnt_duplicate_headers(self):
+        """Test that HTTPException's headers do not add a duplicate
+        Content-Length header
+
+        https://github.com/flask-restful/flask-restful/issues/534
+        """
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        with app.test_request_context('/'):
+            r = api.handle_error(BadRequest())
+
+        self.assertEqual(len(r.headers.getlist('Content-Length')), 1)
+
     def test_will_prettyprint_json_in_debug_mode(self):
         app = Flask(__name__)
         app.config['DEBUG'] = True
