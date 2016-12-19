@@ -573,6 +573,7 @@ class Resource(MethodView):
     """
     representations = None
     method_decorators = []
+    method_decorators_exclude = []
 
     def dispatch_request(self, *args, **kwargs):
 
@@ -583,8 +584,12 @@ class Resource(MethodView):
             meth = getattr(self, 'get', None)
         assert meth is not None, 'Unimplemented method %r' % request.method
 
-        for decorator in self.method_decorators:
-            meth = decorator(meth)
+        apply_decorators = not (
+          self.method_decorators_exclude and
+          request.method.lower() in self.method_decorators_exclude)
+        if apply_decorators:
+            for decorator in self.method_decorators:
+                meth = decorator(meth)
 
         resp = meth(*args, **kwargs)
 
