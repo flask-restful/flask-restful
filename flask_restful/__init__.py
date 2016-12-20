@@ -17,6 +17,7 @@ import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
+from collections import Mapping
 
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
@@ -583,7 +584,12 @@ class Resource(MethodView):
             meth = getattr(self, 'get', None)
         assert meth is not None, 'Unimplemented method %r' % request.method
 
-        for decorator in self.method_decorators:
+        if isinstance(self.method_decorators, Mapping):
+            decorators = self.method_decorators.get(request.method.lower(), [])
+        else:
+            decorators = self.method_decorators
+
+        for decorator in decorators:
             meth = decorator(meth)
 
         resp = meth(*args, **kwargs)

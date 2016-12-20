@@ -982,6 +982,76 @@ class APITestCase(unittest.TestCase):
         except AttributeError as ae:
             self.fail(ae.message)
 
+    def test_selectively_apply_method_decorators(self):
+        def upper_deco(f):
+            def upper(*args, **kwargs):
+                return f(*args, **kwargs).upper()
+            return upper
+
+        class TestResource(flask_restful.Resource):
+            method_decorators = {'get': [upper_deco]}
+
+            def get(self):
+                return 'get test'
+
+            def post(self):
+                return 'post test'
+
+        app = Flask(__name__)
+
+        with app.test_request_context('/', method='POST'):
+            r = TestResource().dispatch_request()
+            assert r == 'post test'
+
+        with app.test_request_context('/', method='GET'):
+            r = TestResource().dispatch_request()
+            assert r == 'GET TEST'
+
+    def test_apply_all_method_decorators_if_not_mapping(self):
+        def upper_deco(f):
+            def upper(*args, **kwargs):
+                return f(*args, **kwargs).upper()
+            return upper
+
+        class TestResource(flask_restful.Resource):
+            method_decorators = [upper_deco]
+
+            def get(self):
+                return 'get test'
+
+            def post(self):
+                return 'post test'
+
+        app = Flask(__name__)
+
+        with app.test_request_context('/', method='POST'):
+            r = TestResource().dispatch_request()
+            assert r == 'POST TEST'
+
+        with app.test_request_context('/', method='GET'):
+            r = TestResource().dispatch_request()
+            assert r == 'GET TEST'
+
+    def test_decorators_only_applied_at_dispatch(self):
+        def upper_deco(f):
+            def upper(*args, **kwargs):
+                return f(*args, **kwargs).upper()
+            return upper
+
+        class TestResource(flask_restful.Resource):
+            method_decorators = [upper_deco]
+
+            def get(self):
+                return 'get test'
+
+            def post(self):
+                return 'post test'
+
+        r = TestResource()
+
+        assert r.get() == 'get test'
+        assert r.post() == 'post test'
+
 
 if __name__ == '__main__':
     unittest.main()
