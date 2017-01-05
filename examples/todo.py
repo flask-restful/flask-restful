@@ -30,6 +30,7 @@ class Todo(Resource):
         return '', 204
 
     def put(self, todo_id):
+        abort_if_todo_doesnt_exist(todo_id)
         args = parser.parse_args()
         task = {'task': args['task']}
         TODOS[todo_id] = task
