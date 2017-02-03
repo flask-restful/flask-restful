@@ -238,7 +238,7 @@ message to be customized while preserving the original error ::
     )
 
     # If a request comes in with a value of "three" for `foo`:
-    
+
     {
         "message":  {
             "foo": "Bad choice: three is not a valid choice",
