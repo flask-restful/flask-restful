@@ -229,14 +229,14 @@ replaced with the string representation of the type error. This allows the
 message to be customized while preserving the original error ::
 
     from flask_restful import reqparse
-    
+
     parser = reqparse.RequestParser()
     parser.add_argument(
         'foo',
         choices=('one', 'two'),
         help='Bad choice: {error_msg}'
     )
-    
+
     # If a request comes in with a value of "three" for `foo`:
     
     {
