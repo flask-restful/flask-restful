@@ -261,7 +261,7 @@ So you could have a :class:`Resource`: ::
     from flask_restful import Resource
 
     class TodoNext(Resource):
-        def __init__(**kwargs):
+        def __init__(self, **kwargs):
             # smart_engine is a black box dependency
             self.smart_engine = kwargs['smart_engine']
 
