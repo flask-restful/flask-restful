@@ -639,13 +639,19 @@ def marshal(data, fields, envelope=None):
         return cls
 
     if isinstance(data, (list, tuple)):
-        return (OrderedDict([(envelope, [marshal(d, fields) for d in data])])
-                if envelope else [marshal(d, fields) for d in data])
+        items = [marshal(d, fields) for d in data]
+    else:
+        items = OrderedDict()
+        for k, v in fields.items():
+            if isinstance(v, dict):
+                items[k] = marshal(data, v)
+            else:
+                items[k] = make(v).output(k, data)
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
-              else make(v).output(k, data))
-             for k, v in fields.items())
-    return OrderedDict([(envelope, OrderedDict(items))]) if envelope else OrderedDict(items)
+    if envelope:
+        return OrderedDict([(envelope, items)])
+    else:
+        return items
 
 
 class marshal_with(object):
