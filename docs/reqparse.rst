@@ -226,10 +226,9 @@ then the error message will be the value of ``help``.
 
 ``help`` may include an interpolation token, ``{error_msg}``, that will be
 replaced with the string representation of the type error. This allows the
-message to be customized while preserving the original error:
+message to be customized while preserving the original error ::
 
     from flask_restful import reqparse
-
 
     parser = reqparse.RequestParser()
     parser.add_argument(
