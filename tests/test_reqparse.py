@@ -9,7 +9,7 @@ from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
 import decimal
 
-import json
+from flask import json
 
 
 class ReqParseTestCase(unittest.TestCase):
