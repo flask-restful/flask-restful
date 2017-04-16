@@ -32,6 +32,7 @@ def abort(http_status_code, **kwargs):
         original_flask_abort(http_status_code)
     except HTTPException as e:
         if len(kwargs):
+            kwargs.setdefault('status', http_status_code)
             e.data = kwargs
         raise
 
