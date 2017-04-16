@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 from datetime import datetime, timedelta, tzinfo
 import unittest
 import pytz
@@ -421,6 +424,53 @@ def test_bad_isointervals():
             inputs.iso8601interval,
             bad_interval,
         )
+
+def test_email():
+    # These email validator test cases are from Django.
+    good_addresses = [
+        'email@here.com',
+        'weirder-email@here.and.there.com',
+        'email@[127.0.0.1]',
+        'email@[2001:dB8::1]',
+        'email@[2001:dB8:0:0:0:0:0:1]',
+        'email@[::fffF:127.0.0.1]',
+        'example@valid-----hyphens.com',
+        'example@valid-with-hyphens.com',
+        '"test@test"@example.com',
+        'test@domain.with.idn.tld.उदाहरण.परीक्षा',
+        '"\\\011"@here.com',
+        'a@%s.us' % ('a' * 249),
+    ]
+    bad_addresses = [
+        None,
+        '',
+        'abc',
+        'abc@',
+        'abc@bar',
+        'a @x.cz',
+        'abc@.com',
+        'something@@somewhere.com',
+        'email@127.0.0.1',
+        'email@[127.0.0.256]',
+        'email@[2001:db8::12345]',
+        'email@[2001:db8:0:0:0:0:1]',
+        'email@[::ffff:127.0.0.256]',
+        'example@invalid-.com',
+        'example@-invalid.com',
+        'example@invalid.com-',
+        'example@inv-.alid-.com',
+        'example@inv-.-alid.com',
+        'test@example.com\n\n<script src="x.js">',
+        '"\\\012"@here.com',
+        'trailingdot@shouldfail.com.',
+        'a@%s.us' % ('a' * 250),
+    ]
+
+    for each in good_addresses:
+        assert_equal(each, inputs.email(each))
+    for each in bad_addresses:
+        assert_raises(ValueError, inputs.email, each)
+
 
 if __name__ == '__main__':
     unittest.main()
