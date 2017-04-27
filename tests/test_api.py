@@ -9,7 +9,7 @@ except:
     from unittest.mock import Mock
 import flask
 import werkzeug
-from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound
+from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound, _aborter
 from werkzeug.http import quote_etag, unquote_etag
 from flask_restful.utils import http_status_message, unpack
 import flask_restful
@@ -808,7 +808,7 @@ class APITestCase(unittest.TestCase):
                 flask_abort(304, etag='myETag')
 
         api.add_resource(Foo1, '/foo')
-        flask_abort.mapping.update({304: NotModified})
+        _aborter.mapping.update({304: NotModified})
 
         with app.test_client() as client:
             foo = client.get('/foo')
