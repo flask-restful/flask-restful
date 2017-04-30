@@ -593,6 +593,24 @@ class ReqParseTestCase(unittest.TestCase):
 
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], None)
+        
+    def test_parse_boolean_false(self):
+        req = Request.from_values("/bubble?foo=false")
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=bool),
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], False)
+
+    def test_parse_boolean_true(self):
+        req = Request.from_values("/bubble?foo=true")
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=bool),
+
+        args = parser.parse_args(req)
+        self.assertEquals(args['foo'], True)
 
     def test_chaining(self):
         parser = RequestParser()
