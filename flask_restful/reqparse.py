@@ -317,6 +317,19 @@ class RequestParser(object):
 
         return namespace
 
+    def parse_known_args(self, req=None):
+        """Parse all arguments from the provided request and return a pair
+        of the unknown arguments and the results.
+
+        The values of the unknowns will always be strings
+        """
+        if req is None:
+            req = request
+
+        result = self.parse_args(req)
+        unknowns = {k: v for k,v in req.args.iteritems() if k not in result}
+        return unknowns, result
+
     def copy(self):
         """ Creates a copy of this RequestParser with the same set of arguments """
         parser_copy = self.__class__(self.argument_class, self.namespace_class)

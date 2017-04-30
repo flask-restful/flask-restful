@@ -594,6 +594,51 @@ class ReqParseTestCase(unittest.TestCase):
         args = parser.parse_args(req)
         self.assertEquals(args['foo'], None)
 
+    def test_parse_unknown(self):
+        req = Request.from_values("/bubble?foo=123&unknown=456")
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=int),
+
+        args = parser.parse_args(req)
+        self.assertEquals(1, len(args))
+        self.assertEquals(args['foo'], 123)
+
+    def test_parse_known_args_all_args_known(self):
+        req = Request.from_values("/bubble?foo=123")
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=int),
+
+        unknowns, args = parser.parse_known_args(req)
+        self.assertEquals(1, len(args))
+        self.assertEquals(0, len(unknowns))
+        self.assertEquals(args['foo'], 123)
+
+    def test_parse_known_args_all_args_unknown(self):
+        req = Request.from_values("/bubble?unknown=123")
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=int),
+
+        unknowns, args = parser.parse_known_args(req)
+        self.assertEquals(1, len(args))
+        self.assertEquals(1, len(unknowns))
+        self.assertEquals(args['foo'], None)
+        self.assertEquals(unknowns['unknown'], '123')
+
+    def test_parse_known_args_some_args_unknown(self):
+        req = Request.from_values("/bubble?foo=123&unknown=456")
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=int),
+
+        unknowns, args = parser.parse_known_args(req)
+        self.assertEquals(1, len(args))
+        self.assertEquals(1, len(unknowns))
+        self.assertEquals(args['foo'], 123)
+        self.assertEquals(unknowns['unknown'], '456')
+
     def test_chaining(self):
         parser = RequestParser()
         self.assertTrue(parser is parser.add_argument("foo"))
