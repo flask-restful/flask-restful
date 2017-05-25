@@ -1,9 +1,13 @@
+import sys
+
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
 
 from werkzeug.http import HTTP_STATUS_CODES
+
+PY3 = sys.version_info > (3,)
 
 
 def http_status_message(code):
