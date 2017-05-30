@@ -558,6 +558,17 @@ class APITestCase(unittest.TestCase):
 
         view.as_view.assert_called_with('bar')
 
+    def test_map_resource_endpoint(self):
+        app = Mock()
+        app.view_functions = {}
+        view = Mock()
+
+        api = flask_restful.Api(app)
+        api.output = Mock()
+        api.map_resource('/foo', view, endpoint='bar')
+
+        view.as_view.assert_called_with('bar')
+
     def test_add_two_conflicting_resources_on_same_endpoint(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
