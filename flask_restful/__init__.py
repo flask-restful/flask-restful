@@ -610,13 +610,15 @@ class Resource(MethodView):
         return resp
 
 
-def marshal(data, fields, envelope=None):
+def marshal(data, fields, default='all_null', envelope=None):
     """Takes raw data (in the form of a dict, list, object) and a dict of
     fields to output and filters the data based on those fields.
 
     :param data: the actual object(s) from which the fields are taken from
     :param fields: a dict of whose keys will make up the final serialized
                    response output
+    :param default: value that the data will serialized into if the data in None.
+                    By default the value is a dictionary with all null keys
     :param envelope: optional key that will be used to envelop the serialized
                      response
 
@@ -632,6 +634,8 @@ def marshal(data, fields, envelope=None):
     OrderedDict([('data', OrderedDict([('a', 100)]))])
 
     """
+    if data is None and default != 'all_null':
+        return {envelope: default} if envelope else default
 
     def make(cls):
         if isinstance(cls, type):
@@ -639,10 +643,10 @@ def marshal(data, fields, envelope=None):
         return cls
 
     if isinstance(data, (list, tuple)):
-        return (OrderedDict([(envelope, [marshal(d, fields) for d in data])])
-                if envelope else [marshal(d, fields) for d in data])
+        return (OrderedDict([(envelope, [marshal(d, fields, default=default) for d in data])])
+                if envelope else [marshal(d, fields, default=default) for d in data])
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
+    items = ((k, marshal(data, v, default=default) if isinstance(v, dict)
               else make(v).output(k, data))
              for k, v in fields.items())
     return OrderedDict([(envelope, OrderedDict(items))]) if envelope else OrderedDict(items)
@@ -671,14 +675,17 @@ class marshal_with(object):
 
     see :meth:`flask_restful.marshal`
     """
-    def __init__(self, fields, envelope=None):
+    def __init__(self, fields, default='all_null', envelope=None):
         """
         :param fields: a dict of whose keys will make up the final
                        serialized response output
+        :param default: value that the data will serialized into if the data in None.
+                        By default the value is a dictionary with all null keys
         :param envelope: optional key that will be used to envelop the serialized
                          response
         """
         self.fields = fields
+        self.default = default
         self.envelope = envelope
 
     def __call__(self, f):
@@ -687,9 +694,9 @@ class marshal_with(object):
             resp = f(*args, **kwargs)
             if isinstance(resp, tuple):
                 data, code, headers = unpack(resp)
-                return marshal(data, self.fields, self.envelope), code, headers
+                return marshal(data, self.fields, self.default, self.envelope), code, headers
             else:
-                return marshal(resp, self.fields, self.envelope)
+                return marshal(resp, self.fields, self.default, self.envelope)
         return wrapper
 
 
