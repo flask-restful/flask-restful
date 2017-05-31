@@ -627,6 +627,24 @@ class ReqParseTestCase(unittest.TestCase):
             args = parser.parse_args()
             self.assertEquals(args['foo'], None)
 
+    def test_none_argument_for_required_field(self):
+
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", location="json", required=True)
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({"foo": None}),
+                                      content_type='application/json'):
+            message = ''
+            try:
+                args = parser.parse_args()
+            except exceptions.BadRequest as e:
+                message = e.data['message']
+
+            self.assertEquals(message, ({'foo': 'Missing required parameter in '
+                                                'the JSON body'}))
+
     def test_type_callable(self):
         req = Request.from_values("/bubble?foo=1")
 
