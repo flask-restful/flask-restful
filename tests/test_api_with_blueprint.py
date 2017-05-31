@@ -120,8 +120,8 @@ class APIWithBlueprintTestCase(unittest.TestCase):
     def test_error_routing(self):
         blueprint = Blueprint('test', __name__)
         api = flask_restful.Api(blueprint)
-        api.add_resource(HelloWorld(), '/hi', endpoint="hello")
-        api.add_resource(GoodbyeWorld(404), '/bye', endpoint="bye")
+        api.add_resource(HelloWorld, '/hi', endpoint="hello")
+        api.add_resource(GoodbyeWorld, '/bye', endpoint="bye", resource_class_args=(404,))
         app = Flask(__name__)
         app.register_blueprint(blueprint)
         with app.test_request_context('/hi', method='POST'):
@@ -134,13 +134,13 @@ class APIWithBlueprintTestCase(unittest.TestCase):
     def test_non_blueprint_rest_error_routing(self):
         blueprint = Blueprint('test', __name__)
         api = flask_restful.Api(blueprint)
-        api.add_resource(HelloWorld(), '/hi', endpoint="hello")
-        api.add_resource(GoodbyeWorld(404), '/bye', endpoint="bye")
+        api.add_resource(HelloWorld, '/hi', endpoint="hello")
+        api.add_resource(GoodbyeWorld, '/bye', endpoint="bye", resource_class_args=(404,))
         app = Flask(__name__)
         app.register_blueprint(blueprint, url_prefix='/blueprint')
         api2 = flask_restful.Api(app)
-        api2.add_resource(HelloWorld(), '/hi', endpoint="hello")
-        api2.add_resource(GoodbyeWorld(404), '/bye', endpoint="bye")
+        api2.add_resource(HelloWorld, '/hi', endpoint="hello")
+        api2.add_resource(GoodbyeWorld, '/bye', endpoint="bye", resource_class_args=(404,))
         with app.test_request_context('/hi', method='POST'):
             assert_false(api._should_use_fr_error_handler())
             assert_true(api2._should_use_fr_error_handler())
@@ -163,8 +163,8 @@ class APIWithBlueprintTestCase(unittest.TestCase):
     def test_non_blueprint_non_rest_error_routing(self):
         blueprint = Blueprint('test', __name__)
         api = flask_restful.Api(blueprint)
-        api.add_resource(HelloWorld(), '/hi', endpoint="hello")
-        api.add_resource(GoodbyeWorld(404), '/bye', endpoint="bye")
+        api.add_resource(HelloWorld, '/hi', endpoint="hello")
+        api.add_resource(GoodbyeWorld, '/bye', endpoint="bye", resource_class_args=(404,))
         app = Flask(__name__)
         app.register_blueprint(blueprint, url_prefix='/blueprint')
 
