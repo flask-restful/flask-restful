@@ -94,7 +94,6 @@ class Api(object):
         self.blueprint = None
 
         if app is not None:
-            self.app = app
             self.init_app(app)
 
     def init_app(self, app):
@@ -113,6 +112,7 @@ class Api(object):
 
         """
         # If app is a blueprint, defer the initialization
+        self.app = app
         try:
             app.record(self._deferred_blueprint_init)
         # Flask.Blueprint has a 'record' attribute, Flask.Api does not
