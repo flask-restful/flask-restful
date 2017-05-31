@@ -43,6 +43,8 @@ class Argument(object):
         returned by :meth:`~reqparse.RequestParser.parse_args()`.
     :param bool required: Whether or not the argument may be omitted (optionals
         only).
+    :param bool nullable: Whether or not the argument may be None type (optionals
+        only).
     :param action: The basic type of action to be taken when this argument
         is encountered in the request. Valid options are "store" and "append".
     :param ignore: Whether to ignore cases where the argument fails type
@@ -67,7 +69,7 @@ class Argument(object):
     :param bool nullable: If enabled, allows null value in argument.
     """
 
-    def __init__(self, name, default=None, dest=None, required=False,
+    def __init__(self, name, default=None, dest=None, required=False, nullable=False,
                  ignore=False, type=text_type, location=('json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True, store_missing=True, trim=False,
@@ -76,6 +78,7 @@ class Argument(object):
         self.default = default
         self.dest = dest
         self.required = required
+        self.nullable = nullable
         self.ignore = ignore
         self.location = location
         self.type = type
@@ -180,6 +183,8 @@ class Argument(object):
                         values = [values]
 
                 for value in values:
+                    if value is None and self.nullable:
+                        continue
                     if hasattr(value, "strip") and self.trim:
                         value = value.strip()
                     if hasattr(value, "lower") and not self.case_sensitive:
