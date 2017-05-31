@@ -94,7 +94,6 @@ class Api(object):
         self.blueprint = None
 
         if app is not None:
-            self.app = app
             self.init_app(app)
 
     def init_app(self, app):
@@ -200,6 +199,8 @@ class Api(object):
         if len(self.resources) > 0:
             for resource, urls, kwargs in self.resources:
                 self._register_view(app, resource, *urls, **kwargs)
+
+        self.app = app
 
     def owns_endpoint(self, endpoint):
         """Tests if an endpoint name (not path) belongs to this Api.  Takes
