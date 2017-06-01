@@ -35,7 +35,7 @@ def abort(http_status_code, **kwargs):
             e.data = kwargs
         raise
 
-DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
+DEFAULT_REPRESENTATIONS = [('application/json; charset=utf-8', output_json)]
 
 
 class Api(object):
@@ -75,7 +75,7 @@ class Api(object):
     """
 
     def __init__(self, app=None, prefix='',
-                 default_mediatype='application/json', decorators=None,
+                 default_mediatype='application/json; charset=utf-8', decorators=None,
                  catch_all_404s=False, serve_challenge_on_401=False,
                  url_part_order='bae', errors=None):
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
