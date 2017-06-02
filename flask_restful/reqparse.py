@@ -7,6 +7,8 @@ from werkzeug import exceptions
 import flask_restful
 import decimal
 import six
+from pkg_resources import get_distribution as getdis
+import pkg_resources
 
 
 class Namespace(dict):
@@ -77,7 +79,15 @@ class Argument(object):
         self.dest = dest
         self.required = required
         self.ignore = ignore
-        self.location = location
+        if getdis('flask').version >= '0.12.2':
+            try:
+                (_ for _ in location)  # test for iterator
+                self.location = map(lambda l: 'get_json' if l == 'json' else l,
+                                    location)
+            except TypeError:
+                self.location = 'get_json' if location == 'json' else location
+        else:
+            self.location = location
         self.type = type
         self.choices = choices
         self.action = action
