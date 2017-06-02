@@ -7,8 +7,6 @@ from werkzeug import exceptions
 import flask_restful
 import decimal
 import six
-from pkg_resources import get_distribution as getdis
-import pkg_resources
 
 
 class Namespace(dict):
@@ -22,7 +20,7 @@ class Namespace(dict):
         self[name] = value
 
 _friendly_location = {
-    u'json': u'the JSON body',
+    u'get_json': u'the JSON body',
     u'form': u'the post body',
     u'args': u'the query string',
     u'values': u'the post body or the query string',
@@ -70,7 +68,7 @@ class Argument(object):
     """
 
     def __init__(self, name, default=None, dest=None, required=False,
-                 ignore=False, type=text_type, location=('json', 'values',),
+                 ignore=False, type=text_type, location=('get_json', 'values',),
                  choices=(), action='store', help=None, operators=('=',),
                  case_sensitive=True, store_missing=True, trim=False,
                  nullable=True):
@@ -79,15 +77,7 @@ class Argument(object):
         self.dest = dest
         self.required = required
         self.ignore = ignore
-        if getdis('flask').version >= '0.12.2':
-            try:
-                (_ for _ in location)  # test for iterator
-                self.location = map(lambda l: 'get_json' if l == 'json' else l,
-                                    location)
-            except TypeError:
-                self.location = 'get_json' if location == 'json' else location
-        else:
-            self.location = location
+        self.location = location
         self.type = type
         self.choices = choices
         self.action = action
