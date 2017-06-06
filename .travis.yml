@@ -9,7 +9,13 @@ python:
   - 2.6
   - pypy
   - pypy3
-install: pip install coveralls
+ env:
+  - FLASK=0.8  # minimum supported version according to setup.py
+  - FLASK=0.12  # recent Flask
+  
+install:
+  - pip install -q Flask==$FLASK
+  - pip install coveralls
 script: make ci
 after_success: coveralls
 
