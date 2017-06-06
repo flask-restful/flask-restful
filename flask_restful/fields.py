@@ -133,19 +133,26 @@ class Nested(Raw):
     :param dict nested: The dictionary to nest
     :param bool allow_null: Whether to return None instead of a dictionary
         with null keys, if a nested dictionary has all-null keys
+    :param string deep_attribute: Whether to return deeper field that exists
+        inside of this fields, if a nested dictionary has the attribute
     :param kwargs: If ``default`` keyword argument is present, a nested
         dictionary will be marshaled as its value if nested dictionary is
         all-null keys (e.g. lets you return an empty JSON object instead of
         null)
+    
     """
 
-    def __init__(self, nested, allow_null=False, **kwargs):
+    def __init__(self, nested, allow_null=False, deep_attribute=None, **kwargs):
         self.nested = nested
         self.allow_null = allow_null
+        self.deep_attribute = deep_attribute
         super(Nested, self).__init__(**kwargs)
 
     def output(self, key, obj):
         value = get_value(key if self.attribute is None else self.attribute, obj)
+        if self.deep_attribute is not None:
+            value = get_value(self.deep_attribute, value)
+
         if value is None:
             if self.allow_null:
                 return None
@@ -388,6 +395,19 @@ class Fixed(Raw):
 """Alias for :class:`~fields.Fixed`"""
 Price = Fixed
 
+def _unix(dt):
+   """Turn a datetime object into a formatted date.
+
+   Example::
+
+       fields._unix(datetime(2011, 1, 1)) => 1293807600
+
+   :param dt: The datetime to transform
+   :type dt: datetime
+   :return: A UNIX foratted timestamp int
+   """
+
+   return int(dt.strftime('%s'))
 
 def _rfc822(dt):
     """Turn a datetime object into a formatted date.
