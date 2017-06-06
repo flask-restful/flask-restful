@@ -249,14 +249,17 @@ Define Custom Error Messages
 You may want to return a specific message and/or status code when certain errors
 are encountered during a request. You can tell Flask-RESTful how you want to
 handle each error/exception so you won't have to fill your API code with
-try/except blocks. ::
+try/except blocks. Flask-RESTful relies on the error classes defined in
+Werkzeug.Exceptions to enable lookup in the custom dictionary.
+Therefore, make sure your keys match the errors defined in the error classes
+`Werkzeug Exceptions <http://werkzeug.pocoo.org/docs/0.11/exceptions/>`_::
 
     errors = {
-        'UserAlreadyExistsError': {
+        'Conflict': {
             'message': "A user with that username already exists.",
             'status': 409,
         },
-        'ResourceDoesNotExist': {
+        'Gone': {
             'message': "A resource with that ID no longer exists.",
             'status': 410,
             'extra': "Any extra information you want.",
@@ -265,6 +268,9 @@ try/except blocks. ::
 
 Including the `'status'` key will set the Response's status code. If not
 specified it will default to 500.
+As you can see `'Conflict'` matches `'werkzeug.exceptions.Conflict'`, so if
+a 409 status code is raised or a `'Conflict'` error is manually raised, the
+key-value pairs displayed under `'Conflict'` will be returned.
 
 Once your ``errors`` dictionary is defined, simply pass it to the
 :class:`~flask_restful.Api` constructor. ::
