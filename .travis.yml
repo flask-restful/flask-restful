@@ -1,11 +1,14 @@
 sudo: false  # https://docs.travis-ci.com/user/ci-environment/
 language: python
 python:
+  - 3.6
   - 3.5
   - 3.4
   - 3.3
   - 2.7
   - 2.6
+  - pypy
+  - pypy3
 install: pip install coveralls
 script: make ci
 after_success: coveralls
