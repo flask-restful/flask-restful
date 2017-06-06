@@ -10,7 +10,7 @@ python:
   - pypy
   - pypy3
 env:
-  - FLASK=0.8  # minimum supported version according to setup.py
+  - FLASK=0.10  # minimum supported version according to setup.py
   - FLASK=0.12  # recent Flask
   
 install:
