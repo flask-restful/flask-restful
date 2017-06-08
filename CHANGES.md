@@ -3,6 +3,17 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3.6
+-------------
+
+Released May 31, 2017
+
+- `Argument.help` now supports unicode strings ([#564](https://github.com/flask-restful/flask-restful/pull/564))
+- Flags can now be passed to `inputs.regex` ([#621](https://github.com/flask-restful/flask-restful/pull/621))
+- Fix behavior of `action='append'` in conjunction with `location='json'` ([#645](https://github.com/flask-restful/flask-restful/pull/645))
+- `method_decorators` can be a `dict` to apply decorator behavior for only specific HTTP methods ([#532](https://github.com/flask-restful/flask-restful/pull/532))
+- JSON keys are no longer sorted by default in debug mode in python3 ([#680](https://github.com/flask-restful/flask-restful/pull/680))
+- Various small fixes and updates to documentation
 
 Version 0.3.5
 -------------

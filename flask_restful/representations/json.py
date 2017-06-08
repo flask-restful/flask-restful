@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from flask import make_response, current_app
+from flask_restful.utils import PY3
 from json import dumps
 
 
@@ -13,7 +14,7 @@ def output_json(data, code, headers=None):
     # that was set.  We also set the "sort_keys" value.
     if current_app.debug:
         settings.setdefault('indent', 4)
-        settings.setdefault('sort_keys', True)
+        settings.setdefault('sort_keys', not PY3)
 
     # always end the json dumps with a new line
     # see https://github.com/mitsuhiko/flask/pull/1262
