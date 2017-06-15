@@ -40,6 +40,16 @@ class HelloWorld(flask_restful.Resource):
         return {}
 
 
+class BadMojoError(HTTPException):
+    pass
+
+
+# Resource that always errors out
+class HelloBomb(flask_restful.Resource):
+    def get(self):
+        raise BadMojoError("It burns..")
+
+
 class APITestCase(unittest.TestCase):
 
     def test_http_code(self):
@@ -118,6 +128,20 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.get_data(), b'{"message": "x"}\n')
 
+
+    def test_handle_error_does_not_swallow_custom_exceptions(self):
+        app = Flask(__name__)
+        errors = {'BadMojoError': {'status': 409, 'message': 'go away'}}
+        api = flask_restful.Api(app, errors=errors)
+        api.add_resource(HelloBomb, '/bomb')
+
+        app = app.test_client()
+        resp = app.get('/bomb')
+        self.assertEquals(resp.status_code, 409)
+        self.assertEquals(resp.content_type, api.default_mediatype)
+        resp_dict = json.loads(resp.data.decode())
+        self.assertEqual(resp_dict.get('status'), 409)
+        self.assertEqual(resp_dict.get('message'), 'go away')
 
     def test_marshal(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
