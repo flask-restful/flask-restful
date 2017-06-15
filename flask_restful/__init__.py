@@ -312,7 +312,7 @@ class Api(object):
 
         data = getattr(e, 'data', default_data)
 
-        if code >= 500:
+        if code and code >= 500:
             exc_info = sys.exc_info()
             if exc_info[1] is None:
                 exc_info = None
