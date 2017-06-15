@@ -43,6 +43,7 @@ class HelloWorld(flask_restful.Resource):
 class BadMojoError(HTTPException):
     pass
 
+
 # Resource that always errors out
 class HelloBomb(flask_restful.Resource):
     def get(self):
