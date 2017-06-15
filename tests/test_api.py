@@ -139,7 +139,7 @@ class APITestCase(unittest.TestCase):
         resp = app.get('/bomb')
         self.assertEquals(resp.status_code, 409)
         self.assertEquals(resp.content_type, api.default_mediatype)
-        resp_dict = json.loads(resp.get_data().strip())
+        resp_dict = json.loads(resp.data.decode())
         self.assertEqual(resp_dict.get('status'), 409)
         self.assertEqual(resp_dict.get('message'), 'go away')
 
