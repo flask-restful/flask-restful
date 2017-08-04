@@ -50,8 +50,7 @@ class Api(object):
     after it has been constructed.
 
     :param app: the Flask application object
-    :type app: flask.Flask
-    :type app: flask.Blueprint
+    :type app: flask.Flask or flask.Blueprint
     :param prefix: Prefix all routes with a value, eg v1 or 2010-04-01
     :type prefix: str
     :param default_mediatype: The default media type to return
