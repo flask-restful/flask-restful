@@ -51,7 +51,20 @@ copyright = u'{}, Kevin Burke, Kyle Conroy, Ryan Horn, Frank Stratton, Guillaume
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-from flask_restful.__version__ import __version__
+
+__namespace = {}
+__version_path = os.path.join('..', 'flask_restful', '__version__.py')
+
+if sys.version[0] == '2':
+    execfile(__version_path, __namespace)
+elif sys.version[0] == '3':
+    with open(__version_path, 'rb') as fh:
+        __version_contents = fh.read()
+    exec(__version_contents, __namespace)
+else:
+    raise Exception(u'Unsupported version of Python.')
+
+__version__ = __namespace['__version__']
 vparts = __version__.split('.')
 # The short X.Y version.
 version = '.'.join(vparts[:2])
