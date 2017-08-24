@@ -280,6 +280,14 @@ class FieldsTestCase(unittest.TestCase):
         with app.test_request_context("/foo/hey", base_url="http://localhost"):
             self.assertEquals("https://localhost/foo/3", field.output("hey", Foo()))
 
+    def test_url_with_extra(self):
+        app = Flask(__name__)
+        app.add_url_rule("/<hey>/<what>", "foobar", view_func=lambda x: x)
+        field = fields.Url("foobar", extra={"what": "hello"})
+
+        with app.test_request_context("/hey"):
+            self.assertEquals("/3/hello", field.output("hey", Foo()))
+
     def test_int(self):
         field = fields.Integer()
         self.assertEquals(3, field.output("hey", {'hey': 3}))
