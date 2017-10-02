@@ -176,7 +176,7 @@ class Argument(object):
                     values = source.getlist(name)
                 else:
                     values = source.get(name)
-                    if not isinstance(values, collections.MutableSequence):
+                    if not (isinstance(values, collections.MutableSequence) and self.action == 'append'):
                         values = [values]
 
                 for value in values:
