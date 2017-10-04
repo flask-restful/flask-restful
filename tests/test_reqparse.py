@@ -835,6 +835,40 @@ class ReqParseTestCase(unittest.TestCase):
         parser.add_argument('foo', type=int)
         self.assertRaises(exceptions.BadRequest, parser.parse_args, req, strict=True)
 
+    def test_strict_parsing_configured_off(self):
+        app = Flask(__name__)
+        app.config['REQPARSE_STRICT'] = False
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            args = parser.parse_args(req)
+            self.assertEquals(args, {})
+
+    def test_strict_parsing_configured_on(self):
+        app = Flask(__name__)
+        app.config['REQPARSE_STRICT'] = True
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            self.assertRaises(exceptions.BadRequest, parser.parse_args, req)
+
+    def test_strict_parsing_configured_off_overridden(self):
+        app = Flask(__name__)
+        app.config['REQPARSE_STRICT'] = False
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            self.assertRaises(exceptions.BadRequest, parser.parse_args, req, strict=True)
+
+    def test_strict_parsing_configured_on_overridden(self):
+        app = Flask(__name__)
+        app.config['REQPARSE_STRICT'] = True
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            args = parser.parse_args(req, strict=False)
+            self.assertEquals(args, {})
+
     def test_trim_argument(self):
         req = Request.from_values("/bubble?foo= 1 &bar=bees&n=22")
         parser = RequestParser()
