@@ -891,5 +891,30 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['int1'], 1)
             self.assertEquals(args['int2'], 2)
 
+    def test_list_argument(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument('arg1', location='json', type=list)
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({'arg1': ['foo', 'bar']}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['arg1'], ['foo', 'bar'])
+
+    def test_list_argument_dict(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument('arg1', location='json', type=list)
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps({'arg1': [{'foo': 1, 'bar': 2}]}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['arg1'], [{'foo': 1, 'bar': 2}])
+
+
 if __name__ == '__main__':
     unittest.main()
