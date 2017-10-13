@@ -190,7 +190,6 @@ problem, Flask-RESTful provides the :class:`fields` module and the
 :meth:`marshal_with` decorator. Similar to the Django ORM and WTForm, you
 use the ``fields`` module to describe the structure of your response. ::
 
-    from collections import OrderedDict
     from flask_restful import fields, marshal_with
 
     resource_fields = {
