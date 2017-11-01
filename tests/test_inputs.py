@@ -116,7 +116,7 @@ def test_regex_bad_input():
         '',
     )
 
-    num_only = inputs.regex(r'^[0-9]+$')
+    num_only = inputs.Regex(r'^[0-9]+$')
 
     for value in cases:
         yield assert_raises, ValueError, lambda: num_only(value)
@@ -129,7 +129,7 @@ def test_regex_good_input():
         '00000',
     )
 
-    num_only = inputs.regex(r'^[0-9]+$')
+    num_only = inputs.Regex(r'^[0-9]+$')
 
     for value in cases:
         yield assert_equal, num_only(value), value
@@ -137,7 +137,7 @@ def test_regex_good_input():
 
 def test_regex_bad_pattern():
     """Regex error raised immediately when regex input parser is created."""
-    assert_raises(re.error, inputs.regex, '[')
+    assert_raises(re.error, inputs.Regex, '[')
 
 
 def test_regex_flags_good_input():
