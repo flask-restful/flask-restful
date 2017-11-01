@@ -7,12 +7,10 @@ python:
   - 3.3
   - 2.7
   - 2.6
-  - pypy
-  - pypy3
 env:
   - FLASK=0.10  # old popular Flask version, 2013-2016
   - FLASK=0.12  # recent Flask
-  
+
 install:
   - pip install -q Flask==$FLASK
   - pip install coveralls
