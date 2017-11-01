@@ -684,14 +684,14 @@ class APITestCase(unittest.TestCase):
 
     def test_output_func(self):
 
-        def make_empty_resposne():
+        def make_empty_response():
             return flask.make_response('')
 
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
         with app.test_request_context("/foo"):
-            wrapper = api.output(make_empty_resposne)
+            wrapper = api.output(make_empty_response)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
             self.assertEquals(resp.data.decode(), '')
