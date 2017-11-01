@@ -1,11 +1,21 @@
+sudo: false  # https://docs.travis-ci.com/user/ci-environment/
 language: python
 python:
+  - 3.6
   - 3.5
   - 3.4
   - 3.3
   - 2.7
   - 2.6
-install: pip install coveralls
+  - pypy
+  - pypy3
+env:
+  - FLASK=0.10  # old popular Flask version, 2013-2016
+  - FLASK=0.12  # recent Flask
+  
+install:
+  - pip install -q Flask==$FLASK
+  - pip install coveralls
 script: make ci
 after_success: coveralls
 
