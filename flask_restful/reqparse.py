@@ -286,11 +286,12 @@ class RequestParser(object):
 
         return self
 
-    def parse_args(self, req=None, strict=False):
+    def parse_args(self, req=None, strict=False, http_error_code=400):
         """Parse all arguments from the provided request and return the results
         as a Namespace
 
         :param strict: if req includes args not in parser, throw 400 BadRequest exception
+        :param http_error_code: use custom error code for `flask_restful.abort()`
         """
         if req is None:
             req = request
@@ -309,7 +310,7 @@ class RequestParser(object):
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
         if errors:
-            flask_restful.abort(400, message=errors)
+            flask_restful.abort(http_error_code, message=errors)
 
         if strict and req.unparsed_arguments:
             raise exceptions.BadRequest('Unknown arguments: %s'
