@@ -12,6 +12,7 @@ requirements = [
     'Flask>=0.8',
     'six>=1.3.0',
     'pytz',
+    'simplejson>=3.13.2',
 ]
 if PY26:
     requirements.append('ordereddict')
