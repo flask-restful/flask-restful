@@ -36,7 +36,7 @@ object.
 
     Flask-RESTful uses the :mod:`json` module from the Python standard library
     instead of :mod:`flask.json` because the Flask JSON serializer includes
-    serializtion capabilities which are not in the JSON spec. If your
+    serialization capabilities which are not in the JSON spec. If your
     application needs these customizations, you can replace the default JSON
     representation with one using the Flask JSON module as described above.
 
