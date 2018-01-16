@@ -286,7 +286,7 @@ class RequestParser(object):
 
         return self
 
-    def parse_args(self, req=None, strict=False, http_error_code=400):
+    def parse_args(self, req=None, strict=False, http_error_code=400, custom=False):
         """Parse all arguments from the provided request and return the results
         as a Namespace
 
@@ -302,6 +302,7 @@ class RequestParser(object):
         # among self.args, it will be popped out
         req.unparsed_arguments = dict(self.argument_class('').source(req)) if strict else {}
         errors = {}
+        custom_response = {'error': False, 'body': {}}
         for arg in self.args:
             value, found = arg.parse(req, self.bundle_errors)
             if isinstance(value, ValueError):
@@ -310,13 +311,28 @@ class RequestParser(object):
             if found or arg.store_missing:
                 namespace[arg.dest or arg.name] = value
         if errors:
-            flask_restful.abort(http_error_code, message=errors)
+            if custom:
+                custom_response['error'] = True
+                custom_response['body'] = errors
+                return custom_response
+            else:
+                flask_restful.abort(http_error_code, message=errors)
 
         if strict and req.unparsed_arguments:
-            raise exceptions.BadRequest('Unknown arguments: %s'
+            if custom:
+                custom_response['error'] = True
+                custom_response['body'] = {'generic_message': 'Unkown arguments: ' + ', '.join(list(req.unparsed_arguments.keys()))}
+                return custom_response
+            else:
+                raise exceptions.BadRequest('Unknown arguments: %s'
                                         % ', '.join(req.unparsed_arguments.keys()))
 
-        return namespace
+        if custom:
+            custom_response['error'] = False
+            custom_response['body'] = namespace
+            return custom_response
+        else:
+            return namespace
 
     def copy(self):
         """ Creates a copy of this RequestParser with the same set of arguments """
