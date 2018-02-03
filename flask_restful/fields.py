@@ -130,7 +130,8 @@ class Nested(Raw):
     """Allows you to nest one set of fields inside another.
     See :ref:`nested-field` for more information
 
-    :param dict nested: The dictionary to nest
+    :param nested: The dictionary to nest or the callable object
+        to generate the dictionary to nest
     :param bool allow_null: Whether to return None instead of a dictionary
         with null keys, if a nested dictionary has all-null keys
     :param kwargs: If ``default`` keyword argument is present, a nested
@@ -139,8 +140,8 @@ class Nested(Raw):
         null)
     """
 
-    def __init__(self, nested, allow_null=False, **kwargs):
-        self.nested = nested
+    def __init__(self, nested_or_callable, allow_null=False, **kwargs):
+        self.nested = nested_or_callable
         self.allow_null = allow_null
         super(Nested, self).__init__(**kwargs)
 
@@ -152,7 +153,8 @@ class Nested(Raw):
             elif self.default is not None:
                 return self.default
 
-        return marshal(value, self.nested)
+        nested = self.nested(value) if callable(self.nested) else self.nested
+        return marshal(value, nested)
 
 
 class List(Raw):

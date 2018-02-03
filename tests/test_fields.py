@@ -487,6 +487,26 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Nested({'a': fields.Integer, 'b': fields.String}, default={})
         self.assertEquals({}, field.output('a', obj))
 
+    def test_callable_nested(self):
+        def dynamic_nested(value):
+            if 'a' in value:
+                field = {'a': fields.Integer}
+            elif 'c' in value:
+                field = {'c': fields.String}
+            elif 'e' in value:
+                field = {'f': fields.String}
+            return field
+
+        obj = {'list': [{'a': 1, 'b': 1},
+                        {'c': 'str', 'd': 2},
+                        {'e': 3, 'f': 'str'}]}
+        field = fields.List(fields.Nested(dynamic_nested))
+
+        self.assertEquals([OrderedDict([('a', 1)]),
+                           OrderedDict([('c', 'str')]),
+                           OrderedDict([('f', 'str')])],
+                          field.output('list', obj))
+
     def test_list_of_raw(self):
         obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
         field = fields.List(fields.Raw)
