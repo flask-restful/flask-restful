@@ -60,7 +60,7 @@ setup(
     tests_require=['Flask-RESTful[paging]', 'mock>=0.8', 'blinker'],
     # Install these with "pip install -e '.[paging]'" or '.[docs]'
     extras_require={
-        'paging': 'pycrypto>=2.6',
+        'paging': 'pycryptodome>=3.5.1',
         'docs': 'sphinx',
     }
 )
