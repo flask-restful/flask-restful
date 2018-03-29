@@ -57,10 +57,9 @@ setup(
     platforms='any',
     test_suite = 'nose.collector',
     install_requires=requirements,
-    tests_require=['Flask-RESTful[paging]', 'mock>=0.8', 'blinker'],
-    # Install these with "pip install -e '.[paging]'" or '.[docs]'
+    tests_require=['Flask-RESTful', 'mock>=0.8', 'blinker'],
+    # Install these with "pip install -e '.[docs]'
     extras_require={
-        'paging': 'pycrypto>=2.6',
         'docs': 'sphinx',
     }
 )

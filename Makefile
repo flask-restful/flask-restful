@@ -88,7 +88,7 @@ depends: .depends-test .depends-dev .depends-doc
 .PHONY: .depends-test
 .depends-test: env Makefile $(DEPENDS_TEST)
 $(DEPENDS_TEST): Makefile tests/requirements.txt
-	$(PIP) install -e .[paging]
+	$(PIP) install -e .
 	$(PIP) install -r tests/requirements.txt
 	touch $(DEPENDS_TEST)  # flag to indicate dependencies are installed
 
