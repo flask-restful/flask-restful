@@ -417,7 +417,7 @@ def test_bad_isointervals():
     for bad_interval in bad_intervals:
         yield (
             assert_raises,
-            ValueError,
+            Exception,
             inputs.iso8601interval,
             bad_interval,
         )
