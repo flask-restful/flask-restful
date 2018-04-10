@@ -480,7 +480,7 @@ class Api(object):
             if isinstance(resp, ResponseBase):  # There may be a better way to test
                 return resp
             data, code, headers = unpack(resp)
-            return self.make_response(data, code, headers=headers)
+            return self.make_response(data, code, headers)
         return wrapper
 
     def url_for(self, resource, **values):
@@ -492,7 +492,7 @@ class Api(object):
             endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
         return url_for(endpoint, **values)
 
-    def make_response(self, data, *args, **kwargs):
+    def make_response(self, *args, **kwargs):
         """Looks up the representation transformer for the requested media
         type, invoking the transformer to create a response object. This
         defaults to default_mediatype if no transformer is found for the
@@ -501,19 +501,23 @@ class Api(object):
 
         :param data: Python object containing response data to be transformed
         """
-        default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
-        mediatype = request.accept_mimetypes.best_match(
-            self.representations,
-            default=default_mediatype,
-        )
-        if mediatype is None:
-            raise NotAcceptable()
+        if len(args) > 1 and args[1] == 204:
+            # 204, no content, force text/plain so we don't add any data during transform
+            mediatype = 'text/plain'
+        else:
+            default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
+            mediatype = request.accept_mimetypes.best_match(
+                self.representations,
+                default=default_mediatype,
+            )
+            if mediatype is None:
+                raise NotAcceptable()
         if mediatype in self.representations:
-            resp = self.representations[mediatype](data, *args, **kwargs)
+            resp = self.representations[mediatype](*args, **kwargs)
             resp.headers['Content-Type'] = mediatype
             return resp
         elif mediatype == 'text/plain':
-            resp = original_flask_make_response(str(data), *args, **kwargs)
+            resp = original_flask_make_response(*args)
             resp.headers['Content-Type'] = 'text/plain'
             return resp
         else:
