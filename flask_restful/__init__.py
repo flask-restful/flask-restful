@@ -284,7 +284,7 @@ class Api(object):
         if not isinstance(e, HTTPException) and current_app.propagate_exceptions:
             exc_type, exc_value, tb = sys.exc_info()
             if exc_value is e:
-                raise
+                raise e
             else:
                 raise e
 
