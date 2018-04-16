@@ -11,7 +11,7 @@ requirements = [
     'aniso8601>=0.82',
     'Flask>=0.8',
     'six>=1.3.0',
-    'pytz',
+    'pytz<=2018.4',
 ]
 if PY26:
     requirements.append('ordereddict')
