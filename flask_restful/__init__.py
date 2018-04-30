@@ -72,6 +72,9 @@ class Api(object):
     :type errors: dict
 
     """
+    __slots__ = ['representations', 'urls', 'prefix', 'default_mediatype', 'decorators', 'catch_all_404s',
+                 'serve_challenge_on_401', 'url_part_order', 'errors', 'blueprint_setup', 'endpoints', 'resources',
+                 'app', 'blueprint']
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
