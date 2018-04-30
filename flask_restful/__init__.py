@@ -74,7 +74,7 @@ class Api(object):
     """
     __slots__ = ['representations', 'urls', 'prefix', 'default_mediatype', 'decorators', 'catch_all_404s',
                  'serve_challenge_on_401', 'url_part_order', 'errors', 'blueprint_setup', 'endpoints', 'resources',
-                 'app', 'blueprint']
+                 'app', 'blueprint', 'output', 'handle_error', '_should_use_fr_error_handler']
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
