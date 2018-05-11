@@ -308,7 +308,7 @@ class RequestParser(object):
                 errors.update(found)
                 found = None
             if found or arg.store_missing:
-                namespace[arg.dest or arg.name] = value
+                namespace[arg.dest or arg.name] = found
         if errors:
             flask_restful.abort(http_error_code, message=errors)
 
