@@ -8,7 +8,7 @@ from flask import make_response as original_flask_make_response
 from flask.views import MethodView
 from flask.signals import got_request_exception
 from werkzeug.datastructures import Headers
-from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
+from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError, BadRequestKeyError
 from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
 from flask_restful.utils import http_status_message, unpack, OrderedDict
@@ -287,6 +287,9 @@ class Api(object):
                 raise
             else:
                 raise e
+
+        if isinstance(e, BadRequestKeyError) and current_app.propagate_exceptions:
+            raise e
 
         headers = Headers()
         if isinstance(e, HTTPException):
