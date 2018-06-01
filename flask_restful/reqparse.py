@@ -104,8 +104,11 @@ class Argument(object):
                 value = getattr(request, l, None)
                 if callable(value):
                     value = value()
-                if value is not None:
-                    values.update(value)
+                if value is None:
+                    continue
+                if not isinstance(value, dict):
+                    continue
+                values.update(value)
             return values
 
         return MultiDict()
