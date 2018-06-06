@@ -21,7 +21,6 @@ from nose.tools import assert_equals, assert_true, assert_false  # you need it f
 import six
 
 
-
 def check_unpack(expected, value):
     assert_equals(expected, value)
 
@@ -480,36 +479,6 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.data.decode(), dumps({
                 'message': BadRequest.description,
-            }) + "\n")
-
-    def test_handle_smart_errors(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        view = flask_restful.Resource
-
-        api.add_resource(view, '/foo', endpoint='bor')
-        api.add_resource(view, '/fee', endpoint='bir')
-        api.add_resource(view, '/fii', endpoint='ber')
-
-        with app.test_request_context("/faaaaa"):
-            resp = api.handle_error(NotFound())
-            self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data.decode(), dumps({
-                "message": NotFound.description,
-            }) + "\n")
-
-        with app.test_request_context("/fOo"):
-            resp = api.handle_error(NotFound())
-            self.assertEquals(resp.status_code, 404)
-            self.assertTrue('did you mean /foo ?' in resp.data.decode())
-
-        app.config['ERROR_404_HELP'] = False
-
-        with app.test_request_context("/fOo"):
-            resp = api.handle_error(NotFound())
-            self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data.decode(), dumps({
-                "message": NotFound.description
             }) + "\n")
 
     def test_error_router_falls_back_to_original(self):

@@ -1,7 +1,5 @@
 from __future__ import absolute_import
-import difflib
 from functools import wraps, partial
-import re
 from flask import request, url_for, current_app
 from flask import abort as original_flask_abort
 from flask import make_response as original_flask_make_response
@@ -9,7 +7,6 @@ from flask.views import MethodView
 from flask.signals import got_request_exception
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
-from werkzeug.http import HTTP_STATUS_CODES
 from werkzeug.wrappers import Response as ResponseBase
 from flask_restful.utils import http_status_message, unpack, OrderedDict
 from flask_restful.representations.json import output_json
@@ -316,24 +313,6 @@ class Api(object):
             if exc_info[1] is None:
                 exc_info = None
             current_app.log_exception(exc_info)
-
-        help_on_404 = current_app.config.get("ERROR_404_HELP", True)
-        if code == 404 and help_on_404:
-            rules = dict([(re.sub('(<.*>)', '', rule.rule), rule.rule)
-                          for rule in current_app.url_map.iter_rules()])
-            close_matches = difflib.get_close_matches(request.path, rules.keys())
-            if close_matches:
-                # If we already have a message, add punctuation and continue it.
-                if "message" in data:
-                    data["message"] = data["message"].rstrip('.') + '. '
-                else:
-                    data["message"] = ""
-
-                data['message'] += 'You have requested this URI [' + request.path + \
-                                   '] but did you mean ' + \
-                                   ' or '.join((
-                                       rules[match] for match in close_matches)
-                                   ) + ' ?'
 
         error_cls_name = type(e).__name__
         if error_cls_name in self.errors:
