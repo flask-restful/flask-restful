@@ -4,12 +4,11 @@ python:
   - 3.6
   - 3.5
   - 3.4
-  - 3.3
   - 2.7
-  - 2.6
 env:
   - FLASK=0.10  # old popular Flask version, 2013-2016
-  - FLASK=0.12  # recent Flask
+  - FLASK=0.12  
+  - FLASK=1.0.2  # recent Flask
 
 install:
   - pip install -q Flask==$FLASK
