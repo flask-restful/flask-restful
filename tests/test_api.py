@@ -777,7 +777,7 @@ class APITestCase(unittest.TestCase):
         allow = ', '.join(set(resp.headers.get_all('Allow')))
         allow = set(method.strip() for method in allow.split(','))
         self.assertEquals(allow,
-                          set(['HEAD', 'OPTIONS'] + HelloWorld.methods))
+                          set(['HEAD', 'OPTIONS'] + list(HelloWorld.methods)))
 
     def test_exception_header_forwarded(self):
         """Test that HTTPException's headers are extended properly"""
