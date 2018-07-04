@@ -8,8 +8,8 @@ from werkzeug.datastructures import FileStorage
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
 import decimal
-
 import json
+import tempfile
 
 
 class ReqParseTestCase(unittest.TestCase):
@@ -40,7 +40,6 @@ class ReqParseTestCase(unittest.TestCase):
             parser.parse_args(req)
             expected = {'foo': u'Bad choice: \xf0\x9f\x8d\x95 is not a valid choice'}
             abort.assert_called_with(400, message=expected)
-
 
     @patch('flask_restful.abort')
     def test_help_no_error_msg(self, abort):
@@ -441,7 +440,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_parse_error_bundling(self):
         app = Flask(__name__)
-        app.config['BUNDLE_ERRORS']=True
+        app.config['BUNDLE_ERRORS'] = True
         with app.app_context():
             req = Request.from_values("/bubble")
 
@@ -463,7 +462,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_parse_error_bundling_w_parser_arg(self):
         app = Flask(__name__)
-        app.config['BUNDLE_ERRORS']=False
+        app.config['BUNDLE_ERRORS'] = False
         with app.app_context():
             req = Request.from_values("/bubble")
 
@@ -698,8 +697,6 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'].filename, 'baz.txtaaaa')
             self.assertEquals(args['foo'].read(), fdata)
 
-
-
     def test_passing_arguments_object(self):
         req = Request.from_values("/bubble?foo=bar")
         parser = RequestParser()
@@ -914,6 +911,135 @@ class ReqParseTestCase(unittest.TestCase):
                                       content_type='application/json'):
             args = parser.parse_args()
             self.assertEquals(args['arg1'], [{'foo': 1, 'bar': 2}])
+
+    def test_arguments_from_simple_dict(self):
+        parser = RequestParser()
+        arg_dict = {'foo': 'int', 'bar': 'str', 'comics': ['xkcd', 'smbc']}
+        parser.add_arguments(arg_dict)
+        self.assertEqual(len(parser.args), len(arg_dict))
+        for arg in parser.args:
+            try:
+                self.assertIn(arg.name, arg_dict.keys())
+            except AttributeError: # Python 2.6 compatibility
+                self.assertTrue(arg.name in arg_dict.keys())
+
+    def test_arguments_from_dict_with_list(self):
+        parser = RequestParser()
+        arg_dict = {'comics': ['xkcd', 'smbc']}
+        parser.add_arguments(arg_dict)
+        self.assertEqual(len(parser.args), len(arg_dict))
+        self.assertEqual(parser.args[0].choices, arg_dict['comics'])
+
+    def test_arguments_from_complex_dict(self):
+        parser = RequestParser()
+        arg_dict = {'foo': {'type': 'int',
+                            'choices': [1, 2, 3],
+                            'default': 2,
+                            'help': 'bar',
+                            'case_sensitive': False}}
+        parser.add_arguments(arg_dict, arg_format='not_simple')
+        self.assertEqual(len(parser.args), len(arg_dict))
+        for k, v in arg_dict['foo'].items():
+            self.assertEqual(getattr(parser.args[0], k), v)
+
+    def test_arguments_from_complext_dict_default(self):
+        parser = RequestParser()
+        arg_dict = {'foo': {'type': 'int',
+                            'choices': [1, 2, 3],
+                            'default': 2,
+                            'help': 'bar'}}
+
+        parser.add_arguments(arg_dict, arg_format='not_simple')
+        self.assertTrue(parser.args[0].case_sensitive)
+
+    def test_arguments_from_dict_vs_native(self):
+        ref_parser = RequestParser()
+        ref_parser.add_argument('foo', type=int)
+        ref_parser.add_argument('bar', type=str)
+
+        parser = RequestParser()
+        arg_dict = {'foo': 'int', 'bar': 'str'}
+        parser.add_arguments(arg_dict)
+
+        self.assertEqual(len(parser.args), len(ref_parser.args))
+        req = Mock(['values'])
+        req.values = MultiDict([('foo', 1), ['bar', 'foo']])
+
+        self.assertEqual(parser.parse_args(req=req), ref_parser.parse_args(req=req))
+
+    def test_arguments_from_file(self):
+        parser = RequestParser()
+        filename = 'tests/test_dict.yaml'
+        parser.add_arguments(filename)
+        self.assertEqual(len(parser.args), 1)
+        self.assertEqual(parser.args[0].name, 'foo')
+
+        parser2 = RequestParser()
+        parser2.add_argument('foo', type=int)
+
+        self.assertEqual(parser.args[0].name, parser2.args[0].name)
+        self.assertEqual(parser.args[0].type, parser2.args[0].type)
+
+    def test_add_arguments_exceptions(self):
+        parser = RequestParser()
+        args = 1
+        try:  # Python 2.6 compatibility
+            with self.assertRaises(TypeError):
+                parser.add_arguments(args)
+        except TypeError:
+            pass
+
+        parser = RequestParser()
+        args = {'foo': 'bar'}
+        try:  # Python 2.6 compatibility
+            with self.assertRaises(AttributeError):
+                parser.add_arguments(args)
+        except TypeError:
+            pass
+
+        parser = RequestParser()
+        args = 'file does not exist'
+        try:  # Python 2.6 compatibility
+            with self.assertRaises(EnvironmentError):
+                parser.add_arguments(args)
+        except TypeError:
+            pass
+
+        with tempfile.NamedTemporaryFile(mode='w') as f:
+            parser = RequestParser()
+            try:  # Python 2.6 compatibility
+                parser.add_arguments(f.name)
+            except TypeError:
+                pass
+            except EnvironmentError:
+                pass
+            except:
+                raise
+
+    def test_argument_repr(self):
+        arg = Argument('foo')
+        try:  # Python 2.6 compatibility
+            self.assertIn('foo', arg.__repr__())
+        except AttributeError:
+            self.assertTrue('foo' in arg.__repr__())
+        self.assertTrue(arg.__repr__().startswith("Argument('foo'"))
+
+    def test_argument_str(self):
+        arg = Argument('foo', choices=[1, 2, 3, 4, 5])
+        try:  # Python 2.6 compatibility
+            self.assertIn('foo', str(arg))
+        except AttributeError:
+            self.assertTrue('foo' in str(arg))
+        self.assertTrue(str(arg).startswith('Name: foo'))
+        try:  # Python 2.6 compatibility
+            self.assertIn('choices: [1, 2, 3, 4, 5]', str(arg))
+        except AttributeError:
+            self.assertTrue('choices: [1, 2, 3, 4, 5]' in str(arg))
+        arg = Argument('foo', choices=[1, 2, 3, 4, 5, 6])
+        try:  # Python 2.6 compatibility
+            self.assertIn("choices: [1, 2, 3, '...', 6]", str(arg))
+        except AttributeError:
+            self.assertTrue("choices: [1, 2, 3, '...', 6]" in str(arg))
 
 
 if __name__ == '__main__':

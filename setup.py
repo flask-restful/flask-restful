@@ -12,6 +12,7 @@ requirements = [
     'Flask>=0.8',
     'six>=1.3.0',
     'pytz',
+    'pyyaml'
 ]
 if PY26:
     requirements.append('ordereddict')
@@ -55,7 +56,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
-    test_suite = 'nose.collector',
+    test_suite='nose.collector',
     install_requires=requirements,
     tests_require=['Flask-RESTful', 'mock>=0.8', 'blinker'],
     # Install these with "pip install -e '.[docs]'

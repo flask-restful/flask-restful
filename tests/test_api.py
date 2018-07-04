@@ -91,7 +91,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/foo'):
             resp = api.handle_error(Unauthorized())
             self.assertEquals(resp.status_code, 401)
-            assert_false('WWW-Autheneticate' in resp.headers)
+            assert_false('WWW-Authenticate' in resp.headers)
 
     def test_handle_error_401_sends_challege_default_realm(self):
         app = Flask(__name__)

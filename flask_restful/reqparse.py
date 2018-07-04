@@ -7,7 +7,11 @@ from werkzeug import exceptions
 import flask_restful
 import decimal
 import six
-
+import yaml
+try:
+    import builtins
+except ImportError:
+    import __builtin__ as builtins
 
 class Namespace(dict):
     def __getattr__(self, name):
@@ -18,6 +22,7 @@ class Namespace(dict):
 
     def __setattr__(self, name, value):
         self[name] = value
+
 
 _friendly_location = {
     u'json': u'the JSON body',
@@ -88,6 +93,23 @@ class Argument(object):
         self.trim = trim
         self.nullable = nullable
 
+    def __str__(self):
+        if len(self.choices) > 5:
+            choices = self.choices[0:3]
+            choices.append('...')
+            choices.append(self.choices[-1])
+        else:
+            choices = self.choices
+        return 'Name: {0}, type: {1}, choices: {2}'.format(self.name, self.type, choices)
+
+    def __repr__(self):
+        return "{0}('{1}', default={2}, dest={3}, required={4}, ignore={5}, location={6}, " \
+               "type=\"{7}\", choices={8}, action='{9}', help={10}, case_sensitive={11}, " \
+               "operators={12}, store_missing={13}, trim={14}, nullable={15})".format(
+                self.__class__.__name__, self.name, self.default, self.dest, self.required, self.ignore, self.location,
+                self.type, self.choices, self.action, self.help, self.case_sensitive,
+                self.operators, self.store_missing, self.trim, self.nullable)
+
     def source(self, request):
         """Pulls values off the request in the provided location
         :param request: The flask request object to parse arguments from
@@ -156,7 +178,7 @@ class Argument(object):
         the argument's type.
 
         :param request: The flask request object to parse arguments from
-        :param do not abort when first error occurs, return a
+        :param bundle_errors: Do not abort when first error occurs, return a
             dict with the name of the argument and the error message to be
             bundled
         """
@@ -257,7 +279,7 @@ class RequestParser(object):
     """
 
     def __init__(self, argument_class=Argument, namespace_class=Namespace,
-            trim=False, bundle_errors=False):
+                 trim=False, bundle_errors=False):
         self.args = []
         self.argument_class = argument_class
         self.namespace_class = namespace_class
@@ -279,9 +301,9 @@ class RequestParser(object):
         else:
             self.args.append(self.argument_class(*args, **kwargs))
 
-        #Do not know what other argument classes are out there
+        # Do not know what other argument classes are out there
         if self.trim and self.argument_class is Argument:
-            #enable trim for appended element
+            # enable trim for appended element
             self.args[-1].trim = kwargs.get('trim', self.trim)
 
         return self
@@ -290,6 +312,7 @@ class RequestParser(object):
         """Parse all arguments from the provided request and return the results
         as a Namespace
 
+        :param req: Can be used to overwrite request from Flask
         :param strict: if req includes args not in parser, throw 400 BadRequest exception
         :param http_error_code: use custom error code for `flask_restful.abort()`
         """
@@ -343,3 +366,36 @@ class RequestParser(object):
                 del self.args[index]
                 break
         return self
+
+    def add_arguments(self, arguments, arg_format='simple'):
+        """
+
+        :param arguments: either a dict, a string with a filename
+            which contains the arguments in the following format:
+            key [argument]: value [type] [arg_format='simple']
+            OR
+            key [argument]: [name, {kwarg: kwarg_value}] [arg_format!='simple'
+        :param arg_format: specifies the input format used for parsing arguments, 'simple' means only 'name: type',
+            everything else assumes a nested dict
+        :return: None
+        """
+        if isinstance(arguments, str):
+            try:
+                with open(arguments, 'r') as f:
+                    arguments = yaml.load(f)
+                if not isinstance(arguments, dict):
+                    raise TypeError('invalid yaml file, got {0} instead of dict'.format(type(arguments)))
+            except:
+                raise
+        elif not isinstance(arguments, dict):
+            raise TypeError("arguments must be either dict or str with a filename, got {0}".format(type(arguments)))
+
+        simple_format = (arg_format == 'simple')
+        for arg_key, arg_value in arguments.items():
+            if simple_format:
+                if isinstance(arg_value, list):
+                    self.add_argument(arg_key, choices=arg_value)
+                else:
+                    self.add_argument(arg_key, type=getattr(builtins, arg_value))
+            else:
+                self.add_argument(arg_key, **arg_value)
