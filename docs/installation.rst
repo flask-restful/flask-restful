@@ -22,6 +22,6 @@ Flask-RESTful has the following dependencies (which will be automatically
 installed if you use ``pip``):
 
 
-* `Flask <http://flask.pocoo.org>`_ version 0.8 or greater
+* `Flask <http://flask.pocoo.org>`_ version 0.10 or greater
 
-Flask-RESTful requires Python version 2.6, 2.7, 3.3, 3.4, 3.5 or 3.6.
+Flask-RESTful requires Python version 2.7, 3.4, 3.5, 3.6 or 3.7

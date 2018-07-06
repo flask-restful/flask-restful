@@ -26,6 +26,6 @@ Alternately, if you push changes to your fork on Github, Travis will run the tes
 for your branch automatically.
 
 A Tox config file is also provided so you can test against multiple python
-versions locally (2.6, 2.7, 3.3, and 3.4) ::
+versions locally (2.7, 3.4, 3.5, 3.6, 3.7) ::
 
     $ tox
