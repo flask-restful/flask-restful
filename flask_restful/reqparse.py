@@ -126,13 +126,16 @@ class Argument(object):
         try:
             return self.type(value, self.name, op)
         except TypeError:
-            try:
-                if self.type is decimal.Decimal:
-                    return self.type(str(value), self.name)
-                else:
+            if self.type is decimal.Decimal:
+                try:
+                    return self.type(str(value))
+                except decimal.InvalidOperation:
+                    raise ValueError("Invalid literal for Decimal: '%s'" % (value,))
+            else:
+                try:
                     return self.type(value, self.name)
-            except TypeError:
-                return self.type(value)
+                except TypeError:
+                    return self.type(value)
 
     def handle_validation_error(self, error, bundle_errors):
         """Called when an error is raised while parsing. Aborts the request
@@ -191,19 +194,15 @@ class Argument(object):
 
                     try:
                         value = self.convert(value, operator)
-                    except Exception as error:
+                    except ValueError as error:
                         if self.ignore:
                             continue
                         return self.handle_validation_error(error, bundle_errors)
 
                     if self.choices and value not in self.choices:
-                        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
-                            return self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
-                        self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
+                        return self.handle_validation_error(
+                            ValueError(u"{0} is not a valid choice".format(
+                                value)), bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -220,9 +219,7 @@ class Argument(object):
                 error_msg = u"Missing required parameter in {0}".format(
                     ' or '.join(friendly_locations)
                 )
-            if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
-                return self.handle_validation_error(ValueError(error_msg), bundle_errors)
-            self.handle_validation_error(ValueError(error_msg), bundle_errors)
+            return self.handle_validation_error(ValueError(error_msg), bundle_errors)
 
         if not results:
             if callable(self.default):
