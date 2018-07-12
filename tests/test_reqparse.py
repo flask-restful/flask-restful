@@ -920,7 +920,7 @@ class ReqParseTestCase(unittest.TestCase):
         for arg in parser.args:
             try:
                 self.assertIn(arg.name, arg_dict.keys())
-            except AttributeError: # Python 2.6 compatibility
+            except AttributeError:  # Python 2.6 compatibility
                 self.assertTrue(arg.name in arg_dict.keys())
 
     def test_arguments_from_dict_with_list(self):
