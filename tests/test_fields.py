@@ -359,15 +359,15 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals(None, field.output("empty", {'empty': None}))
 
     def test_string_encoded(self):
-        field = fields.String()
+        field = fields.StringEncoded()
         self.assertEquals("3", field.output("hey", Foo()))
 
     def test_string_encoded_no_value(self):
-        field = fields.String()
+        field = fields.StringEncoded()
         self.assertEquals(None, field.output("bar", Foo()))
 
     def test_string_encoded_none(self):
-        field = fields.String()
+        field = fields.StringEncoded()
         self.assertEquals(None, field.output("empty", {'empty': None}))
 
     def test_rfc822_date_field_without_offset(self):
