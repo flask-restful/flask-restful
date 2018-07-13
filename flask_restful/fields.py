@@ -218,6 +218,19 @@ class String(Raw):
             raise MarshallingException(ve)
 
 
+class StringEncoded(Raw):
+    """
+    Marshal a value as a string. Uses ``six.u`` uses string unicode-escape to
+    unicode in the string. It is useful for utf-8 characters and also for all
+    emojis like utf8mb4
+    """
+    def format(self, value):
+        try:
+            return six.u(value)
+        except ValueError as ve:
+            raise MarshallingException(ve)
+
+
 class Integer(Raw):
     """ Field for outputting an integer value.
 
