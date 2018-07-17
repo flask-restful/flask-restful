@@ -5,7 +5,6 @@ import sys
 from os import path
 from setuptools import setup, find_packages
 
-PY26 = sys.version_info[:2] == (2, 6,)
 
 requirements = [
     'aniso8601>=0.82',
@@ -13,8 +12,6 @@ requirements = [
     'six>=1.3.0',
     'pytz',
 ]
-if PY26:
-    requirements.append('ordereddict')
 
 
 version_file = path.join(
@@ -43,13 +40,12 @@ setup(
     classifiers=[
         'Framework :: Flask',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'License :: OSI Approved :: BSD License',
     ],
     zip_safe=False,
