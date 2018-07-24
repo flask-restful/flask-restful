@@ -41,7 +41,6 @@ class ReqParseTestCase(unittest.TestCase):
             expected = {'foo': u'Bad choice: \xf0\x9f\x8d\x95 is not a valid choice'}
             abort.assert_called_with(400, message=expected)
 
-
     @patch('flask_restful.abort')
     def test_help_no_error_msg(self, abort):
         app = Flask(__name__)
@@ -441,7 +440,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_parse_error_bundling(self):
         app = Flask(__name__)
-        app.config['BUNDLE_ERRORS']=True
+        app.config['BUNDLE_ERRORS'] = True
         with app.app_context():
             req = Request.from_values("/bubble")
 
@@ -463,7 +462,7 @@ class ReqParseTestCase(unittest.TestCase):
 
     def test_parse_error_bundling_w_parser_arg(self):
         app = Flask(__name__)
-        app.config['BUNDLE_ERRORS']=False
+        app.config['BUNDLE_ERRORS'] = False
         with app.app_context():
             req = Request.from_values("/bubble")
 
@@ -698,8 +697,6 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'].filename, 'baz.txtaaaa')
             self.assertEquals(args['foo'].read(), fdata)
 
-
-
     def test_passing_arguments_object(self):
         req = Request.from_values("/bubble?foo=bar")
         parser = RequestParser()
@@ -914,6 +911,31 @@ class ReqParseTestCase(unittest.TestCase):
                                       content_type='application/json'):
             args = parser.parse_args()
             self.assertEquals(args['arg1'], [{'foo': 1, 'bar': 2}])
+
+    def test_argument_repr(self):
+        arg = Argument('foo')
+        try:  # Python 2.6 compatibility
+            self.assertIn('foo', arg.__repr__())
+        except AttributeError:
+            self.assertTrue('foo' in arg.__repr__())
+        self.assertTrue(arg.__repr__().startswith("Argument('foo'"))
+
+    def test_argument_str(self):
+        arg = Argument('foo', choices=[1, 2, 3, 4, 5])
+        try:  # Python 2.6 compatibility
+            self.assertIn('foo', str(arg))
+        except AttributeError:
+            self.assertTrue('foo' in str(arg))
+        self.assertTrue(str(arg).startswith('Name: foo'))
+        try:  # Python 2.6 compatibility
+            self.assertIn('choices: [1, 2, 3, 4, 5]', str(arg))
+        except AttributeError:
+            self.assertTrue('choices: [1, 2, 3, 4, 5]' in str(arg))
+        arg = Argument('foo', choices=[1, 2, 3, 4, 5, 6])
+        try:  # Python 2.6 compatibility
+            self.assertIn("choices: [1, 2, 3, '...', 6]", str(arg))
+        except AttributeError:
+            self.assertTrue("choices: [1, 2, 3, '...', 6]" in str(arg))
 
 
 if __name__ == '__main__':
