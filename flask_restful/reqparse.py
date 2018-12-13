@@ -118,12 +118,20 @@ class Argument(object):
                 return value
         else:
             values = MultiDict()
+
+            def update_dict(value):
+                if isinstance(value, dict):
+                    values.update(value)
+                elif isinstance(value, list):
+                    for v in value:
+                        update_dict(v)
+
             for l in self.location:
                 value = getattr(request, l, None)
                 if callable(value):
                     value = value()
                 if value is not None:
-                    values.update(value)
+                    update_dict(value)
             return values
 
         return MultiDict()
