@@ -3,6 +3,19 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3.7
+-------------
+
+Released December 18, 2018
+
+- Fix error handling in python3 ([#696](https://github.com/flask-restful/flask-restful/pull/696))
+- Fix arguments with type=list ([#705](https://github.com/flask-restful/flask-restful/pull/705))
+- Return code for `parse_args()` is now configurable ([#722](https://github.com/flask-restful/flask-restful/pull/722))
+- Removed `flask_restful.paging` module.
+- Removed misleading `help_on_404` functionality ([#722](https://github.com/flask-restful/flask-restful/pull/722))
+- JSON keys are no longer sorted by default in debug mode in python3 ([#680](https://github.com/flask-restful/flask-restful/pull/680))
+- Various small fixes and updates to documentation
+
 Version 0.3.6
 -------------
 
