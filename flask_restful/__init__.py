@@ -287,6 +287,16 @@ class Api(object):
 
         headers = Headers()
         if isinstance(e, HTTPException):
+            # `flask.abort`, is a wrapper around `werkzeug.exceptions.abort`.
+            # werkzeug.exceptions.abort takes a single argument. It can either
+            # be a http error code or a response
+            # object(`werkzeug.wrappers.Response`).
+            # (See: https://github.com/pallets/werkzeug/blob/master/werkzeug/
+            # exceptions.py#L753)
+            response = getattr(e, 'response')
+            if response and isinstance(response, ResponseBase):
+                raise e
+
             code = e.code
             default_data = {
                 'message': getattr(e, 'description', http_status_message(code))

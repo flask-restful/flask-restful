@@ -142,6 +142,28 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(resp_dict.get('status'), 409)
         self.assertEqual(resp_dict.get('message'), 'go away')
 
+    def test_handle_abort_with_error_code(self):
+        class AbortingResource(flask_restful.Resource):
+            def get(self):
+                flask_restful.abort(401)
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(AbortingResource, '/')
+        with app.test_client() as client:
+            self.assertEquals(client.get('/').status_code, 401)
+
+    def test_handle_abort_with_response(self):
+        class ResponseAbortingResource(flask_restful.Resource):
+            def get(self):
+                flask_restful.abort(flask.Response(status=401))
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(ResponseAbortingResource, '/')
+        with app.test_client() as client:
+            self.assertEquals(client.get('/').status_code, 401)
+
     def test_marshal(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
