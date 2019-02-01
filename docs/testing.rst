@@ -13,7 +13,7 @@ You can run on all supported versions with::
 
     $ make test-all
 
-Individual tests can be run using using a command with the format::
+Individual tests can be run using a command with the format::
 
     nosetests <filename>:ClassName.func_name
 
