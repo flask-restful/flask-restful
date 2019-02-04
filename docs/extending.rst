@@ -36,7 +36,7 @@ object.
 
     Flask-RESTful uses the :mod:`json` module from the Python standard library
     instead of :mod:`flask.json` because the Flask JSON serializer includes
-    serializtion capabilities which are not in the JSON spec. If your
+    serialization capabilities which are not in the JSON spec. If your
     application needs these customizations, you can replace the default JSON
     representation with one using the Flask JSON module as described above.
 
@@ -182,11 +182,11 @@ instance, if you want to build custom authentication into every request. ::
             if acct:
                 return func(*args, **kwargs)
 
-            restful.abort(401)
+            flask_restful.abort(401)
         return wrapper
 
 
-    class Resource(restful.Resource):
+    class Resource(flask_restful.Resource):
         method_decorators = [authenticate]   # applies to all inherited resources
 
 Alternatively, you can specify a dictionary of iterables that map to HTTP methods

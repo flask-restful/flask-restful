@@ -21,7 +21,6 @@ from nose.tools import assert_equals, assert_true, assert_false  # you need it f
 import six
 
 
-
 def check_unpack(expected, value):
     assert_equals(expected, value)
 
@@ -38,6 +37,16 @@ def test_unpack():
 class HelloWorld(flask_restful.Resource):
     def get(self):
         return {}
+
+
+class BadMojoError(HTTPException):
+    pass
+
+
+# Resource that always errors out
+class HelloBomb(flask_restful.Resource):
+    def get(self):
+        raise BadMojoError("It burns..")
 
 
 class APITestCase(unittest.TestCase):
@@ -82,7 +91,7 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context('/foo'):
             resp = api.handle_error(Unauthorized())
             self.assertEquals(resp.status_code, 401)
-            assert_false('WWW-Autheneticate' in resp.headers)
+            assert_false('WWW-Authenticate' in resp.headers)
 
     def test_handle_error_401_sends_challege_default_realm(self):
         app = Flask(__name__)
@@ -118,6 +127,20 @@ class APITestCase(unittest.TestCase):
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.get_data(), b'{"message": "x"}\n')
 
+
+    def test_handle_error_does_not_swallow_custom_exceptions(self):
+        app = Flask(__name__)
+        errors = {'BadMojoError': {'status': 409, 'message': 'go away'}}
+        api = flask_restful.Api(app, errors=errors)
+        api.add_resource(HelloBomb, '/bomb')
+
+        app = app.test_client()
+        resp = app.get('/bomb')
+        self.assertEquals(resp.status_code, 409)
+        self.assertEquals(resp.content_type, api.default_mediatype)
+        resp_dict = json.loads(resp.data.decode())
+        self.assertEqual(resp_dict.get('status'), 409)
+        self.assertEqual(resp_dict.get('message'), 'go away')
 
     def test_marshal(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
@@ -458,36 +481,6 @@ class APITestCase(unittest.TestCase):
                 'message': BadRequest.description,
             }) + "\n")
 
-    def test_handle_smart_errors(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        view = flask_restful.Resource
-
-        api.add_resource(view, '/foo', endpoint='bor')
-        api.add_resource(view, '/fee', endpoint='bir')
-        api.add_resource(view, '/fii', endpoint='ber')
-
-        with app.test_request_context("/faaaaa"):
-            resp = api.handle_error(NotFound())
-            self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data.decode(), dumps({
-                "message": NotFound.description,
-            }) + "\n")
-
-        with app.test_request_context("/fOo"):
-            resp = api.handle_error(NotFound())
-            self.assertEquals(resp.status_code, 404)
-            self.assertTrue('did you mean /foo ?' in resp.data.decode())
-
-        app.config['ERROR_404_HELP'] = False
-
-        with app.test_request_context("/fOo"):
-            resp = api.handle_error(NotFound())
-            self.assertEquals(resp.status_code, 404)
-            self.assertEquals(resp.data.decode(), dumps({
-                "message": NotFound.description
-            }) + "\n")
-
     def test_error_router_falls_back_to_original(self):
         """Verify that if an exception occurs in the Flask-RESTful error handler,
         the error_router will call the original flask error handler instead.
@@ -660,14 +653,14 @@ class APITestCase(unittest.TestCase):
 
     def test_output_func(self):
 
-        def make_empty_resposne():
+        def make_empty_response():
             return flask.make_response('')
 
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
         with app.test_request_context("/foo"):
-            wrapper = api.output(make_empty_resposne)
+            wrapper = api.output(make_empty_response)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
             self.assertEquals(resp.data.decode(), '')
@@ -784,7 +777,7 @@ class APITestCase(unittest.TestCase):
         allow = ', '.join(set(resp.headers.get_all('Allow')))
         allow = set(method.strip() for method in allow.split(','))
         self.assertEquals(allow,
-                          set(['HEAD', 'OPTIONS'] + HelloWorld.methods))
+                          {'HEAD', 'OPTIONS'}.union(HelloWorld.methods))
 
     def test_exception_header_forwarded(self):
         """Test that HTTPException's headers are extended properly"""

@@ -294,8 +294,8 @@ class Url(Raw):
     :param scheme: URL scheme specifier (e.g. ``http``, ``https``)
     :type scheme: str
     """
-    def __init__(self, endpoint=None, absolute=False, scheme=None):
-        super(Url, self).__init__()
+    def __init__(self, endpoint=None, absolute=False, scheme=None, **kwargs):
+        super(Url, self).__init__(**kwargs)
         self.endpoint = endpoint
         self.absolute = absolute
         self.scheme = scheme

@@ -138,12 +138,6 @@ You can also match parts of the path as variables to your resource methods. ::
     api.add_resource(Todo,
         '/todo/<int:todo_id>', endpoint='todo_ep')
 
-.. note ::
-
-    If a request does not match any of your application's endpoints,
-    Flask-RESTful will return a 404 error message with suggestions of other
-    endpoints that closely match the requested endpoint. This can be disabled
-    by setting ``ERROR_404_HELP`` to ``False`` in your application config.
 
 Argument Parsing
 ----------------
@@ -190,7 +184,6 @@ problem, Flask-RESTful provides the :class:`fields` module and the
 :meth:`marshal_with` decorator. Similar to the Django ORM and WTForm, you
 use the ``fields`` module to describe the structure of your response. ::
 
-    from collections import OrderedDict
     from flask_restful import fields, marshal_with
 
     resource_fields = {
