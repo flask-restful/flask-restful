@@ -593,6 +593,17 @@ class APITestCase(unittest.TestCase):
         app.add_url_rule.assert_called_with('/foo',
                                             view_func=api.output())
 
+    def test_add_resource_with_custom_view_func(self):
+        app = Mock(flask.Flask)
+        app.view_functions = {}
+        api = flask_restful.Api(app)
+        api.output = Mock()
+        custom_func = Mock()
+        api.add_resource(views.MethodView, '/foo', view_func=custom_func())
+
+        app.add_url_rule.assert_called_with('/foo',
+                                            view_func=custom_func())
+
     def test_resource_decorator(self):
         app = Mock(flask.Flask)
         app.view_functions = {}

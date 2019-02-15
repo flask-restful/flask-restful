@@ -419,8 +419,11 @@ class Api(object):
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
-        resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
-            **resource_class_kwargs))
+        if 'view_func' not in kwargs:
+            resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
+                **resource_class_kwargs))
+        else:
+            resource_func = kwargs.pop('view_func')
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
