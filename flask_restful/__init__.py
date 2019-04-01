@@ -58,7 +58,7 @@ class Api(object):
         to handle 404 errors throughout your app
     :param serve_challenge_on_401: Whether to serve a challenge response to
         clients on receiving 401. This usually leads to a username/password
-        popup in web browers.
+        popup in web browsers.
     :param url_part_order: A string that controls the order that the pieces
         of the url are concatenated when the full url is constructed.  'b'
         is the blueprint (or blueprint registration) prefix, 'a' is the api
