@@ -303,6 +303,12 @@ class Api(object):
         # https://github.com/flask-restful/flask-restful/issues/534
         remove_headers = ('Content-Length',)
 
+        if not self.serve_challenge_on_401:
+            # remove "WWW-Authenticate" in resp.headers if self.serve_challenge_on_401 is set to False.
+            # required for passing tests/test_api.py test_handle_error_401_no_challenge_by_default.
+            remove_headers += ('WWW-Authenticate',)
+
+
         for header in remove_headers:
             headers.pop(header, None)
 
