@@ -84,15 +84,6 @@ class APITestCase(unittest.TestCase):
             response = api.unauthorized(response)
         self.assertEquals(response.headers['WWW-Authenticate'], 'Basic realm="Foo"')
 
-    def test_handle_error_401_no_challenge_by_default(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
-        with app.test_request_context('/foo'):
-            resp = api.handle_error(Unauthorized())
-            self.assertEquals(resp.status_code, 401)
-            assert_false('WWW-Authenticate' in resp.headers)
-
     def test_handle_error_401_sends_challege_default_realm(self):
         app = Flask(__name__)
         api = flask_restful.Api(app, serve_challenge_on_401=True)
