@@ -133,6 +133,24 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(resp_dict.get('status'), 409)
         self.assertEqual(resp_dict.get('message'), 'go away')
 
+    def test_handle_error_does_not_swallow_abort_response(self):
+
+        class HelloBombAbort(flask_restful.Resource):
+            def get(self):
+                raise HTTPException(response=flask.make_response("{}", 403))
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloBombAbort, '/bomb')
+
+        app = app.test_client()
+        resp = app.get('/bomb')
+
+        resp_dict = json.loads(resp.data.decode())
+
+        self.assertEquals(resp.status_code, 403)
+        self.assertDictEqual(resp_dict, {})
+
     def test_marshal(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
