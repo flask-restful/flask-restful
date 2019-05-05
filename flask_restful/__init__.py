@@ -287,6 +287,13 @@ class Api(object):
 
         headers = Headers()
         if isinstance(e, HTTPException):
+            if e.response is not None:
+                # If HTTPException is initialized with a response, then return e.get_response().
+                # This prevents specified error response from being overridden.
+                # eg. HTTPException(response=Response("Hello World"))
+                resp = e.get_response()
+                return resp
+
             code = e.code
             default_data = {
                 'message': getattr(e, 'description', http_status_message(code))
