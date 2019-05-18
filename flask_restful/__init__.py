@@ -197,6 +197,8 @@ class Api(object):
             for resource, urls, kwargs in self.resources:
                 self._register_view(app, resource, *urls, **kwargs)
 
+        self.app = app
+
     def owns_endpoint(self, endpoint):
         """Tests if an endpoint name (not path) belongs to this Api.  Takes
         in to account the Blueprint name part of the endpoint name.
