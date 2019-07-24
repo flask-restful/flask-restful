@@ -745,6 +745,62 @@ class APITestCase(unittest.TestCase):
     def test_abort_type(self):
         self.assertRaises(HTTPException, lambda: flask_restful.abort(404))
 
+    def test_flask_abort_with_jsonify(self):
+        """ Tests that flask.abort with response returns status_code as 200
+            if status_code is unspecified, and data equals that provided
+            by flask.jsonify(dict)
+
+        Author: wangxue666666, billyrrr
+
+        """
+
+        class HelloBombAbort(flask_restful.Resource):
+            def get(self):
+                flask.abort(
+                    # Abort with code equal 401 in data only
+                    flask.jsonify(dict(code=401, msg="error message 1"))
+                )
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloBombAbort, '/bomb')
+
+        app = app.test_client()
+        resp = app.get('/bomb')
+
+        resp_dict = json.loads(resp.data.decode())
+        self.assertEquals(resp.status_code, 200)
+        self.assertDictEqual(resp_dict,
+                             {'code': 401, 'msg': 'error message 1'})
+
+    def test_fr_abort_with_jsonify(self):
+        """ Tests that flask_restful.abort with response returns status_code
+            as 200 if status_code is unspecified, and data equals that provided
+            by flask.jsonify(dict)
+
+        Author: wangxue666666, billyrrr
+
+        """
+
+        class HelloBombAbort(flask_restful.Resource):
+            def get(self):
+                flask_restful.abort(
+                    # Abort with code equal 401 in data only
+                    flask.jsonify(dict(code=401, msg="error message 1"))
+                )
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloBombAbort, '/bomb')
+
+        app = app.test_client()
+        resp = app.get('/bomb')
+
+        resp_dict = json.loads(resp.data.decode())
+        self.assertEquals(resp.status_code, 200)
+        self.assertDictEqual(resp_dict,
+                             {'code': 401, 'msg': 'error message 1'})
+
     def test_endpoints(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
