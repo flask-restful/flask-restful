@@ -801,6 +801,68 @@ class APITestCase(unittest.TestCase):
         self.assertDictEqual(resp_dict,
                              {'code': 401, 'msg': 'error message 1'})
 
+    def test_flask_abort_status_code_specified(self):
+        """ Tests that flask.abort with response returns correct status_code
+            and data["code"] if the two are unequal.
+
+        Author: wangxue666666, billyrrr
+
+        """
+
+        class HelloBombAbort(flask_restful.Resource):
+            def get(self):
+                flask.abort(
+                    flask.Response(
+                        response=json.dumps(
+                            dict(code=401, msg="error message 1")
+                        ),
+                        status=400
+                    )
+                )
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloBombAbort, '/bomb')
+
+        app = app.test_client()
+        resp = app.get('/bomb')
+
+        resp_dict = json.loads(resp.data.decode())
+        self.assertEquals(resp.status_code, 400)
+        self.assertDictEqual(resp_dict,
+                             {'code': 401, 'msg': 'error message 1'})
+
+    def test_fr_abort_status_code_specified(self):
+        """ Tests that flask.abort with response returns correct status_code
+            and data["code"] if the two are unequal.
+
+        Author: wangxue666666, billyrrr
+
+        """
+
+        class HelloBombAbort(flask_restful.Resource):
+            def get(self):
+                flask_restful.abort(
+                    flask.Response(
+                        response=json.dumps(
+                            dict(code=401, msg="error message 1")
+                        ),
+                        status=400
+                    )
+                )
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloBombAbort, '/bomb')
+
+        app = app.test_client()
+        resp = app.get('/bomb')
+
+        resp_dict = json.loads(resp.data.decode())
+        self.assertEquals(resp.status_code, 400)
+        self.assertDictEqual(resp_dict,
+                             {'code': 401, 'msg': 'error message 1'})
+
     def test_endpoints(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
