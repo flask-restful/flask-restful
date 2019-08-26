@@ -271,3 +271,5 @@ Once your ``errors`` dictionary is defined, simply pass it to the
 
     app = Flask(__name__)
     api = flask_restful.Api(app, errors=errors)
+
+Note: Custom `Exceptions` must have  :class:`~werkzeug.exceptions.HTTPException` as the base Exception.
