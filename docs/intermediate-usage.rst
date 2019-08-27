@@ -61,9 +61,9 @@ The key to this setup lies in ``app.py``: ::
     app = Flask(__name__)
     api = Api(app)
 
-    api.add_resource(Foo, '/Foo', '/Foo/<str:id>')
-    api.add_resource(Bar, '/Bar', '/Bar/<str:id>')
-    api.add_resource(Baz, '/Baz', '/Baz/<str:id>')
+    api.add_resource(Foo, '/Foo', '/Foo/<string:id>')
+    api.add_resource(Bar, '/Bar', '/Bar/<string:id>')
+    api.add_resource(Baz, '/Baz', '/Baz/<string:id>')
 
 As you can imagine with a particularly large or complex API, this file ends up
 being very valuable as a comprehensive list of all the routes and resources in
