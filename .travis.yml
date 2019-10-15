@@ -63,6 +63,18 @@ matrix:
       dist: xenial
       sudo: true
       env: FLASK=1.0.2
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: FLASK=0.10
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: FLASK=0.12
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: FLASK=1.0.2
     - python: pypy
       dist: trusty
       sudo: false

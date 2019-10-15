@@ -14,7 +14,10 @@ import sys
 from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
-from collections import Mapping
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
