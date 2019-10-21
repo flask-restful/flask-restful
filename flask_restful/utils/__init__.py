@@ -1,9 +1,9 @@
 import sys
 
 try:
-    from collections import OrderedDict
+    from collections.abc import OrderedDict
 except ImportError:
-    from ordereddict import OrderedDict
+    from collections import OrderedDict
 
 from werkzeug.http import HTTP_STATUS_CODES
 
