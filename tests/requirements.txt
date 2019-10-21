@@ -1,4 +1,4 @@
-nose>=1.1.2
 mock>=0.8
-nosexcover
 blinker
+pytest-cov==2.8.1
+pytest==4.6.6

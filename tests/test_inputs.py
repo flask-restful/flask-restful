@@ -1,242 +1,244 @@
-from datetime import datetime, timedelta, tzinfo
-import unittest
-import pytz
+from datetime import datetime
 import re
+import unittest
 
-#noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+import pytest
 from nose.tools import assert_equal, assert_raises  # you need it for tests in form of continuations
+import pytz
 import six
 
 from flask_restful import inputs
 
 
-def test_reverse_rfc822_datetime():
-    dates = [
-        ("Sat, 01 Jan 2011 00:00:00 -0000", datetime(2011, 1, 1, tzinfo=pytz.utc)),
-        ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
-        ("Sat, 01 Jan 2011 21:59:59 -0200", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
-    ]
-
-    for date_string, expected in dates:
-        yield assert_equal, inputs.datetime_from_rfc822(date_string), expected
+@pytest.mark.parametrize('date,expected', [
+    ("Sat, 01 Jan 2011 00:00:00 -0000", datetime(2011, 1, 1, tzinfo=pytz.utc)),
+    ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+    ("Sat, 01 Jan 2011 21:59:59 -0200", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+])
+def test_reverse_rfc822_datetime(date, expected):
+    assert inputs.datetime_from_rfc822(date) == expected
 
 
-def test_reverse_iso8601_datetime():
-    dates = [
-        ("2011-01-01T00:00:00+00:00", datetime(2011, 1, 1, tzinfo=pytz.utc)),
-        ("2011-01-01T23:59:59+00:00", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
-        ("2011-01-01T23:59:59.001000+00:00", datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc)),
-        ("2011-01-01T23:59:59+02:00", datetime(2011, 1, 1, 21, 59, 59, tzinfo=pytz.utc))
-    ]
-
-    for date_string, expected in dates:
-        yield assert_equal, inputs.datetime_from_iso8601(date_string), expected
+@pytest.mark.parametrize('date,expected', [
+    ("2011-01-01T00:00:00+00:00", datetime(2011, 1, 1, tzinfo=pytz.utc)),
+    ("2011-01-01T23:59:59+00:00", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+    ("2011-01-01T23:59:59.001000+00:00", datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc)),
+    ("2011-01-01T23:59:59+02:00", datetime(2011, 1, 1, 21, 59, 59, tzinfo=pytz.utc))
+])
+def test_reverse_iso8601_datetime(date, expected):
+    assert inputs.datetime_from_iso8601(date) == expected
 
 
-def test_urls():
-    urls = [
-        'http://www.djangoproject.com/',
-        'http://localhost/',
-        'http://example.com/',
-        'http://www.example.com/',
-        'http://www.example.com:8000/test',
-        'http://valid-with-hyphens.com/',
-        'http://subdomain.example.com/',
-        'http://200.8.9.10/',
-        'http://200.8.9.10:8000/test',
-        'http://valid-----hyphens.com/',
-        'http://example.com?something=value',
-        'http://example.com/index.php?something=value&another=value2',
-        'http://foo:bar@example.com',
-        'http://foo:@example.com',
-        'http://foo:@2001:db8:85a3::8a2e:370:7334',
-        'http://foo2:qd1%r@example.com',
-    ]
-
-    for value in urls:
-        yield assert_equal, inputs.url(value), value
+@pytest.mark.parametrize('url', [
+    'http://www.djangoproject.com/',
+    'http://localhost/',
+    'http://example.com/',
+    'http://www.example.com/',
+    'http://www.example.com:8000/test',
+    'http://valid-with-hyphens.com/',
+    'http://subdomain.example.com/',
+    'http://200.8.9.10/',
+    'http://200.8.9.10:8000/test',
+    'http://valid-----hyphens.com/',
+    'http://example.com?something=value',
+    'http://example.com/index.php?something=value&another=value2',
+    'http://foo:bar@example.com',
+    'http://foo:@example.com',
+    'http://foo:@2001:db8:85a3::8a2e:370:7334',
+    'http://foo2:qd1%r@example.com',
+])
+def test_urls(url):
+    assert inputs.url(url) == url
 
 
-def check_bad_url_raises(value):
-    try:
-        inputs.url(value)
-        assert False, "shouldn't get here"
-    except ValueError as e:
-        assert_equal(six.text_type(e), u"{0} is not a valid URL".format(value))
+@pytest.mark.parametrize('url', [
+    'foo',
+    'http://',
+    'http://example',
+    'http://example.',
+    'http://.com',
+    'http://invalid-.com',
+    'http://-invalid.com',
+    'http://inv-.alid-.com',
+    'http://inv-.-alid.com',
+    'foo bar baz',
+    u'foo \u2713',
+    'http://@foo:bar@example.com',
+    'http://:bar@example.com',
+    'http://bar:bar:bar@example.com',
+])
+def test_bad_urls(url):
+    with pytest.raises(ValueError) as error:
+        inputs.url(url)
+    assert six.text_type(error.value) == u"{0} is not a valid URL".format(url)
 
 
-def test_bad_urls():
-    values = [
-        'foo',
-        'http://',
-        'http://example',
-        'http://example.',
-        'http://.com',
-        'http://invalid-.com',
-        'http://-invalid.com',
-        'http://inv-.alid-.com',
-        'http://inv-.-alid.com',
-        'foo bar baz',
-        u'foo \u2713',
-        'http://@foo:bar@example.com',
-        'http://:bar@example.com',
-        'http://bar:bar:bar@example.com',
-    ]
-
-    for value in values:
-        yield check_bad_url_raises, value
-
-
-def test_bad_url_error_message():
-    values = [
-        'google.com',
-        'domain.google.com',
-        'kevin:pass@google.com/path?query',
-        u'google.com/path?\u2713',
-    ]
-
-    for value in values:
-        yield check_url_error_message, value
+@pytest.mark.parametrize('url', [
+    'google.com',
+    'domain.google.com',
+    'kevin:pass@google.com/path?query',
+    u'google.com/path?\u2713',
+])
+def test_bad_url_error_message(url):
+    check_url_error_message(url)
 
 
 def check_url_error_message(value):
-    try:
+    with pytest.raises(ValueError) as error:
         inputs.url(value)
-        assert False, u"inputs.url({0}) should raise an exception".format(value)
-    except ValueError as e:
-        assert_equal(six.text_type(e),
-                     (u"{0} is not a valid URL. Did you mean: http://{0}".format(value)))
+
+    assert six.text_type(error.value) == (
+        u"{0} is not a valid URL. Did you mean: http://{0}".format(value))
 
 
-def test_regex_bad_input():
-    cases = (
-        'abc',
-        '123abc',
-        'abc123',
-        '',
-    )
-
+@pytest.mark.parametrize('input', [
+    'abc',
+    '123abc',
+    'abc123',
+    '',
+])
+def test_regex_bad_input(input):
     num_only = inputs.regex(r'^[0-9]+$')
 
-    for value in cases:
-        yield assert_raises, ValueError, lambda: num_only(value)
+    with pytest.raises(ValueError):
+        num_only(input)
 
 
-def test_regex_good_input():
-    cases = (
-        '123',
-        '1234567890',
-        '00000',
-    )
-
+@pytest.mark.parametrize('input', [
+    '123',
+    '1234567890',
+    '00000',
+])
+def test_regex_good_input(input):
     num_only = inputs.regex(r'^[0-9]+$')
-
-    for value in cases:
-        yield assert_equal, num_only(value), value
+    assert num_only(input) == input
 
 
 def test_regex_bad_pattern():
     """Regex error raised immediately when regex input parser is created."""
-    assert_raises(re.error, inputs.regex, '[')
+    with pytest.raises(re.error):
+        inputs.regex('[')
 
 
-def test_regex_flags_good_input():
-    cases = (
-        'abcd',
-        'ABCabc',
-        'ABC',
-    )
-
+@pytest.mark.parametrize('input', [
+    'abcd',
+    'ABCabc',
+    'ABC',
+])
+def test_regex_flags_good_input(input):
     case_insensitive = inputs.regex(r'^[A-Z]+$', re.IGNORECASE)
-
-    for value in cases:
-        yield assert_equal, case_insensitive(value), value
+    assert case_insensitive(input) == input
 
 
-def test_regex_flags_bad_input():
-    cases = (
-        'abcd',
-        'ABCabc'
-    )
-
+@pytest.mark.parametrize('case', [
+    'abcd',
+    'ABCabc',
+])
+def test_regex_flags_bad_input(case):
     case_sensitive = inputs.regex(r'^[A-Z]+$')
+    with pytest.raises(ValueError):
+        case_sensitive(case)
 
-    for value in cases:
-        yield assert_raises, ValueError, lambda: case_sensitive(value)
+
+def test_boolean_false():
+    assert not inputs.boolean("False")
 
 
-class TypesTestCase(unittest.TestCase):
+def test_boolean_is_false_for_0():
+    assert not inputs.boolean("0")
 
-    def test_boolean_false(self):
-        assert_equal(inputs.boolean("False"), False)
 
-    def test_boolean_is_false_for_0(self):
-        assert_equal(inputs.boolean("0"), False)
+def test_boolean_true():
+    assert inputs.boolean("true")
 
-    def test_boolean_true(self):
-        assert_equal(inputs.boolean("true"), True)
 
-    def test_boolean_is_true_for_1(self):
-        assert_equal(inputs.boolean("1"), True)
+def test_boolean_is_true_for_1():
+    assert inputs.boolean("1")
 
-    def test_boolean_upper_case(self):
-        assert_equal(inputs.boolean("FaLSE"), False)
 
-    def test_boolean(self):
-        assert_equal(inputs.boolean("FaLSE"), False)
+def test_boolean_upper_case():
+    assert not inputs.boolean("FaLSE")
 
-    def test_boolean_with_python_bool(self):
-        """Input that is already a native python `bool` should be passed through
-        without extra processing."""
-        assert_equal(inputs.boolean(True), True)
-        assert_equal(inputs.boolean(False), False)
 
-    def test_bad_boolean(self):
-        assert_raises(ValueError, lambda: inputs.boolean("blah"))
+def test_boolean():
+    assert not inputs.boolean("FaLSE")
 
-    def test_date_later_than_1900(self):
-        assert_equal(inputs.date("1900-01-01"), datetime(1900, 1, 1))
 
-    def test_date_input_error(self):
-        assert_raises(ValueError, lambda: inputs.date("2008-13-13"))
+def test_boolean_with_python_bool():
+    """Input that is already a native python `bool` should be passed through
+    without extra processing."""
+    assert inputs.boolean(True)
+    assert not inputs.boolean(False)
 
-    def test_date_input(self):
-        assert_equal(inputs.date("2008-08-01"), datetime(2008, 8, 1))
 
-    def test_natual_negative(self):
-        assert_raises(ValueError, lambda: inputs.natural(-1))
+def test_bad_boolean():
+    with pytest.raises(ValueError):
+        inputs.boolean("blah")
 
-    def test_natural(self):
-        assert_equal(3, inputs.natural(3))
 
-    def test_natual_string(self):
-        assert_raises(ValueError, lambda: inputs.natural('foo'))
+def test_date_later_than_1900():
+    assert inputs.date("1900-01-01") == datetime(1900, 1, 1)
 
-    def test_positive(self):
-        assert_equal(1, inputs.positive(1))
-        assert_equal(10000, inputs.positive(10000))
 
-    def test_positive_zero(self):
-        assert_raises(ValueError, lambda: inputs.positive(0))
+def test_date_input_error():
+    with pytest.raises(ValueError):
+        inputs.date("2008-13-13")
 
-    def test_positive_negative_input(self):
-        assert_raises(ValueError, lambda: inputs.positive(-1))
 
-    def test_int_range_good(self):
-        int_range = inputs.int_range(1, 5)
-        assert_equal(3, int_range(3))
+def test_date_input():
+    assert inputs.date("2008-08-01") == datetime(2008, 8, 1)
 
-    def test_int_range_inclusive(self):
-        int_range = inputs.int_range(1, 5)
-        assert_equal(5, int_range(5))
 
-    def test_int_range_low(self):
-        int_range = inputs.int_range(0, 5)
-        assert_raises(ValueError, lambda: int_range(-1))
+def test_natual_negative():
+    with pytest.raises(ValueError):
+        inputs.natural(-1)
 
-    def test_int_range_high(self):
-        int_range = inputs.int_range(0, 5)
-        assert_raises(ValueError, lambda: int_range(6))
+
+def test_natural():
+    assert 3 == inputs.natural(3)
+
+
+def test_natual_string():
+    with pytest.raises(ValueError):
+        inputs.natural('foo')
+
+
+def test_positive():
+    assert 1 == inputs.positive(1)
+    assert 10000 == inputs.positive(10000)
+
+
+def test_positive_zero():
+    with pytest.raises(ValueError):
+        inputs.positive(0)
+
+
+def test_positive_negative_input():
+    with pytest.raises(ValueError):
+        inputs.positive(-1)
+
+
+def test_int_range_good():
+    int_range = inputs.int_range(1, 5)
+    assert 3 == int_range(3)
+
+
+def test_int_range_inclusive():
+    int_range = inputs.int_range(1, 5)
+    assert 5 == int_range(5)
+
+
+def test_int_range_low():
+    int_range = inputs.int_range(0, 5)
+    with pytest.raises(ValueError):
+        int_range(-1)
+
+
+def test_int_range_high():
+    int_range = inputs.int_range(0, 5)
+    with pytest.raises(ValueError):
+        int_range(6)
 
 
 def test_isointerval():
@@ -390,37 +392,26 @@ def test_isointerval():
     ]
 
     for value, expected in intervals:
-        yield assert_equal, inputs.iso8601interval(value), expected
+        assert inputs.iso8601interval(value) == expected
 
 
 def test_invalid_isointerval_error():
-    try:
+    with pytest.raises(ValueError) as error:
         inputs.iso8601interval('2013-01-01/blah')
-    except ValueError as error:
-        assert_equal(
-            str(error),
-            "Invalid argument: 2013-01-01/blah. argument must be a valid ISO8601 "
-            "date/time interval.",
-        )
-        return
-    assert False, 'Should raise a ValueError'
+    assert str(error.value) == "Invalid argument: 2013-01-01/blah. " \
+                               "argument must be a valid ISO8601 date/time interval."
 
 
-def test_bad_isointervals():
-    bad_intervals = [
-        '2013-01T14:',
-        '',
-        'asdf',
-        '01/01/2013',
-    ]
+@pytest.mark.parametrize('interval', [
+    '2013-01T14:',
+    '',
+    'asdf',
+    '01/01/2013',
+])
+def test_bad_isointervals(interval):
+    with pytest.raises(Exception):
+        inputs.iso8601interval(interval)
 
-    for bad_interval in bad_intervals:
-        yield (
-            assert_raises,
-            Exception,
-            inputs.iso8601interval,
-            bad_interval,
-        )
 
 if __name__ == '__main__':
     unittest.main()
