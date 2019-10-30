@@ -4,11 +4,7 @@ import pytz
 from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
 from email.utils import formatdate
 import six
-try:
-    from urlparse import urlparse, urlunparse
-except ImportError:
-    # python3
-    from urllib.parse import urlparse, urlunparse
+from six.moves.urllib.parse import urlparse, urlunparse
 
 from flask_restful import inputs, marshal
 from flask import url_for, request
