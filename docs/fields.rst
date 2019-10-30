@@ -153,7 +153,7 @@ that includes the scheme, hostname and port, pass the keyword argument
 pass the ``scheme`` keyword argument::
 
     fields = {
-        'uri': fields.Url('todo_resource', absolute=True)
+        'uri': fields.Url('todo_resource', absolute=True),
         'https_uri': fields.Url('todo_resource', absolute=True, scheme='https')
     }
 
