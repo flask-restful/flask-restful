@@ -4,101 +4,39 @@ cache: pip
 matrix:
   include:
     - python: 2.7
-      dist: trusty
-      sudo: false
-      env: FLASK=0.10
-    - python: 2.7
-      dist: trusty
-      sudo: false
       env: FLASK=0.12
     - python: 2.7
-      dist: trusty
-      sudo: false
-      env: FLASK=1.0.2
+      env: FLASK=1.0
     - python: 3.4
-      dist: trusty
-      sudo: false
-      env: FLASK=0.10
-    - python: 3.4
-      dist: trusty
-      sudo: false
       env: FLASK=0.12
     - python: 3.4
-      dist: trusty
-      sudo: false
-      env: FLASK=1.0.2
+      env: FLASK=1.0
     - python: 3.5
-      dist: trusty
-      sudo: false
-      env: FLASK=0.10
-    - python: 3.5
-      dist: trusty
-      sudo: false
       env: FLASK=0.12
     - python: 3.5
-      dist: trusty
-      sudo: false
-      env: FLASK=1.0.2
+      env: FLASK=1.0
     - python: 3.6
-      dist: trusty
-      sudo: false
-      env: FLASK=0.10
-    - python: 3.6
-      dist: trusty
-      sudo: false
       env: FLASK=0.12
     - python: 3.6
-      dist: trusty
-      sudo: false
-      env: FLASK=1.0.2
+      env: FLASK=1.0
+    - python: 3.6
+      env: FLASK=1.1
     - python: 3.7
-      dist: xenial
-      sudo: true
-      env: FLASK=0.10
-    - python: 3.7
-      dist: xenial
-      sudo: true
       env: FLASK=0.12
     - python: 3.7
-      dist: xenial
-      sudo: true
-      env: FLASK=1.0.2
-    - python: 3.8
-      dist: xenial
-      sudo: true
-      env: FLASK=0.10
-    - python: 3.8
-      dist: xenial
-      sudo: true
-      env: FLASK=0.12
-    - python: 3.8
-      dist: xenial
-      sudo: true
-      env: FLASK=1.0.2
+      env: FLASK=1.0
+    - python: 3.7
+      env: FLASK=1.1
     - python: pypy
-      dist: trusty
-      sudo: false
-      env: FLASK=0.10
-    - python: pypy
-      dist: trusty
-      sudo: false
       env: FLASK=0.12
     - python: pypy
-      dist: trusty
-      sudo: false
-      env: FLASK=1.0.2
+      env: FLASK=1.0
     - python: pypy3
-      dist: trusty
-      sudo: false
-      env: FLASK=0.10
-    - python: pypy3
-      dist: trusty
-      sudo: false
       env: FLASK=0.12
     - python: pypy3
-      dist: trusty
-      sudo: false
-      env: FLASK=1.0.2
+      env: FLASK=1.0
+    - python: pypy3
+      env: FLASK=1.1
 
 install:
   - pip install -q Flask==$FLASK

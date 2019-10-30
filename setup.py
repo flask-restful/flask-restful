@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 requirements = [
     'aniso8601>=0.82',
-    'Flask>=0.8',
+    'Flask>=0.12',
     'six>=1.3.0',
     'pytz',
 ]
