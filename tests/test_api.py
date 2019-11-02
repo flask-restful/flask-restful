@@ -713,10 +713,8 @@ class APITestCase(unittest.TestCase):
     def test_resource_template(self):
         app = Flask(__name__)
 
-        def text(data, code, headers=None):
-            return flask.make_response(six.text_type(data))
-
         mock_html = "<html><body>Hello World!</body></html>"
+        mock_html2 = "<!DOCTYPE html><html lang='en'><body>Hello World!</body></html>"
 
         def render_template(html_str):
             return html_str
@@ -725,9 +723,17 @@ class APITestCase(unittest.TestCase):
             def get(self):
                 return render_template(mock_html)
 
-        with app.test_request_context("/foo", headers={'Accept': 'text/plain'}):
+        class HelloWorldHtml2(flask_restful.Resource):
+            def get(self):
+                return render_template(mock_html2)
+
+        with app.test_request_context("/foo"):
             resource = HelloWorldHtml()
             resp = resource.dispatch_request()
+            self.assertEquals(resp.status_code, 200)
+
+            resource2 = HelloWorldHtml2()
+            resp = resource2.dispatch_request()
             self.assertEquals(resp.status_code, 200)
 
     def test_resource_error(self):
