@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from functools import wraps, partial
-from flask import request, url_for, current_app
+from flask import request, url_for, current_app, make_response
 from flask import abort as original_flask_abort
 from flask import make_response as original_flask_make_response
 from flask.views import MethodView
@@ -563,8 +563,19 @@ class Resource(MethodView):
     representations = None
     method_decorators = []
 
-    def dispatch_request(self, *args, **kwargs):
+    def _is_template(self, response):
+        if "<html" == response[:5] or "<!DOCTYPE" == response[:9]:
+            return True
+        else:
+            return False
 
+    def output_html(self, data, code):
+        """Return Flask HTML template"""
+        resp = make_response(data, code)
+        resp.headers["Content-Type"] = "text/html"
+        return resp
+
+    def dispatch_request(self, *args, **kwargs):
         # Taken from flask
         #noinspection PyUnresolvedReferences
         meth = getattr(self, request.method.lower(), None)
@@ -582,10 +593,15 @@ class Resource(MethodView):
 
         resp = meth(*args, **kwargs)
 
+        representations = self.representations or OrderedDict()
+
+        if isinstance(resp, str) and self._is_template(resp):
+            representations["text/html"] = self.output_html
+            data, code, _ = unpack(resp)
+            return representations["text/html"](data, code)
+
         if isinstance(resp, ResponseBase):  # There may be a better way to test
             return resp
-
-        representations = self.representations or OrderedDict()
 
         #noinspection PyUnresolvedReferences
         mediatype = request.accept_mimetypes.best_match(representations, default=None)

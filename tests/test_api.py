@@ -8,6 +8,7 @@ except:
     # python3
     from unittest.mock import Mock
 import flask
+from flask import make_response
 import werkzeug
 from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound, _aborter
 from werkzeug.http import quote_etag, unquote_etag
@@ -708,6 +709,26 @@ class APITestCase(unittest.TestCase):
             resource = Foo()
             resp = resource.dispatch_request()
             self.assertEquals(resp.data.decode(), 'hello')
+
+    def test_resource_template(self):
+        app = Flask(__name__)
+
+        def text(data, code, headers=None):
+            return flask.make_response(six.text_type(data))
+
+        mock_html = "<html><body>Hello World!</body></html>"
+
+        def render_template(html_str):
+            return html_str
+
+        class HelloWorldHtml(flask_restful.Resource):
+            def get(self):
+                return render_template(mock_html)
+
+        with app.test_request_context("/foo", headers={'Accept': 'text/plain'}):
+            resource = HelloWorldHtml()
+            resp = resource.dispatch_request()
+            self.assertEquals(resp.status_code, 200)
 
     def test_resource_error(self):
         app = Flask(__name__)
