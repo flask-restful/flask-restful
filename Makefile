@@ -51,7 +51,7 @@ PIP := $(BIN)/pip
 FLAKE8 := $(BIN)/flake8
 PEP8RADIUS := $(BIN)/pep8radius
 PEP257 := $(BIN)/pep257
-NOSE := $(BIN)/nosetests
+PYTEST := $(BIN)/pytest
 COVERAGE := $(BIN)/coverage
 ACTIVATE := $(BIN)/activate
 
@@ -137,7 +137,7 @@ fix: .depends-dev
 
 .PHONY: test
 test: .depends-test .clean-test
-	$(NOSE) tests --with-coverage --cover-package=$(PACKAGE)
+	$(PYTEST) --cov=.
 
 test-all: test-py27 test-py34 test-py35 test-py36 test-py37
 test-py27:

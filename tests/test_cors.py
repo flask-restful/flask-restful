@@ -1,86 +1,69 @@
-import unittest
-from flask import Flask
 import flask_restful
 from flask_restful.utils import cors
-from nose.tools import assert_equals, assert_true
 
 
-class CORSTestCase(unittest.TestCase):
+def test_crossdomain(api):
+    class Foo(flask_restful.Resource):
+        @cors.crossdomain(origin='*')
+        def get(self):
+            return "data"
+    api.add_resource(Foo, '/')
 
-    def test_crossdomain(self):
+    with api.app.test_client() as client:
+        res = client.get('/')
+        assert res.status_code == 200
+        assert res.headers['Access-Control-Allow-Origin'] == '*'
+        assert res.headers['Access-Control-Max-Age'] == '21600'
+        assert 'HEAD' in res.headers['Access-Control-Allow-Methods']
+        assert 'OPTIONS' in res.headers['Access-Control-Allow-Methods']
+        assert 'GET' in res.headers['Access-Control-Allow-Methods']
 
-        class Foo(flask_restful.Resource):
-            @cors.crossdomain(origin='*')
-            def get(self):
-                return "data"
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(Foo, '/')
+def test_access_control_expose_headers(api):
+    class Foo(flask_restful.Resource):
+        @cors.crossdomain(origin='*',
+                          expose_headers=['X-My-Header', 'X-Another-Header'])
+        def get(self):
+            return "data"
+    api.add_resource(Foo, '/')
 
-        with app.test_client() as client:
-            res = client.get('/')
-            assert_equals(res.status_code, 200)
-            assert_equals(res.headers['Access-Control-Allow-Origin'], '*')
-            assert_equals(res.headers['Access-Control-Max-Age'], '21600')
-            assert_true('HEAD' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('OPTIONS' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('GET' in res.headers['Access-Control-Allow-Methods'])
+    with api.app.test_client() as client:
+        res = client.get('/')
+        assert res.status_code == 200
+        assert 'X-MY-HEADER' in res.headers['Access-Control-Expose-Headers']
+        assert 'X-ANOTHER-HEADER' in res.headers['Access-Control-Expose-Headers']
 
-    def test_access_control_expose_headers(self):
 
-        class Foo(flask_restful.Resource):
-            @cors.crossdomain(origin='*',
-                              expose_headers=['X-My-Header', 'X-Another-Header'])
-            def get(self):
-                return "data"
+def test_access_control_allow_methods(api):
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(Foo, '/')
+    class Foo(flask_restful.Resource):
+        @cors.crossdomain(origin='*',
+                          methods={"HEAD","OPTIONS","GET"})
+        def get(self):
+            return "data"
 
-        with app.test_client() as client:
-            res = client.get('/')
-            assert_equals(res.status_code, 200)
-            assert_true('X-MY-HEADER' in res.headers['Access-Control-Expose-Headers'])
-            assert_true('X-ANOTHER-HEADER' in res.headers['Access-Control-Expose-Headers'])
+        def post(self):
+            return "data"
+    api.add_resource(Foo, '/')
 
-    def test_access_control_allow_methods(self):
+    with api.app.test_client() as client:
+        res = client.get('/')
+        assert res.status_code == 200
+        assert 'HEAD' in res.headers['Access-Control-Allow-Methods']
+        assert 'OPTIONS' in res.headers['Access-Control-Allow-Methods']
+        assert 'GET' in res.headers['Access-Control-Allow-Methods']
+        assert 'POST' not in res.headers['Access-Control-Allow-Methods']
 
-        class Foo(flask_restful.Resource):
-            @cors.crossdomain(origin='*',
-                              methods={"HEAD","OPTIONS","GET"})
-            def get(self):
-                return "data"
 
-            def post(self):
-                return "data"
+def test_no_crossdomain(api):
+    class Foo(flask_restful.Resource):
+        def get(self):
+            return "data"
+    api.add_resource(Foo, '/')
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/')
-            assert_equals(res.status_code, 200)
-            assert_true('HEAD' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('OPTIONS' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('GET' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('POST' not in res.headers['Access-Control-Allow-Methods'])
-
-    def test_no_crossdomain(self):
-
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
-
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/')
-            assert_equals(res.status_code, 200)
-            assert_true('Access-Control-Allow-Origin' not in res.headers)
-            assert_true('Access-Control-Allow-Methods' not in res.headers)
-            assert_true('Access-Control-Max-Age' not in res.headers)
+    with api.app.test_client() as client:
+        res = client.get('/')
+        assert res.status_code == 200
+        assert 'Access-Control-Allow-Origin' not in res.headers
+        assert 'Access-Control-Allow-Methods' not in res.headers
+        assert 'Access-Control-Max-Age' not in res.headers

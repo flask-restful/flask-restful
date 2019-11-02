@@ -52,9 +52,8 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
-    test_suite = 'nose.collector',
     install_requires=requirements,
-    tests_require=['Flask-RESTful', 'mock>=0.8', 'blinker'],
+    tests_require=['Flask-RESTful', 'mock>=0.8', 'blinker', 'pytest'],
     # Install these with "pip install -e '.[docs]'
     extras_require={
         'docs': 'sphinx',

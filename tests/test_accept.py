@@ -1,241 +1,142 @@
 import unittest
+
+import pytest
 from flask import Flask
-import flask_restful
-from werkzeug import exceptions
 from nose.tools import assert_equals
 
+import flask_restful
 
 
-class AcceptTestCase(unittest.TestCase):
+class Foo(flask_restful.Resource):
+    def get(self):
+        return "data"
 
-    def test_accept_default_application_json(self):
 
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
+@pytest.fixture()
+def api_with_mediatype(api):
+    api.add_resource(Foo, '/')
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
+    return api
 
-        api.add_resource(Foo, '/')
 
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'application/json')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'application/json')
+@pytest.fixture()
+def api_no_mediatype(app):
+    api = flask_restful.Api(app, default_mediatype=None)
+    api.add_resource(Foo, '/')
 
+    return api
 
-    def test_accept_no_default_match_acceptable(self):
 
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
+@pytest.mark.parametrize('headers', [
+    [('Accept', 'application/json')],
+    [('Accept', 'text/plain')],
+])
+def test_accept_default_headers_to_json(api_with_mediatype, headers):
+    with api_with_mediatype.app.test_client() as client:
+        res = client.get('/', headers=headers)
+        assert res.status_code == 200
+        assert res.content_type == 'application/json'
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype=None)
 
-        api.add_resource(Foo, '/')
+def test_accept_default_any_pick_first(api_with_mediatype):
+    @api_with_mediatype.representation('text/plain')
+    def text_rep(data, status_code, headers=None):
+        resp = api_with_mediatype.app.make_response((str(data), status_code, headers))
+        return resp
 
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'application/json')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'application/json')
+    with api_with_mediatype.app.test_client() as client:
+        res = client.get('/', headers=[('Accept', '*/*')])
+        assert res.status_code == 200
+        assert res.content_type == 'application/json'
 
 
-    def test_accept_default_override_accept(self):
+def test_accept_no_default_no_match_not_acceptable(api_no_mediatype):
+    with api_no_mediatype.app.test_client() as client:
+        res = client.get('/', headers=[('Accept', 'text/plain')])
+        assert res.status_code == 406
+        assert res.content_type == 'application/json'
 
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
+def test_accept_no_default_custom_repr_match(api_no_mediatype):
+    api_no_mediatype.representations = {}
 
-        api.add_resource(Foo, '/')
+    @api_no_mediatype.representation('text/plain')
+    def text_rep(data, status_code, headers=None):
+        resp = api_no_mediatype.app.make_response((str(data), status_code, headers))
+        return resp
 
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'application/json')
+    with api_no_mediatype.app.test_client() as client:
+        res = client.get('/', headers=[('Accept', 'text/plain')])
+        assert res.status_code == 200
+        assert res.content_type == 'text/plain'
 
 
-    def test_accept_default_any_pick_first(self):
+def test_accept_no_default_custom_repr_not_acceptable(api_no_mediatype):
+    api_no_mediatype.representations = {}
 
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
+    @api_no_mediatype.representation('text/plain')
+    def text_rep(data, status_code, headers=None):
+        resp = api_no_mediatype.app.make_response((str(data), status_code, headers))
+        return resp
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
+    with api_no_mediatype.app.test_client() as client:
+        res = client.get('/', headers=[('Accept', 'application/json')])
+        assert res.status_code == 406
+        assert res.content_type == 'text/plain'
 
-        @api.representation('text/plain')
-        def text_rep(data, status_code, headers=None):
-            resp = app.make_response((str(data), status_code, headers))
-            return resp
 
-        api.add_resource(Foo, '/')
+def test_accept_no_default_match_q0_not_acceptable(api_no_mediatype):
+    """
+    q=0 should be considered NotAcceptable,
+    but this depends on werkzeug >= 1.0 which is not yet released
+    so this test is expected to fail until we depend on werkzeug >= 1.0
+    """
+    with api_no_mediatype.app.test_client() as client:
+        res = client.get('/', headers=[('Accept', 'application/json; q=0')])
+        assert res.status_code == 406
+        assert res.content_type == 'application/json'
 
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', '*/*')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'application/json')
 
+def test_accept_no_default_accept_highest_quality_of_two(api_no_mediatype):
+    @api_no_mediatype.representation('text/plain')
+    def text_rep(data, status_code, headers=None):
+        resp = api_no_mediatype.app.make_response((str(data), status_code, headers))
+        return resp
 
-    def test_accept_no_default_no_match_not_acceptable(self):
+    with api_no_mediatype.app.test_client() as client:
+        res = client.get('/', headers=[('Accept', 'application/json; q=0.1, text/plain; q=1.0')])
+        assert res.status_code == 200
+        assert res.content_type == 'text/plain'
 
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype=None)
+def test_accept_no_default_accept_highest_quality_of_three(api_no_mediatype):
+    @api_no_mediatype.representation('text/html')
+    @api_no_mediatype.representation('text/plain')
+    def text_rep(data, status_code, headers=None):
+        resp = api_no_mediatype.app.make_response((str(data), status_code, headers))
+        return resp
 
-        api.add_resource(Foo, '/')
+    with api_no_mediatype.app.test_client() as client:
+        res = client.get('/', headers=[('Accept', 'application/json; q=0.1, text/plain; q=0.3, text/html; q=0.2')])
+        assert res.status_code == 200
+        assert res.content_type == 'text/plain'
 
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 406)
-            assert_equals(res.content_type, 'application/json')
 
+def test_accept_no_default_no_representations(api_no_mediatype):
+    api_no_mediatype.representations = {}
 
-    def test_accept_no_default_custom_repr_match(self):
+    with api_no_mediatype.app.test_client() as client:
+        res = client.get('/', headers=[('Accept', 'text/plain')])
+        assert res.status_code == 406
+        assert res.content_type == 'text/plain'
 
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype=None)
-        api.representations = {}
+def test_accept_invalid_default_no_representations(app):
+    api = flask_restful.Api(app, default_mediatype='nonexistant/mediatype')
+    api.representations = {}
 
-        @api.representation('text/plain')
-        def text_rep(data, status_code, headers=None):
-            resp = app.make_response((str(data), status_code, headers))
-            return resp
+    api.add_resource(Foo, '/')
 
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'text/plain')
-
-
-    def test_accept_no_default_custom_repr_not_acceptable(self):
-
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
-
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype=None)
-        api.representations = {}
-
-        @api.representation('text/plain')
-        def text_rep(data, status_code, headers=None):
-            resp = app.make_response((str(data), status_code, headers))
-            return resp
-
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'application/json')])
-            assert_equals(res.status_code, 406)
-            assert_equals(res.content_type, 'text/plain')
-
-
-    def test_accept_no_default_match_q0_not_acceptable(self):
-        """
-        q=0 should be considered NotAcceptable,
-        but this depends on werkzeug >= 1.0 which is not yet released
-        so this test is expected to fail until we depend on werkzeug >= 1.0
-        """
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
-
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype=None)
-
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'application/json; q=0')])
-            assert_equals(res.status_code, 406)
-            assert_equals(res.content_type, 'application/json')
-
-    def test_accept_no_default_accept_highest_quality_of_two(self):
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
-
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype=None)
-
-        @api.representation('text/plain')
-        def text_rep(data, status_code, headers=None):
-            resp = app.make_response((str(data), status_code, headers))
-            return resp
-
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'application/json; q=0.1, text/plain; q=1.0')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'text/plain')
-
-
-    def test_accept_no_default_accept_highest_quality_of_three(self):
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
-
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype=None)
-
-        @api.representation('text/html')
-        @api.representation('text/plain')
-        def text_rep(data, status_code, headers=None):
-            resp = app.make_response((str(data), status_code, headers))
-            return resp
-
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'application/json; q=0.1, text/plain; q=0.3, text/html; q=0.2')])
-            assert_equals(res.status_code, 200)
-            assert_equals(res.content_type, 'text/plain')
-
-
-    def test_accept_no_default_no_representations(self):
-
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
-
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype=None)
-        api.representations = {}
-
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 406)
-            assert_equals(res.content_type, 'text/plain')
-
-    def test_accept_invalid_default_no_representations(self):
-
-        class Foo(flask_restful.Resource):
-            def get(self):
-                return "data"
-
-        app = Flask(__name__)
-        api = flask_restful.Api(app, default_mediatype='nonexistant/mediatype')
-        api.representations = {}
-
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
-            res = client.get('/', headers=[('Accept', 'text/plain')])
-            assert_equals(res.status_code, 500)
+    with app.test_client() as client:
+        res = client.get('/', headers=[('Accept', 'text/plain')])
+        assert res.status_code == 500
