@@ -151,6 +151,17 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(resp.status_code, 403)
         self.assertDictEqual(resp_dict, {})
 
+    def test_handle_error_does_not_barf_on_bogus_method_and_redirect(self):
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloWorld, '/hello/')
+
+        app = app.test_client()
+        resp = app.open('/hello', method='FOOBAR')
+
+        self.assertEquals(resp.status_code, 405)
+
     def test_marshal(self):
         fields = OrderedDict([('foo', flask_restful.fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])

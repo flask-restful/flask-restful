@@ -264,11 +264,11 @@ class Api(object):
         :type e: Exception
 
         """
-        if self._has_fr_route():
-            try:
+        try:
+            if self._has_fr_route():
                 return self.handle_error(e)
-            except Exception:
-                pass  # Fall through to original handler
+        except Exception:
+            pass  # Fall through to original handler
         return original_handler(e)
 
     def handle_error(self, e):
