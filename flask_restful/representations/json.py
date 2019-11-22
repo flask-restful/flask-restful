@@ -12,7 +12,7 @@ def output_json(data, code, headers=None):
     # If we're in debug mode, and the indent is not set, we set it to a
     # reasonable value here.  Note that this won't override any existing value
     # that was set.  We also set the "sort_keys" value.
-    if current_app.debug or current_app.config.get("JSONIFY_PRETTYPRINT_REGULAR"):    
+    if current_app.debug or (1==1):    
         settings.setdefault('indent', 4)
         settings.setdefault('sort_keys', not PY3)
 
