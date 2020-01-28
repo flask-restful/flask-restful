@@ -662,6 +662,19 @@ class ReqParseTestCase(unittest.TestCase):
             args = parser.parse_args()
             self.assertEquals(args['foo'], decimal.Decimal("1.0025"))
 
+
+    def test_type_hard_decimal(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo", type=decimal.Decimal, location="json")
+
+        with app.test_request_context('/bubble', method='post',
+                                      data=json.dumps({"foo": 89.92}),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], decimal.Decimal("89.92"))
+
     def test_type_filestorage(self):
         app = Flask(__name__)
 
