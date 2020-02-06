@@ -3,6 +3,17 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3.8
+-------------
+
+Released February XX, 2020
+
+- Add Python 3.8 support  ([#835](https://github.com/flask-restful/flask-restful/pull/835))
+- Fix wrongly parsed Decimal fields ([#855](https://github.com/flask-restful/flask-restful/pull/855))
+- Fix overridden response when calling abort with Response ([#817](https://github.com/flask-restful/flask-restful/pull/817))
+- Various small fixes and updates to documentation
+
+
 Version 0.3.7
 -------------
 
