@@ -445,7 +445,9 @@ class APITestCase(unittest.TestCase):
 
         resp = app.get("/foo")
         self.assertEquals(resp.status_code, 404)
-        self.assertEquals('text/html', resp.headers['Content-Type'])
+        # in newer versions of werkzeug this is `text/html; charset=utf8`
+        content_type, _, _ = resp.headers['Content-Type'].partition(';')
+        self.assertEquals('text/html', content_type)
 
     def test_non_api_error_404_catchall(self):
         app = Flask(__name__)

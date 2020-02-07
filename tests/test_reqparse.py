@@ -2,9 +2,9 @@
 import unittest
 from mock import Mock, patch
 from flask import Flask
-from werkzeug import exceptions, MultiDict
+from werkzeug import exceptions
 from werkzeug.wrappers import Request
-from werkzeug.datastructures import FileStorage
+from werkzeug.datastructures import FileStorage, MultiDict
 from flask_restful.reqparse import Argument, RequestParser, Namespace
 import six
 import decimal
