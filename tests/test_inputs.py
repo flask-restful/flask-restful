@@ -1,11 +1,12 @@
-from datetime import datetime, timedelta, tzinfo
-import unittest
-import pytz
+from datetime import datetime
 import re
+import unittest
 
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equal, assert_raises  # you need it for tests in form of continuations
+import pytz
 import six
+
 
 from flask_restful import inputs
 
@@ -421,6 +422,7 @@ def test_bad_isointervals():
             inputs.iso8601interval,
             bad_interval,
         )
+
 
 if __name__ == '__main__':
     unittest.main()

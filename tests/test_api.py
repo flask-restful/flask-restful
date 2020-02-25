@@ -1,24 +1,26 @@
-import unittest
 import json
-from flask import Flask, Blueprint, redirect, views, abort as flask_abort
-from flask.signals import got_request_exception, signals_available
+from json import dumps, loads, JSONEncoder
+import unittest
 try:
     from mock import Mock
 except:
     # python3
     from unittest.mock import Mock
+
+
 import flask
-import werkzeug
-from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, NotFound, _aborter
+from flask import Flask, Blueprint, redirect, views, abort as flask_abort
+from flask.signals import got_request_exception, signals_available
+#noinspection PyUnresolvedReferences
+from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
+import six
+from werkzeug.exceptions import HTTPException, Unauthorized, BadRequest, _aborter
 from werkzeug.http import quote_etag, unquote_etag
+
 from flask_restful.utils import http_status_message, unpack
 import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
-from json import dumps, loads, JSONEncoder
-#noinspection PyUnresolvedReferences
-from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
-import six
 
 
 def check_unpack(expected, value):
@@ -51,73 +53,69 @@ class HelloBomb(flask_restful.Resource):
 
 class APITestCase(unittest.TestCase):
 
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.api = flask_restful.Api(self.app)
+
+        self.app_401 = Flask(__name__)
+        self.api_401 = flask_restful.Api(self.app, serve_challenge_on_401=True)
+
+        self.fields = OrderedDict([('foo', flask_restful.fields.Raw)])
+
     def test_http_code(self):
         self.assertEquals(http_status_message(200), 'OK')
         self.assertEquals(http_status_message(404), 'Not Found')
 
     def test_unauthorized_no_challenge_by_default(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
         response = Mock()
         response.headers = {}
-        with app.test_request_context('/foo'):
-            response = api.unauthorized(response)
+        with self.app.test_request_context('/foo'):
+            response = self.api.unauthorized(response)
         assert_false('WWW-Authenticate' in response.headers)
 
     def test_unauthorized(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app, serve_challenge_on_401=True)
         response = Mock()
         response.headers = {}
-        with app.test_request_context('/foo'):
-            response = api.unauthorized(response)
+        with self.app_401.test_request_context('/foo'):
+            response = self.api_401.unauthorized(response)
         self.assertEquals(response.headers['WWW-Authenticate'],
                           'Basic realm="flask-restful"')
 
     def test_unauthorized_custom_realm(self):
-        app = Flask(__name__)
-        app.config['HTTP_BASIC_AUTH_REALM'] = 'Foo'
-        api = flask_restful.Api(app, serve_challenge_on_401=True)
+        self.app_401.config['HTTP_BASIC_AUTH_REALM'] = 'Foo'
         response = Mock()
         response.headers = {}
-        with app.test_request_context('/foo'):
-            response = api.unauthorized(response)
+        with self.app_401.test_request_context('/foo'):
+            response = self.api_401.unauthorized(response)
         self.assertEquals(response.headers['WWW-Authenticate'], 'Basic realm="Foo"')
 
     def test_handle_error_401_sends_challege_default_realm(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app, serve_challenge_on_401=True)
         exception = HTTPException()
         exception.code = 401
         exception.data = {'foo': 'bar'}
 
-        with app.test_request_context('/foo'):
-            resp = api.handle_error(exception)
+        with self.app_401.test_request_context('/foo'):
+            resp = self.api_401.handle_error(exception)
             self.assertEquals(resp.status_code, 401)
             self.assertEquals(resp.headers['WWW-Authenticate'],
                               'Basic realm="flask-restful"')
 
     def test_handle_error_401_sends_challege_configured_realm(self):
-        app = Flask(__name__)
-        app.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
-        api = flask_restful.Api(app, serve_challenge_on_401=True)
+        self.app_401.config['HTTP_BASIC_AUTH_REALM'] = 'test-realm'
 
-        with app.test_request_context('/foo'):
-            resp = api.handle_error(Unauthorized())
+        with self.app_401.test_request_context('/foo'):
+            resp = self.api_401.handle_error(Unauthorized())
             self.assertEquals(resp.status_code, 401)
             self.assertEquals(resp.headers['WWW-Authenticate'],
                               'Basic realm="test-realm"')
 
     def test_handle_error_does_not_swallow_exceptions(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
         exception = BadRequest('x')
 
-        with app.test_request_context('/foo'):
-            resp = api.handle_error(exception)
+        with self.app.test_request_context('/foo'):
+            resp = self.api.handle_error(exception)
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.get_data(), b'{"message": "x"}\n')
-
 
     def test_handle_error_does_not_swallow_custom_exceptions(self):
         app = Flask(__name__)
@@ -138,12 +136,9 @@ class APITestCase(unittest.TestCase):
         class HelloBombAbort(flask_restful.Resource):
             def get(self):
                 raise HTTPException(response=flask.make_response("{}", 403))
+        self.api.add_resource(HelloBombAbort, '/bomb')
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(HelloBombAbort, '/bomb')
-
-        app = app.test_client()
+        app = self.app.test_client()
         resp = app.get('/bomb')
 
         resp_dict = json.loads(resp.data.decode())
@@ -152,46 +147,36 @@ class APITestCase(unittest.TestCase):
         self.assertDictEqual(resp_dict, {})
 
     def test_marshal(self):
-        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
-        output = flask_restful.marshal(marshal_dict, fields)
+        output = flask_restful.marshal(marshal_dict, self.fields)
         self.assertEquals(output, {'foo': 'bar'})
 
     def test_marshal_with_envelope(self):
-        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
         marshal_dict = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
-        output = flask_restful.marshal(marshal_dict, fields, envelope='hey')
+        output = flask_restful.marshal(marshal_dict, self.fields, envelope='hey')
         self.assertEquals(output, {'hey': {'foo': 'bar'}})
 
     def test_marshal_decorator(self):
-        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
-
-        @flask_restful.marshal_with(fields)
+        @flask_restful.marshal_with(self.fields)
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
         self.assertEquals(try_me(), {'foo': 'bar'})
 
     def test_marshal_decorator_with_envelope(self):
-        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
-
-        @flask_restful.marshal_with(fields, envelope='hey')
+        @flask_restful.marshal_with(self.fields, envelope='hey')
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')])
 
         self.assertEquals(try_me(), {'hey': {'foo': 'bar'}})
 
     def test_marshal_decorator_tuple(self):
-        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
-
-        @flask_restful.marshal_with(fields)
+        @flask_restful.marshal_with(self.fields)
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
         self.assertEquals(try_me(), ({'foo': 'bar'}, 200, {'X-test': 123}))
 
     def test_marshal_decorator_tuple_with_envelope(self):
-        fields = OrderedDict([('foo', flask_restful.fields.Raw)])
-
-        @flask_restful.marshal_with(fields, envelope='hey')
+        @flask_restful.marshal_with(self.fields, envelope='hey')
         def try_me():
             return OrderedDict([('foo', 'bar'), ('bat', 'baz')]), 200, {'X-test': 123}
 
@@ -214,21 +199,18 @@ class APITestCase(unittest.TestCase):
         self.assertEquals(('foo', 200, {'X-test': 123}), try_me())
 
     def test_marshal_field(self):
-        fields = OrderedDict({'foo': flask_restful.fields.Raw()})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
-        output = flask_restful.marshal(marshal_fields, fields)
+        output = flask_restful.marshal(marshal_fields, self.fields)
         self.assertEquals(output, {'foo': 'bar'})
 
     def test_marshal_tuple(self):
-        fields = OrderedDict({'foo': flask_restful.fields.Raw})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
-        output = flask_restful.marshal((marshal_fields,), fields)
+        output = flask_restful.marshal((marshal_fields,), self.fields)
         self.assertEquals(output, [{'foo': 'bar'}])
 
     def test_marshal_tuple_with_envelope(self):
-        fields = OrderedDict({'foo': flask_restful.fields.Raw})
         marshal_fields = OrderedDict([('foo', 'bar'), ('bat', 'baz')])
-        output = flask_restful.marshal((marshal_fields,), fields, envelope='hey')
+        output = flask_restful.marshal((marshal_fields,), self.fields, envelope='hey')
         self.assertEquals(output, {'hey': [{'foo': 'bar'}]})
 
     def test_marshal_nested(self):
@@ -397,24 +379,19 @@ class APITestCase(unittest.TestCase):
             }) + "\n")
 
     def test_handle_error_with_code(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app, serve_challenge_on_401=True)
-
         exception = Exception()
         exception.code = "Not an integer"
         exception.data = {'foo': 'bar'}
 
-        with app.test_request_context("/foo"):
-            resp = api.handle_error(exception)
+        with self.app_401.test_request_context("/foo"):
+            resp = self.api_401.handle_error(exception)
             self.assertEquals(resp.status_code, 500)
             self.assertEquals(resp.data.decode(), dumps({"foo": "bar"}) + "\n")
 
     def test_handle_auth(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app, serve_challenge_on_401=True)
 
-        with app.test_request_context("/foo"):
-            resp = api.handle_error(Unauthorized())
+        with self.app_401.test_request_context("/foo"):
+            resp = self.api_401.handle_error(Unauthorized())
             self.assertEquals(resp.status_code, 401)
             expected_data = dumps({'message': Unauthorized.description}) + "\n"
             self.assertEquals(resp.data.decode(), expected_data)
@@ -422,15 +399,12 @@ class APITestCase(unittest.TestCase):
             self.assertTrue('WWW-Authenticate' in resp.headers)
 
     def test_handle_api_error(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
         class Test(flask_restful.Resource):
             def get(self):
                 flask.abort(404)
 
-        api.add_resource(Test(), '/api', endpoint='api')
-        app = app.test_client()
+        self.api.add_resource(Test(), '/api', endpoint='api')
+        app = self.app.test_client()
 
         resp = app.get("/api")
         assert_equals(resp.status_code, 404)
@@ -439,9 +413,7 @@ class APITestCase(unittest.TestCase):
         assert_true('message' in data)
 
     def test_handle_non_api_error(self):
-        app = Flask(__name__)
-        flask_restful.Api(app)
-        app = app.test_client()
+        app = self.app.test_client()
 
         resp = app.get("/foo")
         self.assertEquals(resp.status_code, 404)
@@ -462,8 +434,6 @@ class APITestCase(unittest.TestCase):
             # This test requires the blinker lib to run.
             print("Can't test signals without signal support")
             return
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
 
         exception = BadRequest()
 
@@ -472,21 +442,18 @@ class APITestCase(unittest.TestCase):
         def record(sender, exception):
             recorded.append(exception)
 
-        got_request_exception.connect(record, app)
+        got_request_exception.connect(record, self.app)
         try:
-            with app.test_request_context("/foo"):
-                api.handle_error(exception)
+            with self.app.test_request_context("/foo"):
+                self.api.handle_error(exception)
                 self.assertEquals(len(recorded), 1)
                 self.assertTrue(exception is recorded[0])
         finally:
-            got_request_exception.disconnect(record, app)
+            got_request_exception.disconnect(record, self.app)
 
     def test_handle_error(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
-        with app.test_request_context("/foo"):
-            resp = api.handle_error(BadRequest())
+        with self.app.test_request_context("/foo"):
+            resp = self.api.handle_error(BadRequest())
             self.assertEquals(resp.status_code, 400)
             self.assertEquals(resp.data.decode(), dumps({
                 'message': BadRequest.description,
@@ -496,45 +463,34 @@ class APITestCase(unittest.TestCase):
         """Verify that if an exception occurs in the Flask-RESTful error handler,
         the error_router will call the original flask error handler instead.
         """
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        app.handle_exception = Mock()
-        api.handle_error = Mock(side_effect=Exception())
-        api._has_fr_route = Mock(return_value=True)
+        self.app.handle_exception = Mock()
+        self.api.handle_error = Mock(side_effect=Exception())
+        self.api._has_fr_route = Mock(return_value=True)
         exception = Mock(spec=HTTPException)
 
-        with app.test_request_context('/foo'):
-            api.error_router(exception, app.handle_exception)
+        with self.app.test_request_context('/foo'):
+            self.api.error_router(exception, self.app.handle_exception)
 
-        self.assertTrue(app.handle_exception.called_with(exception))
+        self.assertTrue(self.app.handle_exception.called_with(exception))
 
     def test_media_types(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
-        with app.test_request_context("/foo", headers={
+        with self.app.test_request_context("/foo", headers={
             'Accept': 'application/json'
         }):
-            self.assertEquals(api.mediatypes(), ['application/json'])
+            self.assertEquals(self.api.mediatypes(), ['application/json'])
 
     def test_media_types_method(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
-        with app.test_request_context("/foo", headers={
+        with self.app.test_request_context("/foo", headers={
             'Accept': 'application/xml; q=.5'
         }):
-            self.assertEquals(api.mediatypes_method()(Mock()),
+            self.assertEquals(self.api.mediatypes_method()(Mock()),
                               ['application/xml', 'application/json'])
 
     def test_media_types_q(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
-        with app.test_request_context("/foo", headers={
+        with self.app.test_request_context("/foo", headers={
             'Accept': 'application/json; q=1, application/xml; q=.5'
         }):
-            self.assertEquals(api.mediatypes(),
+            self.assertEquals(self.api.mediatypes(),
                               ['application/json', 'application/xml'])
 
     def test_decorator(self):
@@ -563,9 +519,6 @@ class APITestCase(unittest.TestCase):
         view.as_view.assert_called_with('bar')
 
     def test_add_two_conflicting_resources_on_same_endpoint(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
         class Foo1(flask_restful.Resource):
             def get(self):
                 return 'foo1'
@@ -574,21 +527,19 @@ class APITestCase(unittest.TestCase):
             def get(self):
                 return 'foo2'
 
-        api.add_resource(Foo1, '/foo', endpoint='bar')
-        self.assertRaises(ValueError, api.add_resource, Foo2, '/foo/toto', endpoint='bar')
+        self.api.add_resource(Foo1, '/foo', endpoint='bar')
+        self.assertRaises(ValueError, self.api.add_resource, Foo2, '/foo/toto', endpoint='bar')
 
     def test_add_the_same_resource_on_same_endpoint(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
 
         class Foo1(flask_restful.Resource):
             def get(self):
                 return 'foo1'
 
-        api.add_resource(Foo1, '/foo', endpoint='bar')
-        api.add_resource(Foo1, '/foo/toto', endpoint='blah')
+        self.api.add_resource(Foo1, '/foo', endpoint='bar')
+        self.api.add_resource(Foo1, '/foo/toto', endpoint='blah')
 
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             foo1 = client.get('/foo')
             self.assertEquals(foo1.data, b'"foo1"\n')
             foo2 = client.get('/foo/toto')
@@ -629,9 +580,6 @@ class APITestCase(unittest.TestCase):
                                             defaults={"bar": "baz"})
 
     def test_add_resource_forward_resource_class_parameters(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
         class Foo(flask_restful.Resource):
             def __init__(self, *args, **kwargs):
                 self.one = args[0]
@@ -640,11 +588,11 @@ class APITestCase(unittest.TestCase):
             def get(self):
                 return "{0} {1}".format(self.one, self.two)
 
-        api.add_resource(Foo, '/foo',
+        self.api.add_resource(Foo, '/foo',
                 resource_class_args=('wonderful',),
                 resource_class_kwargs={'secret_state': 'slurm'})
 
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             foo = client.get('/foo')
             self.assertEquals(foo.data, b'"wonderful slurm"\n')
 
@@ -652,12 +600,8 @@ class APITestCase(unittest.TestCase):
 
         def make_empty_response():
             return {'foo': 'bar'}
-
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
-        with app.test_request_context("/foo"):
-            wrapper = api.output(make_empty_response)
+        with self.app.test_request_context("/foo"):
+            wrapper = self.api.output(make_empty_response)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
             self.assertEquals(resp.data.decode(), '{"foo": "bar"}\n')
@@ -667,11 +611,8 @@ class APITestCase(unittest.TestCase):
         def make_empty_response():
             return flask.make_response('')
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
-        with app.test_request_context("/foo"):
-            wrapper = api.output(make_empty_response)
+        with self.app.test_request_context("/foo"):
+            wrapper = self.api.output(make_empty_response)
             resp = wrapper()
             self.assertEquals(resp.status_code, 200)
             self.assertEquals(resp.data.decode(), '')
@@ -748,21 +689,17 @@ class APITestCase(unittest.TestCase):
         self.assertRaises(HTTPException, lambda: flask_restful.abort(404))
 
     def test_endpoints(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
-        with app.test_request_context('/foo'):
-            self.assertFalse(api._has_fr_route())
+        self.api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
+        with self.app.test_request_context('/foo'):
+            self.assertFalse(self.api._has_fr_route())
 
-        with app.test_request_context('/ids/3'):
-            self.assertTrue(api._has_fr_route())
+        with self.app.test_request_context('/ids/3'):
+            self.assertTrue(self.api._has_fr_route())
 
     def test_url_for(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(HelloWorld, '/ids/<int:id>')
-        with app.test_request_context('/foo'):
-            self.assertEqual(api.url_for(HelloWorld, id=123), '/ids/123')
+        self.api.add_resource(HelloWorld, '/ids/<int:id>')
+        with self.app.test_request_context('/foo'):
+            self.assertEqual(self.api.url_for(HelloWorld, id=123), '/ids/123')
 
     def test_url_for_with_blueprint(self):
         """Verify that url_for works when an Api object is mounted on a
@@ -777,13 +714,11 @@ class APITestCase(unittest.TestCase):
             self.assertEqual(api.url_for(HelloWorld, bar='baz'), '/foo/baz')
 
     def test_fr_405(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
-        app = app.test_client()
+        self.api.add_resource(HelloWorld, '/ids/<int:id>', endpoint="hello")
+        app = self.app.test_client()
         resp = app.post('/ids/3')
         self.assertEquals(resp.status_code, 405)
-        self.assertEquals(resp.content_type, api.default_mediatype)
+        self.assertEquals(resp.content_type, self.api.default_mediatype)
         # Allow can be of the form 'GET, PUT, POST'
         allow = ', '.join(set(resp.headers.get_all('Allow')))
         allow = set(method.strip() for method in allow.split(','))
@@ -792,9 +727,7 @@ class APITestCase(unittest.TestCase):
 
     def test_exception_header_forwarded(self):
         """Test that HTTPException's headers are extended properly"""
-        app = Flask(__name__)
-        app.config['DEBUG'] = True
-        api = flask_restful.Api(app)
+        self.app.config['DEBUG'] = True
 
         class NotModified(HTTPException):
             code = 304
@@ -811,10 +744,10 @@ class APITestCase(unittest.TestCase):
             def get(self):
                 flask_abort(304, etag='myETag')
 
-        api.add_resource(Foo1, '/foo')
+        self.api.add_resource(Foo1, '/foo')
         _aborter.mapping.update({304: NotModified})
 
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             foo = client.get('/foo')
             self.assertEquals(foo.get_etag(),
                               unquote_etag(quote_etag('myETag')))
@@ -825,26 +758,21 @@ class APITestCase(unittest.TestCase):
 
         https://github.com/flask-restful/flask-restful/issues/534
         """
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
-        with app.test_request_context('/'):
-            r = api.handle_error(BadRequest())
+        with self.app.test_request_context('/'):
+            r = self.api.handle_error(BadRequest())
 
         self.assertEqual(len(r.headers.getlist('Content-Length')), 1)
 
     def test_will_prettyprint_json_in_debug_mode(self):
-        app = Flask(__name__)
-        app.config['DEBUG'] = True
-        api = flask_restful.Api(app)
+        self.app.config['DEBUG'] = True
 
         class Foo1(flask_restful.Resource):
             def get(self):
                 return {'foo': 'bar', 'baz': 'asdf'}
 
-        api.add_resource(Foo1, '/foo', endpoint='bar')
+        self.api.add_resource(Foo1, '/foo', endpoint='bar')
 
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             foo = client.get('/foo')
 
             # Python's dictionaries have random order (as of "new" Pythons,
@@ -866,23 +794,20 @@ class APITestCase(unittest.TestCase):
                             'sort_keys': True,
                             'separators': (', ', ': ')}
 
-        app = Flask(__name__)
-        app.config.from_object(TestConfig)
-        api = flask_restful.Api(app)
+        self.app.config.from_object(TestConfig)
 
         class Foo(flask_restful.Resource):
             def get(self):
                 return {'foo': 'bar', 'baz': 'qux'}
 
-        api.add_resource(Foo, '/foo')
+        self.api.add_resource(Foo, '/foo')
 
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             data = client.get('/foo').data
 
         expected = b'{\n  "baz": "qux", \n  "foo": "bar"\n}\n'
 
         self.assertEquals(data, expected)
-
 
     def test_use_custom_jsonencoder(self):
         class CabageEncoder(JSONEncoder):
@@ -892,65 +817,55 @@ class APITestCase(unittest.TestCase):
         class TestConfig(object):
             RESTFUL_JSON = {'cls': CabageEncoder}
 
-        app = Flask(__name__)
-        app.config.from_object(TestConfig)
-        api = flask_restful.Api(app)
+        self.app.config.from_object(TestConfig)
 
         class Cabbage(flask_restful.Resource):
             def get(self):
                 return {'frob': object()}
 
-        api.add_resource(Cabbage, '/cabbage')
+        self.api.add_resource(Cabbage, '/cabbage')
 
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             data = client.get('/cabbage').data
 
         expected = b'{"frob": "cabbage"}\n'
         self.assertEquals(data, expected)
 
     def test_json_with_no_settings(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
 
         class Foo(flask_restful.Resource):
             def get(self):
                 return {'foo': 'bar'}
 
-        api.add_resource(Foo, '/foo')
+        self.api.add_resource(Foo, '/foo')
 
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             data = client.get('/foo').data
 
         expected = b'{"foo": "bar"}\n'
         self.assertEquals(data, expected)
 
     def test_redirect(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
         class FooResource(flask_restful.Resource):
             def get(self):
                 return redirect('/')
 
-        api.add_resource(FooResource, '/api')
+        self.api.add_resource(FooResource, '/api')
 
-        app = app.test_client()
+        app = self.app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 302)
         self.assertEquals(resp.headers['Location'], 'http://localhost/')
 
     def test_json_float_marshalled(self):
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-
         class FooResource(flask_restful.Resource):
             fields = {'foo': flask_restful.fields.Float}
             def get(self):
                 return flask_restful.marshal({"foo": 3.0}, self.fields)
 
-        api.add_resource(FooResource, '/api')
+        self.api.add_resource(FooResource, '/api')
 
-        app = app.test_client()
+        app = self.app.test_client()
         resp = app.get('/api')
         self.assertEquals(resp.status_code, 200)
         self.assertEquals(resp.data.decode('utf-8'), '{"foo": 3.0}\n')
@@ -1001,13 +916,11 @@ class APITestCase(unittest.TestCase):
             def post(self):
                 return 'post test'
 
-        app = Flask(__name__)
-
-        with app.test_request_context('/', method='POST'):
+        with self.app.test_request_context('/', method='POST'):
             r = TestResource().dispatch_request()
             assert r == 'post test'
 
-        with app.test_request_context('/', method='GET'):
+        with self.app.test_request_context('/', method='GET'):
             r = TestResource().dispatch_request()
             assert r == 'GET TEST'
 
@@ -1026,13 +939,11 @@ class APITestCase(unittest.TestCase):
             def post(self):
                 return 'post test'
 
-        app = Flask(__name__)
-
-        with app.test_request_context('/', method='POST'):
+        with self.app.test_request_context('/', method='POST'):
             r = TestResource().dispatch_request()
             assert r == 'POST TEST'
 
-        with app.test_request_context('/', method='GET'):
+        with self.app.test_request_context('/', method='GET'):
             r = TestResource().dispatch_request()
             assert r == 'GET TEST'
 

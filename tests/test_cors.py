@@ -1,11 +1,17 @@
 import unittest
+
 from flask import Flask
+from nose.tools import assert_equals, assert_true
+
 import flask_restful
 from flask_restful.utils import cors
-from nose.tools import assert_equals, assert_true
 
 
 class CORSTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.api = flask_restful.Api(self.app)
 
     def test_crossdomain(self):
 
@@ -13,12 +19,9 @@ class CORSTestCase(unittest.TestCase):
             @cors.crossdomain(origin='*')
             def get(self):
                 return "data"
+        self.api.add_resource(Foo, '/')
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             res = client.get('/')
             assert_equals(res.status_code, 200)
             assert_equals(res.headers['Access-Control-Allow-Origin'], '*')
@@ -34,12 +37,9 @@ class CORSTestCase(unittest.TestCase):
                               expose_headers=['X-My-Header', 'X-Another-Header'])
             def get(self):
                 return "data"
+        self.api.add_resource(Foo, '/')
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             res = client.get('/')
             assert_equals(res.status_code, 200)
             assert_true('X-MY-HEADER' in res.headers['Access-Control-Expose-Headers'])
@@ -55,12 +55,9 @@ class CORSTestCase(unittest.TestCase):
 
             def post(self):
                 return "data"
+        self.api.add_resource(Foo, '/')
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             res = client.get('/')
             assert_equals(res.status_code, 200)
             assert_true('HEAD' in res.headers['Access-Control-Allow-Methods'])
@@ -73,12 +70,9 @@ class CORSTestCase(unittest.TestCase):
         class Foo(flask_restful.Resource):
             def get(self):
                 return "data"
+        self.api.add_resource(Foo, '/')
 
-        app = Flask(__name__)
-        api = flask_restful.Api(app)
-        api.add_resource(Foo, '/')
-
-        with app.test_client() as client:
+        with self.app.test_client() as client:
             res = client.get('/')
             assert_equals(res.status_code, 200)
             assert_true('Access-Control-Allow-Origin' not in res.headers)
