@@ -214,7 +214,7 @@ That covers the inputs. We also defined some interesting field types in the
         'date_updated': fields.DateTime,
         'links': fields.Nested({
             'friends': fields.Url('user_friends', absolute=True),
-            'posts': fields.Url('user_friends', absolute=True),
+            'posts': fields.Url('user_posts', absolute=True),
         }),
     }
 
