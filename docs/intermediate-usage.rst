@@ -214,7 +214,7 @@ That covers the inputs. We also defined some interesting field types in the
         'date_updated': fields.DateTime,
         'links': fields.Nested({
             'friends': fields.Url('user_friends', absolute=True),
-            'posts': fields.Url('user_friends', absolute=True),
+            'posts': fields.Url('user_posts', absolute=True),
         }),
     }
 
@@ -241,7 +241,7 @@ way that it would be an acceptable argument to :func:`marshal` by itself.
 Finally, we used the :class:`fields.Url` field type. ::
 
         'friends': fields.Url('user_friends', absolute=True),
-        'posts': fields.Url('user_friends', absolute=True),
+        'posts': fields.Url('user_posts', absolute=True),
 
 It takes as its first parameter the name of the endpoint associated with the
 urls of the objects in the ``links`` sub-object.  Passing ``absolute=True``
