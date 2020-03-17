@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime
 from flask import Flask, Blueprint, request
 try:
     from mock import Mock
@@ -25,6 +26,14 @@ class GoodbyeWorld(flask_restful.Resource):
     def get(self):
         flask.abort(self.err)
 
+
+class WithDatetime(flask_restful.Resource):
+    current_datetime = datetime.utcnow()
+
+    def get(self):
+        return {
+            'current_datetime': self.current_datetime
+        }
 
 class APIWithBlueprintTestCase(unittest.TestCase):
 
@@ -186,6 +195,27 @@ class APIWithBlueprintTestCase(unittest.TestCase):
             assert_false(api._has_fr_route())
         with app.test_request_context('/blueprint/bye'):
             assert_true(api._has_fr_route())
+
+    def test_blueprint_with_custom_json_encoder(self):
+        from flask import json
+        class CustomJSONEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, datetime):
+                    return obj.isoformat()
+
+                return super().default(self, obj)
+
+        blueprint = Blueprint('test', __name__)
+        blueprint.json_encoder = CustomJSONEncoder
+        api = flask_restful.Api(blueprint)
+        api.add_resource(WithDatetime(), '/test', endpoint="test")
+        app = Flask(__name__)
+        app.register_blueprint(blueprint, url_prefix='/blueprint')
+
+        client = app.test_client()
+        resp = client.get('/blueprint/test')
+
+        self.assertEquals(resp.json.get('current_datetime'), WithDatetime.current_datetime.isoformat())
 
 
 if __name__ == '__main__':
