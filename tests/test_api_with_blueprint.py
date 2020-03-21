@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from flask import Flask, Blueprint, request
+from flask import Flask, Blueprint, request, json
 try:
     from mock import Mock
 except:
@@ -197,26 +197,36 @@ class APIWithBlueprintTestCase(unittest.TestCase):
             assert_true(api._has_fr_route())
 
     def test_blueprint_with_custom_json_encoder(self):
-        from flask import json
         class CustomJSONEncoder(json.JSONEncoder):
             def default(self, obj):
                 if isinstance(obj, datetime):
+                    print('executed', obj)
                     return obj.isoformat()
 
                 return super().default(self, obj)
 
         blueprint = Blueprint('test', __name__)
-        blueprint.json_encoder = CustomJSONEncoder
         api = flask_restful.Api(blueprint)
         api.add_resource(WithDatetime(), '/test', endpoint="test")
         app = Flask(__name__)
+
+        # `Blueprint` in Flask < 1.0.0 does not have `json_encoder` property
+        try:
+            blueprint.json_encoder
+            # Flask >= 1.0.0
+            blueprint.json_encoder = CustomJSONEncoder
+        except AttributeError:
+            app.json_encoder = CustomJSONEncoder
+
         app.register_blueprint(blueprint, url_prefix='/blueprint')
 
         client = app.test_client()
         resp = client.get('/blueprint/test')
 
-        self.assertEquals(resp.json.get('current_datetime'), WithDatetime.current_datetime.isoformat())
+        # `Response` in Flask < 1.0.0 does not have `json` property
+        data = json.loads(resp.data)
 
+        self.assertEquals(data.get('current_datetime'), WithDatetime.current_datetime.isoformat())
 
 if __name__ == '__main__':
     unittest.main()
