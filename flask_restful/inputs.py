@@ -269,7 +269,7 @@ def datetime_from_rfc822(datetime_str):
 
 
 def datetime_from_iso8601(datetime_str):
-    """Turns an ISO8601 formatted date into a datetime object.
+    """Turns an ISO8601 formatted datetime into a datetime object.
 
     Example::
 
