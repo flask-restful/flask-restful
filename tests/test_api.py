@@ -16,13 +16,12 @@ import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
 from json import dumps, loads, JSONEncoder
-#noinspection PyUnresolvedReferences
-from nose.tools import assert_equals, assert_true, assert_false  # you need it for tests in form of continuations
+from nose.tools import assert_equal  # you need it for tests in form of continuations
 import six
 
 
 def check_unpack(expected, value):
-    assert_equals(expected, value)
+    assert_equal(expected, value)
 
 
 def test_unpack():
@@ -62,7 +61,7 @@ class APITestCase(unittest.TestCase):
         response.headers = {}
         with app.test_request_context('/foo'):
             response = api.unauthorized(response)
-        assert_false('WWW-Authenticate' in response.headers)
+        self.assertFalse('WWW-Authenticate' in response.headers)
 
     def test_unauthorized(self):
         app = Flask(__name__)
@@ -433,10 +432,10 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
 
         resp = app.get("/api")
-        assert_equals(resp.status_code, 404)
-        assert_equals('application/json', resp.headers['Content-Type'])
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual('application/json', resp.headers['Content-Type'])
         data = loads(resp.data.decode())
-        assert_true('message' in data)
+        self.assertTrue('message' in data)
 
     def test_handle_non_api_error(self):
         app = Flask(__name__)
@@ -742,7 +741,7 @@ class APITestCase(unittest.TestCase):
             flask_restful.abort(404, message="no user")
             assert False  # We should never get here
         except Exception as e:
-            assert_equals(e.data['message'], "no user")
+            self.assertEqual(e.data['message'], "no user")
 
     def test_abort_type(self):
         self.assertRaises(HTTPException, lambda: flask_restful.abort(404))
