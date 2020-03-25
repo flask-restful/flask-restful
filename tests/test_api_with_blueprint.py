@@ -33,9 +33,9 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         api = flask_restful.Api(blueprint)
         app = Flask(__name__)
         app.register_blueprint(blueprint)
-        self.assertEquals(api.urls, {})
-        self.assertEquals(api.prefix, '')
-        self.assertEquals(api.default_mediatype, 'application/json')
+        self.assertEqual(api.urls, {})
+        self.assertEqual(api.prefix, '')
+        self.assertEqual(api.default_mediatype, 'application/json')
 
     def test_api_delayed_initialization(self):
         blueprint = Blueprint('test', __name__)
@@ -70,7 +70,7 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.register_blueprint(blueprint)
         with app.test_request_context('/api/hi'):
-            self.assertEquals(request.endpoint, 'test.hello')
+            self.assertEqual(request.endpoint, 'test.hello')
 
     def test_url_with_blueprint_prefix(self):
         blueprint = Blueprint('test', __name__, url_prefix='/bp')
@@ -79,7 +79,7 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.register_blueprint(blueprint)
         with app.test_request_context('/bp/hi'):
-            self.assertEquals(request.endpoint, 'test.hello')
+            self.assertEqual(request.endpoint, 'test.hello')
 
     def test_url_with_registration_prefix(self):
         blueprint = Blueprint('test', __name__)
@@ -88,7 +88,7 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.register_blueprint(blueprint, url_prefix='/reg')
         with app.test_request_context('/reg/hi'):
-            self.assertEquals(request.endpoint, 'test.hello')
+            self.assertEqual(request.endpoint, 'test.hello')
 
     def test_registration_prefix_overrides_blueprint_prefix(self):
         blueprint = Blueprint('test', __name__, url_prefix='/bp')
@@ -97,7 +97,7 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.register_blueprint(blueprint, url_prefix='/reg')
         with app.test_request_context('/reg/hi'):
-            self.assertEquals(request.endpoint, 'test.hello')
+            self.assertEqual(request.endpoint, 'test.hello')
 
     def test_url_with_api_and_blueprint_prefix(self):
         blueprint = Blueprint('test', __name__, url_prefix='/bp')
@@ -106,7 +106,7 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.register_blueprint(blueprint)
         with app.test_request_context('/bp/api/hi'):
-            self.assertEquals(request.endpoint, 'test.hello')
+            self.assertEqual(request.endpoint, 'test.hello')
 
     def test_url_part_order_aeb(self):
         blueprint = Blueprint('test', __name__, url_prefix='/bp')
@@ -115,7 +115,7 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.register_blueprint(blueprint)
         with app.test_request_context('/api/hi/bp'):
-            self.assertEquals(request.endpoint, 'test.hello')
+            self.assertEqual(request.endpoint, 'test.hello')
 
     def test_error_routing(self):
         blueprint = Blueprint('test', __name__)

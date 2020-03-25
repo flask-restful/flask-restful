@@ -88,12 +88,12 @@ class FieldsTestCase(unittest.TestCase):
     def test_basic_dictionary(self):
         obj = {"foo": 3}
         field = fields.String()
-        self.assertEquals(field.output("foo", obj), "3")
+        self.assertEqual(field.output("foo", obj), "3")
 
     def test_no_attribute(self):
         obj = {"bar": 3}
         field = fields.String()
-        self.assertEquals(field.output("foo", obj), None)
+        self.assertEqual(field.output("foo", obj), None)
 
     def test_date_field_invalid(self):
         obj = {"bar": 3}
@@ -103,7 +103,7 @@ class FieldsTestCase(unittest.TestCase):
     def test_attribute(self):
         obj = {"bar": 3}
         field = fields.String(attribute="bar")
-        self.assertEquals(field.output("foo", obj), "3")
+        self.assertEqual(field.output("foo", obj), "3")
 
     def test_formatting_field_none(self):
         obj = {}
@@ -121,26 +121,26 @@ class FieldsTestCase(unittest.TestCase):
             "account_sid": 4,
         }
         field = fields.FormattedString("/foo/{account_sid}/{sid}/")
-        self.assertEquals(field.output("foo", obj), "/foo/4/3/")
+        self.assertEqual(field.output("foo", obj), "/foo/4/3/")
 
     def test_formatting_field(self):
         obj = Mock()
         obj.sid = 3
         obj.account_sid = 4
         field = fields.FormattedString("/foo/{account_sid}/{sid}/")
-        self.assertEquals(field.output("foo", obj), "/foo/4/3/")
+        self.assertEqual(field.output("foo", obj), "/foo/4/3/")
 
     def test_basic_field(self):
         obj = Mock()
         obj.foo = 3
         field = fields.Raw()
-        self.assertEquals(field.output("foo", obj), 3)
+        self.assertEqual(field.output("foo", obj), 3)
 
     def test_raw_field(self):
         obj = Mock()
         obj.foo = 3
         field = fields.Raw()
-        self.assertEquals(field.output("foo", obj), 3)
+        self.assertEqual(field.output("foo", obj), 3)
 
     def test_nested_raw_field(self):
         foo = Mock()
@@ -148,7 +148,7 @@ class FieldsTestCase(unittest.TestCase):
         bar.value = 3
         foo.bar = bar
         field = fields.Raw()
-        self.assertEquals(field.output("bar.value", foo), 3)
+        self.assertEqual(field.output("bar.value", foo), 3)
 
     def test_formatted_string_invalid_obj(self):
         field = fields.FormattedString("{hey}")
@@ -156,15 +156,15 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_formatted_string(self):
         field = fields.FormattedString("{hey}")
-        self.assertEquals("3", field.output("hey", Foo()))
+        self.assertEqual("3", field.output("hey", Foo()))
 
     def test_string_with_attribute(self):
         field = fields.String(attribute="hey")
-        self.assertEquals("3", field.output("foo", Foo()))
+        self.assertEqual("3", field.output("foo", Foo()))
 
     def test_string_with_lambda(self):
         field = fields.String(attribute=lambda x: x.hey)
-        self.assertEquals("3", field.output("foo", Foo()))
+        self.assertEqual("3", field.output("foo", Foo()))
 
     def test_string_with_partial(self):
 
@@ -173,7 +173,7 @@ class FieldsTestCase(unittest.TestCase):
 
         p = partial(f, suffix="whatever")
         field = fields.String(attribute=p)
-        self.assertEquals("3-whatever", field.output("foo", Foo()))
+        self.assertEqual("3-whatever", field.output("foo", Foo()))
 
     def test_url_invalid_object(self):
         app = Flask(__name__)
@@ -189,7 +189,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url("foobar")
 
         with app.test_request_context("/"):
-            self.assertEquals("/3", field.output("hey", Foo()))
+            self.assertEqual("/3", field.output("hey", Foo()))
 
     def test_url_absolute(self):
         app = Flask(__name__)
@@ -197,7 +197,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url("foobar", absolute=True)
 
         with app.test_request_context("/"):
-            self.assertEquals("http://localhost/3", field.output("hey", Foo()))
+            self.assertEqual("http://localhost/3", field.output("hey", Foo()))
 
     def test_url_absolute_scheme(self):
         """Url.scheme should override current_request.scheme"""
@@ -206,7 +206,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url("foobar", absolute=True, scheme='https')
 
         with app.test_request_context("/", base_url="http://localhost"):
-            self.assertEquals("https://localhost/3", field.output("hey", Foo()))
+            self.assertEqual("https://localhost/3", field.output("hey", Foo()))
 
     def test_url_without_endpoint_invalid_object(self):
         app = Flask(__name__)
@@ -222,7 +222,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url()
 
         with app.test_request_context("/hey"):
-            self.assertEquals("/3", field.output("hey", Foo()))
+            self.assertEqual("/3", field.output("hey", Foo()))
 
     def test_url_without_endpoint_absolute(self):
         app = Flask(__name__)
@@ -230,7 +230,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url(absolute=True)
 
         with app.test_request_context("/hey"):
-            self.assertEquals("http://localhost/3", field.output("hey", Foo()))
+            self.assertEqual("http://localhost/3", field.output("hey", Foo()))
 
     def test_url_without_endpoint_absolute_scheme(self):
         app = Flask(__name__)
@@ -238,7 +238,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url(absolute=True, scheme='https')
 
         with app.test_request_context("/hey", base_url="http://localhost"):
-            self.assertEquals("https://localhost/3", field.output("hey", Foo()))
+            self.assertEqual("https://localhost/3", field.output("hey", Foo()))
 
     def test_url_with_blueprint_invalid_object(self):
         app = Flask(__name__)
@@ -258,7 +258,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url()
 
         with app.test_request_context("/foo/hey"):
-            self.assertEquals("/foo/3", field.output("hey", Foo()))
+            self.assertEqual("/foo/3", field.output("hey", Foo()))
 
     def test_url_with_blueprint_absolute(self):
         app = Flask(__name__)
@@ -268,7 +268,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url(absolute=True)
 
         with app.test_request_context("/foo/hey"):
-            self.assertEquals("http://localhost/foo/3", field.output("hey", Foo()))
+            self.assertEqual("http://localhost/foo/3", field.output("hey", Foo()))
 
     def test_url_with_blueprint_absolute_scheme(self):
         app = Flask(__name__)
@@ -278,7 +278,7 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url(absolute=True, scheme='https')
 
         with app.test_request_context("/foo/hey", base_url="http://localhost"):
-            self.assertEquals("https://localhost/foo/3", field.output("hey", Foo()))
+            self.assertEqual("https://localhost/foo/3", field.output("hey", Foo()))
 
     def test_url_superclass_kwargs(self):
         app = Flask(__name__)
@@ -286,19 +286,19 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.Url(absolute=True, attribute='hey')
 
         with app.test_request_context("/hey"):
-            self.assertEquals("http://localhost/3", field.output("hey", Foo()))
+            self.assertEqual("http://localhost/3", field.output("hey", Foo()))
 
     def test_int(self):
         field = fields.Integer()
-        self.assertEquals(3, field.output("hey", {'hey': 3}))
+        self.assertEqual(3, field.output("hey", {'hey': 3}))
 
     def test_int_default(self):
         field = fields.Integer(default=1)
-        self.assertEquals(1, field.output("hey", {'hey': None}))
+        self.assertEqual(1, field.output("hey", {'hey': None}))
 
     def test_no_int(self):
         field = fields.Integer()
-        self.assertEquals(0, field.output("hey", {'hey': None}))
+        self.assertEqual(0, field.output("hey", {'hey': None}))
 
     def test_int_decode_error(self):
         field = fields.Integer()
@@ -306,7 +306,7 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_float(self):
         field = fields.Float()
-        self.assertEquals(3.0, field.output("hey", {'hey': 3.0}))
+        self.assertEqual(3.0, field.output("hey", {'hey': 3.0}))
 
     def test_float_decode_error(self):
         field = fields.Float()
@@ -317,21 +317,21 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_arbitrary(self):
         field = fields.Arbitrary()
-        self.assertEquals(self.PI_STR, field.output("hey", {'hey': self.PI}))
+        self.assertEqual(self.PI_STR, field.output("hey", {'hey': self.PI}))
 
     def test_fixed(self):
         field5 = fields.Fixed(5)
         field4 = fields.Fixed(4)
 
-        self.assertEquals('3.14159', field5.output("hey", {'hey': self.PI}))
-        self.assertEquals('3.1416', field4.output("hey", {'hey': self.PI}))
-        self.assertEquals('3.0000', field4.output("hey", {'hey': '3'}))
-        self.assertEquals('3.0000', field4.output("hey", {'hey': '03'}))
-        self.assertEquals('3.0000', field4.output("hey", {'hey': '03.0'}))
+        self.assertEqual('3.14159', field5.output("hey", {'hey': self.PI}))
+        self.assertEqual('3.1416', field4.output("hey", {'hey': self.PI}))
+        self.assertEqual('3.0000', field4.output("hey", {'hey': '3'}))
+        self.assertEqual('3.0000', field4.output("hey", {'hey': '03'}))
+        self.assertEqual('3.0000', field4.output("hey", {'hey': '03.0'}))
 
     def test_zero_fixed(self):
         field = fields.Fixed()
-        self.assertEquals('0.00000', field.output('hey', {'hey': 0}))
+        self.assertEqual('0.00000', field.output('hey', {'hey': 0}))
 
     def test_infinite_fixed(self):
         field = fields.Fixed()
@@ -344,39 +344,39 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_fixed_with_attribute(self):
         field = fields.Fixed(4, attribute="bar")
-        self.assertEquals('3.0000', field.output("foo", {'bar': '3'}))
+        self.assertEqual('3.0000', field.output("foo", {'bar': '3'}))
 
     def test_string(self):
         field = fields.String()
-        self.assertEquals("3", field.output("hey", Foo()))
+        self.assertEqual("3", field.output("hey", Foo()))
 
     def test_string_no_value(self):
         field = fields.String()
-        self.assertEquals(None, field.output("bar", Foo()))
+        self.assertEqual(None, field.output("bar", Foo()))
 
     def test_string_none(self):
         field = fields.String()
-        self.assertEquals(None, field.output("empty", {'empty': None}))
+        self.assertEqual(None, field.output("empty", {'empty': None}))
 
     def test_rfc822_date_field_without_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
         field = fields.DateTime()
-        self.assertEquals("Mon, 22 Aug 2011 20:58:45 -0000", field.output("bar", obj))
+        self.assertEqual("Mon, 22 Aug 2011 20:58:45 -0000", field.output("bar", obj))
 
     def test_rfc822_date_field_with_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
         field = fields.DateTime()
-        self.assertEquals("Mon, 22 Aug 2011 19:58:45 -0000", field.output("bar", obj))
+        self.assertEqual("Mon, 22 Aug 2011 19:58:45 -0000", field.output("bar", obj))
 
     def test_iso8601_date_field_without_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
         field = fields.DateTime(dt_format='iso8601')
-        self.assertEquals("2011-08-22T20:58:45", field.output("bar", obj))
+        self.assertEqual("2011-08-22T20:58:45", field.output("bar", obj))
 
     def test_iso8601_date_field_with_offset(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
         field = fields.DateTime(dt_format='iso8601')
-        self.assertEquals("2011-08-22T20:58:45+01:00", field.output("bar", obj))
+        self.assertEqual("2011-08-22T20:58:45+01:00", field.output("bar", obj))
 
     def test_unsupported_datetime_format(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
@@ -385,34 +385,34 @@ class FieldsTestCase(unittest.TestCase):
 
     def test_to_dict(self):
         obj = {"hey": 3}
-        self.assertEquals(obj, fields.to_marshallable_type(obj))
+        self.assertEqual(obj, fields.to_marshallable_type(obj))
 
     def test_to_dict_obj(self):
         obj = {"hey": 3}
-        self.assertEquals(obj, fields.to_marshallable_type(Foo()))
+        self.assertEqual(obj, fields.to_marshallable_type(Foo()))
 
     def test_to_dict_custom_marshal(self):
         obj = {"hey": 3}
-        self.assertEquals(obj, fields.to_marshallable_type(Bar()))
+        self.assertEqual(obj, fields.to_marshallable_type(Bar()))
 
     def test_get_value(self):
-        self.assertEquals(3, fields.get_value("hey", {"hey": 3}))
+        self.assertEqual(3, fields.get_value("hey", {"hey": 3}))
 
     def test_get_value_no_value(self):
-        self.assertEquals(None, fields.get_value("foo", {"hey": 3}))
+        self.assertEqual(None, fields.get_value("foo", {"hey": 3}))
 
     def test_get_value_obj(self):
-        self.assertEquals(3, fields.get_value("hey", Foo()))
+        self.assertEqual(3, fields.get_value("hey", Foo()))
 
     def test_list(self):
         obj = {'list': ['a', 'b', 'c']}
         field = fields.List(fields.String)
-        self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
+        self.assertEqual(['a', 'b', 'c'], field.output('list', obj))
 
     def test_list_from_set(self):
         obj = {'list': set(['a', 'b', 'c'])}
         field = fields.List(fields.String)
-        self.assertEquals(set(['a', 'b', 'c']), set(field.output('list', obj)))
+        self.assertEqual(set(['a', 'b', 'c']), set(field.output('list', obj)))
 
     def test_list_from_object(self):
         class TestObject(object):
@@ -420,7 +420,7 @@ class FieldsTestCase(unittest.TestCase):
                 self.list = list
         obj = TestObject(['a', 'b', 'c'])
         field = fields.List(fields.String)
-        self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
+        self.assertEqual(['a', 'b', 'c'], field.output('list', obj))
 
     def test_list_with_attribute(self):
         class TestObject(object):
@@ -428,7 +428,7 @@ class FieldsTestCase(unittest.TestCase):
                 self.foo = list
         obj = TestObject(['a', 'b', 'c'])
         field = fields.List(fields.String, attribute='foo')
-        self.assertEquals(['a', 'b', 'c'], field.output('list', obj))
+        self.assertEqual(['a', 'b', 'c'], field.output('list', obj))
 
     def test_list_with_scoped_attribute_on_dict_or_obj(self):
         class TestObject(object):
@@ -444,8 +444,8 @@ class FieldsTestCase(unittest.TestCase):
         test_dict = {'bar': [{'attrib': 'a'}, {'attrib':'b'}, {'attrib':'c'}]}
 
         field = fields.List(fields.String(attribute='attrib'), attribute='bar')
-        self.assertEquals(['a', 'b', 'c'], field.output('bar', test_obj))
-        self.assertEquals(['a', 'b', 'c'], field.output('bar', test_dict))
+        self.assertEqual(['a', 'b', 'c'], field.output('bar', test_obj))
+        self.assertEqual(['a', 'b', 'c'], field.output('bar', test_dict))
 
     def test_null_list(self):
         class TestObject(object):
@@ -453,7 +453,7 @@ class FieldsTestCase(unittest.TestCase):
                 self.list = list
         obj = TestObject(None)
         field = fields.List(fields.String)
-        self.assertEquals(None, field.output('list', obj))
+        self.assertEqual(None, field.output('list', obj))
 
     def test_indexable_object(self):
         class TestObject(object):
@@ -469,35 +469,35 @@ class FieldsTestCase(unittest.TestCase):
 
         obj = TestObject("hi")
         field = fields.String(attribute="foo")
-        self.assertEquals("hi", field.output("foo", obj))
+        self.assertEqual("hi", field.output("foo", obj))
 
     def test_list_from_dict_with_attribute(self):
         obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
         field = fields.List(fields.Integer(attribute='a'))
-        self.assertEquals([1, 2, 3], field.output('list', obj))
+        self.assertEqual([1, 2, 3], field.output('list', obj))
 
     def test_list_of_nested(self):
         obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
         field = fields.List(fields.Nested({'a': fields.Integer}))
-        self.assertEquals([OrderedDict([('a', 1)]), OrderedDict([('a', 2)]), OrderedDict([('a', 3)])],
+        self.assertEqual([OrderedDict([('a', 1)]), OrderedDict([('a', 2)]), OrderedDict([('a', 3)])],
                           field.output('list', obj))
 
     def test_nested_with_default(self):
         obj = None
         field = fields.Nested({'a': fields.Integer, 'b': fields.String}, default={})
-        self.assertEquals({}, field.output('a', obj))
+        self.assertEqual({}, field.output('a', obj))
 
     def test_list_of_raw(self):
         obj = {'list': [{'a': 1, 'b': 1}, {'a': 2, 'b': 1}, {'a': 3, 'b': 1}]}
         field = fields.List(fields.Raw)
-        self.assertEquals([OrderedDict([('a', 1), ('b', 1), ]),
+        self.assertEqual([OrderedDict([('a', 1), ('b', 1), ]),
                            OrderedDict([('a', 2), ('b', 1), ]),
                            OrderedDict([('a', 3), ('b', 1), ])],
                           field.output('list', obj))
 
         obj = {'list': [1, 2, 'a']}
         field = fields.List(fields.Raw)
-        self.assertEquals([1, 2, 'a'], field.output('list', obj))
+        self.assertEqual([1, 2, 'a'], field.output('list', obj))
 
 
 if __name__ == '__main__':
