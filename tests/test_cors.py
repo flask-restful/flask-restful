@@ -2,7 +2,6 @@ import unittest
 from flask import Flask
 import flask_restful
 from flask_restful.utils import cors
-from nose.tools import assert_equals, assert_true
 
 
 class CORSTestCase(unittest.TestCase):
@@ -20,12 +19,12 @@ class CORSTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/')
-            assert_equals(res.status_code, 200)
-            assert_equals(res.headers['Access-Control-Allow-Origin'], '*')
-            assert_equals(res.headers['Access-Control-Max-Age'], '21600')
-            assert_true('HEAD' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('OPTIONS' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('GET' in res.headers['Access-Control-Allow-Methods'])
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.headers['Access-Control-Allow-Origin'], '*')
+            self.assertEqual(res.headers['Access-Control-Max-Age'], '21600')
+            self.assertTrue('HEAD' in res.headers['Access-Control-Allow-Methods'])
+            self.assertTrue('OPTIONS' in res.headers['Access-Control-Allow-Methods'])
+            self.assertTrue('GET' in res.headers['Access-Control-Allow-Methods'])
 
     def test_access_control_expose_headers(self):
 
@@ -41,9 +40,9 @@ class CORSTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/')
-            assert_equals(res.status_code, 200)
-            assert_true('X-MY-HEADER' in res.headers['Access-Control-Expose-Headers'])
-            assert_true('X-ANOTHER-HEADER' in res.headers['Access-Control-Expose-Headers'])
+            self.assertEqual(res.status_code, 200)
+            self.assertTrue('X-MY-HEADER' in res.headers['Access-Control-Expose-Headers'])
+            self.assertTrue('X-ANOTHER-HEADER' in res.headers['Access-Control-Expose-Headers'])
 
     def test_access_control_allow_methods(self):
 
@@ -62,11 +61,11 @@ class CORSTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/')
-            assert_equals(res.status_code, 200)
-            assert_true('HEAD' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('OPTIONS' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('GET' in res.headers['Access-Control-Allow-Methods'])
-            assert_true('POST' not in res.headers['Access-Control-Allow-Methods'])
+            self.assertEqual(res.status_code, 200)
+            self.assertTrue('HEAD' in res.headers['Access-Control-Allow-Methods'])
+            self.assertTrue('OPTIONS' in res.headers['Access-Control-Allow-Methods'])
+            self.assertTrue('GET' in res.headers['Access-Control-Allow-Methods'])
+            self.assertTrue('POST' not in res.headers['Access-Control-Allow-Methods'])
 
     def test_no_crossdomain(self):
 
@@ -80,7 +79,7 @@ class CORSTestCase(unittest.TestCase):
 
         with app.test_client() as client:
             res = client.get('/')
-            assert_equals(res.status_code, 200)
-            assert_true('Access-Control-Allow-Origin' not in res.headers)
-            assert_true('Access-Control-Allow-Methods' not in res.headers)
-            assert_true('Access-Control-Max-Age' not in res.headers)
+            self.assertEqual(res.status_code, 200)
+            self.assertTrue('Access-Control-Allow-Origin' not in res.headers)
+            self.assertTrue('Access-Control-Allow-Methods' not in res.headers)
+            self.assertTrue('Access-Control-Max-Age' not in res.headers)
