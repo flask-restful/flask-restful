@@ -11,7 +11,14 @@ from werkzeug.wrappers import Response as ResponseBase
 from flask_restful.utils import http_status_message, unpack, OrderedDict
 from flask_restful.representations.json import output_json
 import sys
-from flask.helpers import _endpoint_from_view_func
+
+try:
+    # Flask < 2.0.0
+    from flask.helpers import _endpoint_from_view_func
+except:
+    # Flask >= 2.0.0
+    from flask.scaffold import _endpoint_from_view_func
+
 from types import MethodType
 import operator
 try:
