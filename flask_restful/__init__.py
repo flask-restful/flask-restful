@@ -11,7 +11,6 @@ from werkzeug.wrappers import Response as ResponseBase
 from flask_restful.utils import http_status_message, unpack, OrderedDict
 from flask_restful.representations.json import output_json
 import sys
-from flask.helpers import _endpoint_from_view_func
 from types import MethodType
 import operator
 try:
@@ -156,7 +155,7 @@ class Api(object):
             rule = blueprint_setup.url_prefix + rule
         options.setdefault('subdomain', blueprint_setup.subdomain)
         if endpoint is None:
-            endpoint = _endpoint_from_view_func(view_func)
+            endpoint = view_func.__name__
         defaults = blueprint_setup.url_defaults
         if 'defaults' in options:
             defaults = dict(defaults, **options.pop('defaults'))
