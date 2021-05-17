@@ -3,6 +3,11 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Versopn 0.3.9
+-------------
+
+- Compatibility with Flask 2.0
+
 Version 0.3.8
 -------------
 
