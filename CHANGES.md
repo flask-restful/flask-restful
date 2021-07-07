@@ -3,7 +3,7 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
-Versopn 0.3.9
+Version 0.3.9
 -------------
 
 - Compatibility with Flask 2.0
@@ -11,7 +11,7 @@ Versopn 0.3.9
 Version 0.3.8
 -------------
 
-Released February XX, 2020
+Released February 06, 2020
 
 - Add Python 3.8 support  ([#835](https://github.com/flask-restful/flask-restful/pull/835))
 - Fix wrongly parsed Decimal fields ([#855](https://github.com/flask-restful/flask-restful/pull/855))
