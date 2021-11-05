@@ -191,6 +191,9 @@ class Argument(object):
 
         for operator in self.operators:
             name = self.name + operator.replace("=", "", 1)
+            if isinstance(source, bytes):
+                source = source.decode()
+                source = {name: source}
             if name in source:
                 # Account for MultiDict and regular dict
                 if hasattr(source, "getlist"):
