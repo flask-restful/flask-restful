@@ -33,6 +33,9 @@ setup(
     version=version,
     license='BSD',
     url='https://www.github.com/flask-restful/flask-restful/',
+    project_urls={
+        'Source': 'https://github.com/flask-restful/flask-restful',
+    },
     author='Twilio API Team',
     author_email='help@twilio.com',
     description='Simple framework for creating REST APIs',
