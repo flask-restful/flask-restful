@@ -122,7 +122,7 @@ class Argument(object):
         else:
             values = MultiDict()
             for l in self.location:
-                if not request.is_json and l == 'json':
+                if l == 'json' and not request.is_json:
                     continue
                 value = getattr(request, l, None)
                 if callable(value):
