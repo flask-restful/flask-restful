@@ -936,7 +936,7 @@ class APITestCase(unittest.TestCase):
         app = app.test_client()
         resp = app.get('/api')
         self.assertEqual(resp.status_code, 302)
-        self.assertEqual(resp.headers['Location'], 'http://localhost/')
+        self.assertEqual(resp.headers['Location'], '/')
 
     def test_json_float_marshalled(self):
         app = Flask(__name__)
