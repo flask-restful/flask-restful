@@ -637,7 +637,7 @@ class APITestCase(unittest.TestCase):
                 self.two = kwargs['secret_state']
 
             def get(self):
-                return "{0} {1}".format(self.one, self.two)
+                return f"{self.one} {self.two}"
 
         api.add_resource(Foo, '/foo',
                 resource_class_args=('wonderful',),

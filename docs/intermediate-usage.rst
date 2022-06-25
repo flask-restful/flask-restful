@@ -115,7 +115,7 @@ exercise a larger amount of options. We'll define a resource named "User". ::
         if valid_email(email_str):
             return email_str
         else:
-            raise ValueError('{} is not a valid email'.format(email_str))
+            raise ValueError(f'{email_str} is not a valid email')
 
     post_parser = reqparse.RequestParser()
     post_parser.add_argument(

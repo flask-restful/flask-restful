@@ -33,9 +33,9 @@ def url(value):
     :raises: ValueError
     """
     if not url_regex.search(value):
-        message = u"{0} is not a valid URL".format(value)
+        message = f"{value} is not a valid URL"
         if url_regex.search('http://' + value):
-            message += u". Did you mean: http://{0}".format(value)
+            message += f". Did you mean: http://{value}"
         raise ValueError(message)
     return value
 
@@ -63,7 +63,7 @@ class regex(object):
 
     def __call__(self, value):
         if not self.re.search(value):
-            message = 'Value does not match pattern: "{0}"'.format(self.pattern)
+            message = f'Value does not match pattern: "{self.pattern}"'
             raise ValueError(message)
         return value
 
@@ -177,8 +177,8 @@ def iso8601interval(value, argument='argument'):
 
     except ValueError:
         raise ValueError(
-            "Invalid {arg}: {value}. {arg} must be a valid ISO8601 "
-            "date/time interval.".format(arg=argument, value=value),
+            f"Invalid {argument}: {value}. {argument} must be a valid ISO8601 "
+            "date/time interval.",
         )
 
     return start, end
@@ -194,15 +194,15 @@ def _get_integer(value):
     try:
         return int(value)
     except (TypeError, ValueError):
-        raise ValueError('{0} is not a valid integer'.format(value))
+        raise ValueError(f'{value} is not a valid integer')
 
 
 def natural(value, argument='argument'):
     """ Restrict input type to the natural numbers (0, 1, 2, 3...) """
     value = _get_integer(value)
     if value < 0:
-        error = ('Invalid {arg}: {value}. {arg} must be a non-negative '
-                 'integer'.format(arg=argument, value=value))
+        error = (f'Invalid {argument}: {value}. {argument} must be a non-negative '
+                 'integer')
         raise ValueError(error)
     return value
 
@@ -211,8 +211,8 @@ def positive(value, argument='argument'):
     """ Restrict input type to the positive integers (1, 2, 3...) """
     value = _get_integer(value)
     if value < 1:
-        error = ('Invalid {arg}: {value}. {arg} must be a positive '
-                 'integer'.format(arg=argument, value=value))
+        error = (f'Invalid {argument}: {value}. {argument} must be a positive '
+                 'integer')
         raise ValueError(error)
     return value
 
@@ -227,8 +227,7 @@ class int_range(object):
     def __call__(self, value):
         value = _get_integer(value)
         if value < self.low or value > self.high:
-            error = ('Invalid {arg}: {val}. {arg} must be within the range {lo} - {hi}'
-                     .format(arg=self.argument, val=value, lo=self.low, hi=self.high))
+            error = (f'Invalid {self.argument}: {value}. {self.argument} must be within the range {self.low} - {self.high}')
             raise ValueError(error)
 
         return value
@@ -251,7 +250,7 @@ def boolean(value):
         return True
     if value in ('false', '0',):
         return False
-    raise ValueError("Invalid literal for boolean(): {0}".format(value))
+    raise ValueError(f"Invalid literal for boolean(): {value}")
 
 
 def datetime_from_rfc822(datetime_str):

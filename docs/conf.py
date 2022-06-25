@@ -45,8 +45,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Flask-RESTful'
-copyright = u'{}, Kevin Burke, Kyle Conroy, Ryan Horn, Frank Stratton, Guillaume Binet'.format(
-    date.today().year)
+copyright = f'{date.today().year}, Kevin Burke, Kyle Conroy, Ryan Horn, Frank Stratton, Guillaume Binet'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
