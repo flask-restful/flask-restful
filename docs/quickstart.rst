@@ -158,7 +158,7 @@ has built-in support for request data validation using a library similar to
     Unlike the argparse module, :meth:`reqparse.RequestParser.parse_args`
     returns a Python dictionary instead of a custom data structure.
 
-Using the :class:`reqparse` module also gives you sane error messages for
+Using the :class:`reqparse` module also gives you same error messages for
 free. If an argument fails to pass validation, Flask-RESTful will respond with
 a 400 Bad Request and a response highlighting the error. ::
 
