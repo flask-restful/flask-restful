@@ -3,17 +3,17 @@ import subprocess
 
 
 def point_release(version):
-    parts = version.split('.')
+    parts = version.split(".")
     parts[-1] = str(int(parts[-1]) + 1)
-    return '.'.join(parts)
+    return ".".join(parts)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Bump version number')
-    parser.add_argument('version')
+    parser = argparse.ArgumentParser(description="Bump version number")
+    parser.add_argument("version")
     args = parser.parse_args()
 
-    branch = subprocess.check_output(['git', 'branch']).strip()
+    branch = subprocess.check_output(["git", "branch"]).strip()
 
     if not "* master" in branch:
         raise Exception("Must be on master branch to release")

@@ -1,32 +1,43 @@
 from __future__ import absolute_import
-from functools import wraps, partial
-from flask import request, url_for, current_app
-from flask import abort as original_flask_abort
-from flask import make_response as original_flask_make_response
-from flask.views import MethodView
-from flask.signals import got_request_exception
-from werkzeug.datastructures import Headers
-from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAcceptable, InternalServerError
-from werkzeug.wrappers import Response as ResponseBase
-from flask_restful.utils import http_status_message, unpack, OrderedDict
-from flask_restful.representations.json import output_json
-import sys
-from types import MethodType
+
 import operator
+import sys
+from functools import partial, wraps
+from types import MethodType
+
+from flask import abort as original_flask_abort
+from flask import current_app
+from flask import make_response as original_flask_make_response
+from flask import request, url_for
+from flask.signals import got_request_exception
+from flask.views import MethodView
+from werkzeug.datastructures import Headers
+from werkzeug.exceptions import (
+    HTTPException,
+    InternalServerError,
+    MethodNotAllowed,
+    NotAcceptable,
+    NotFound,
+)
+from werkzeug.wrappers import Response as ResponseBase
+
+from flask_restful.representations.json import output_json
+from flask_restful.utils import OrderedDict, http_status_message, unpack
+
 try:
     from collections.abc import Mapping
 except ImportError:
     from collections import Mapping
 
 
-__all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
+__all__ = ("Api", "Resource", "marshal", "marshal_with", "marshal_with_field", "abort")
 
 
 def abort(http_status_code, **kwargs):
     """Raise a HTTPException for the given http_status_code. Attach any keyword
     arguments to the exception for later processing.
     """
-    #noinspection PyUnresolvedReferences
+    # noinspection PyUnresolvedReferences
     try:
         original_flask_abort(http_status_code)
     except HTTPException as e:
@@ -34,10 +45,11 @@ def abort(http_status_code, **kwargs):
             e.data = kwargs
         raise
 
-DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
+
+DEFAULT_REPRESENTATIONS = [("application/json", output_json)]
 
 
-class Api(object):
+class Api():
     """
     The main entry point for the application.
     You need to initialize it with a Flask Application: ::
@@ -72,10 +84,17 @@ class Api(object):
 
     """
 
-    def __init__(self, app=None, prefix='',
-                 default_mediatype='application/json', decorators=None,
-                 catch_all_404s=False, serve_challenge_on_401=False,
-                 url_part_order='bae', errors=None):
+    def __init__(
+        self,
+        app=None,
+        prefix="",
+        default_mediatype="application/json",
+        decorators=None,
+        catch_all_404s=False,
+        serve_challenge_on_401=False,
+        url_part_order="bae",
+        errors=None,
+    ):
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
@@ -127,15 +146,13 @@ class Api(object):
         :param registration_prefix: The part of the url contributed by the
             blueprint.  Generally speaking, BlueprintSetupState.url_prefix
         """
-        parts = {
-            'b': registration_prefix,
-            'a': self.prefix,
-            'e': url_part
-        }
-        return ''.join(parts[key] for key in self.url_part_order if parts[key])
+        parts = {"b": registration_prefix, "a": self.prefix, "e": url_part}
+        return "".join(parts[key] for key in self.url_part_order if parts[key])
 
     @staticmethod
-    def _blueprint_setup_add_url_rule_patch(blueprint_setup, rule, endpoint=None, view_func=None, **options):
+    def _blueprint_setup_add_url_rule_patch(
+        blueprint_setup, rule, endpoint=None, view_func=None, **options
+    ):
         """Method used to patch BlueprintSetupState.add_url_rule for setup
         state instance corresponding to this Api instance.  Exists primarily
         to enable _complete_url's function.
@@ -153,14 +170,19 @@ class Api(object):
             rule = rule(blueprint_setup.url_prefix)
         elif blueprint_setup.url_prefix:
             rule = blueprint_setup.url_prefix + rule
-        options.setdefault('subdomain', blueprint_setup.subdomain)
+        options.setdefault("subdomain", blueprint_setup.subdomain)
         if endpoint is None:
             endpoint = view_func.__name__
         defaults = blueprint_setup.url_defaults
-        if 'defaults' in options:
-            defaults = dict(defaults, **options.pop('defaults'))
-        blueprint_setup.app.add_url_rule(rule, '%s.%s' % (blueprint_setup.blueprint.name, endpoint),
-                                         view_func, defaults=defaults, **options)
+        if "defaults" in options:
+            defaults = dict(defaults, **options.pop("defaults"))
+        blueprint_setup.app.add_url_rule(
+            rule,
+            "%s.%s" % (blueprint_setup.blueprint.name, endpoint),
+            view_func,
+            defaults=defaults,
+            **options
+        )
 
     def _deferred_blueprint_init(self, setup_state):
         """Synchronize prefix between blueprint/api and registration options, then
@@ -177,12 +199,13 @@ class Api(object):
         """
 
         self.blueprint_setup = setup_state
-        if setup_state.add_url_rule.__name__ != '_blueprint_setup_add_url_rule_patch':
+        if setup_state.add_url_rule.__name__ != "_blueprint_setup_add_url_rule_patch":
             setup_state._original_add_url_rule = setup_state.add_url_rule
-            setup_state.add_url_rule = MethodType(Api._blueprint_setup_add_url_rule_patch,
-                                                  setup_state)
+            setup_state.add_url_rule = MethodType(
+                Api._blueprint_setup_add_url_rule_patch, setup_state
+            )
         if not setup_state.first_registration:
-            raise ValueError('flask-restful blueprints can only be registered once.')
+            raise ValueError("flask-restful blueprints can only be registered once.")
         self._init_app(setup_state.app)
 
     def _init_app(self, app):
@@ -193,7 +216,9 @@ class Api(object):
         :type app: flask.Flask
         """
         app.handle_exception = partial(self.error_router, app.handle_exception)
-        app.handle_user_exception = partial(self.error_router, app.handle_user_exception)
+        app.handle_user_exception = partial(
+            self.error_router, app.handle_user_exception
+        )
 
         if len(self.resources) > 0:
             for resource, urls, kwargs in self.resources:
@@ -209,13 +234,13 @@ class Api(object):
 
         if self.blueprint:
             if endpoint.startswith(self.blueprint.name):
-                endpoint = endpoint.split(self.blueprint.name + '.', 1)[-1]
+                endpoint = endpoint.split(self.blueprint.name + ".", 1)[-1]
             else:
                 return False
         return endpoint in self.endpoints
 
     def _should_use_fr_error_handler(self):
-        """ Determine if error should be handled with FR or default Flask
+        """Determine if error should be handled with FR or default Flask
 
         The goal is to return Flask error handlers for non-FR-related routes,
         and FR errors (with the correct media type) for FR endpoints. This
@@ -234,7 +259,7 @@ class Api(object):
             return self.owns_endpoint(rule.endpoint)
         except NotFound:
             return self.catch_all_404s
-        except:
+        except Exception:
             # Werkzeug throws other kinds of exceptions, such as Redirect
             pass
 
@@ -298,24 +323,24 @@ class Api(object):
 
             code = e.code
             default_data = {
-                'message': getattr(e, 'description', http_status_message(code))
+                "message": getattr(e, "description", http_status_message(code))
             }
             headers = e.get_response().headers
         else:
             code = 500
             default_data = {
-                'message': http_status_message(code),
+                "message": http_status_message(code),
             }
 
         # Werkzeug exceptions generate a content-length header which is added
         # to the response in addition to the actual content-length header
         # https://github.com/flask-restful/flask-restful/issues/534
-        remove_headers = ('Content-Length',)
+        remove_headers = ("Content-Length",)
 
         for header in remove_headers:
             headers.pop(header, None)
 
-        data = getattr(e, 'data', default_data)
+        data = getattr(e, "data", default_data)
 
         if code and code >= 500:
             exc_info = sys.exc_info()
@@ -326,7 +351,7 @@ class Api(object):
         error_cls_name = type(e).__name__
         if error_cls_name in self.errors:
             custom_data = self.errors.get(error_cls_name, {})
-            code = custom_data.get('status', 500)
+            code = custom_data.get("status", 500)
             data.update(custom_data)
 
         if code == 406 and self.default_mediatype is None:
@@ -335,12 +360,11 @@ class Api(object):
             # default mediatype (so that make_response doesn't throw
             # another NotAcceptable error).
             supported_mediatypes = list(self.representations.keys())
-            fallback_mediatype = supported_mediatypes[0] if supported_mediatypes else "text/plain"
+            fallback_mediatype = (
+                supported_mediatypes[0] if supported_mediatypes else "text/plain"
+            )
             resp = self.make_response(
-                data,
-                code,
-                headers,
-                fallback_mediatype = fallback_mediatype
+                data, code, headers, fallback_mediatype=fallback_mediatype
             )
         else:
             resp = self.make_response(data, code, headers)
@@ -350,8 +374,7 @@ class Api(object):
         return resp
 
     def mediatypes_method(self):
-        """Return a method that returns a list of mediatypes
-        """
+        """Return a method that returns a list of mediatypes"""
         return lambda resource_cls: self.mediatypes() + [self.default_mediatype]
 
     def add_resource(self, resource, *urls, **kwargs):
@@ -407,29 +430,35 @@ class Api(object):
                     return 'Hello, World!'
 
         """
+
         def decorator(cls):
             self.add_resource(cls, *urls, **kwargs)
             return cls
+
         return decorator
 
     def _register_view(self, app, resource, *urls, **kwargs):
-        endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
+        endpoint = kwargs.pop("endpoint", None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
-        resource_class_args = kwargs.pop('resource_class_args', ())
-        resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
+        resource_class_args = kwargs.pop("resource_class_args", ())
+        resource_class_kwargs = kwargs.pop("resource_class_kwargs", {})
 
         # NOTE: 'view_functions' is cleaned up from Blueprint class in Flask 1.0
-        if endpoint in getattr(app, 'view_functions', {}):
-            previous_view_class = app.view_functions[endpoint].__dict__['view_class']
+        if endpoint in getattr(app, "view_functions", {}):
+            previous_view_class = app.view_functions[endpoint].__dict__["view_class"]
 
             # if you override the endpoint with a different class, avoid the collision by raising an exception
             if previous_view_class != resource:
-                raise ValueError('This endpoint (%s) is already set to the class %s.' % (endpoint, previous_view_class.__name__))
+                raise ValueError(
+                    "This endpoint (%s) is already set to the class %s."
+                    % (endpoint, previous_view_class.__name__)
+                )
 
         resource.mediatypes = self.mediatypes_method()  # Hacky
         resource.endpoint = endpoint
-        resource_func = self.output(resource.as_view(endpoint, *resource_class_args,
-            **resource_class_kwargs))
+        resource_func = self.output(
+            resource.as_view(endpoint, *resource_class_args, **resource_class_kwargs)
+        )
 
         for decorator in self.decorators:
             resource_func = decorator(resource_func)
@@ -441,7 +470,9 @@ class Api(object):
                 if self.blueprint_setup:
                     # Set the rule to a string directly, as the blueprint is already
                     # set up.
-                    self.blueprint_setup.add_url_rule(url, view_func=resource_func, **kwargs)
+                    self.blueprint_setup.add_url_rule(
+                        url, view_func=resource_func, **kwargs
+                    )
                     continue
                 else:
                     # Set the rule to a function that expects the blueprint prefix
@@ -452,7 +483,7 @@ class Api(object):
                     rule = partial(self._complete_url, url)
             else:
                 # If we've got no Blueprint, just build a url with no prefix
-                rule = self._complete_url(url, '')
+                rule = self._complete_url(url, "")
             # Add the url to the application or blueprint
             app.add_url_rule(rule, view_func=resource_func, **kwargs)
 
@@ -462,6 +493,7 @@ class Api(object):
 
         :param resource: The resource as a flask view function
         """
+
         @wraps(resource)
         def wrapper(*args, **kwargs):
             resp = resource(*args, **kwargs)
@@ -469,6 +501,7 @@ class Api(object):
                 return resp
             data, code, headers = unpack(resp)
             return self.make_response(data, code, headers=headers)
+
         return wrapper
 
     def url_for(self, resource, **values):
@@ -477,7 +510,7 @@ class Api(object):
         Works like :func:`flask.url_for`."""
         endpoint = resource.endpoint
         if self.blueprint:
-            endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
+            endpoint = "{0}.{1}".format(self.blueprint.name, endpoint)
         return url_for(endpoint, **values)
 
     def make_response(self, data, *args, **kwargs):
@@ -489,7 +522,9 @@ class Api(object):
 
         :param data: Python object containing response data to be transformed
         """
-        default_mediatype = kwargs.pop('fallback_mediatype', None) or self.default_mediatype
+        default_mediatype = (
+            kwargs.pop("fallback_mediatype", None) or self.default_mediatype
+        )
         mediatype = request.accept_mimetypes.best_match(
             self.representations,
             default=default_mediatype,
@@ -498,19 +533,23 @@ class Api(object):
             raise NotAcceptable()
         if mediatype in self.representations:
             resp = self.representations[mediatype](data, *args, **kwargs)
-            resp.headers['Content-Type'] = mediatype
+            resp.headers["Content-Type"] = mediatype
             return resp
-        elif mediatype == 'text/plain':
+        elif mediatype == "text/plain":
             resp = original_flask_make_response(str(data), *args, **kwargs)
-            resp.headers['Content-Type'] = 'text/plain'
+            resp.headers["Content-Type"] = "text/plain"
             return resp
         else:
             raise InternalServerError()
 
     def mediatypes(self):
         """Returns a list of requested mediatypes sent in the Accept header"""
-        return [h for h, q in sorted(request.accept_mimetypes,
-                                     key=operator.itemgetter(1), reverse=True)]
+        return [
+            h
+            for h, q in sorted(
+                request.accept_mimetypes, key=operator.itemgetter(1), reverse=True
+            )
+        ]
 
     def representation(self, mediatype):
         """Allows additional representation transformers to be declared for the
@@ -533,19 +572,21 @@ class Api(object):
                 resp.headers.extend(headers)
                 return resp
         """
+
         def wrapper(func):
             self.representations[mediatype] = func
             return func
+
         return wrapper
 
     def unauthorized(self, response):
-        """ Given a response, change it to ask for credentials """
+        """Given a response, change it to ask for credentials"""
 
         if self.serve_challenge_on_401:
             realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
-            challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+            challenge = '{0} realm="{1}"'.format("Basic", realm)
 
-            response.headers['WWW-Authenticate'] = challenge
+            response.headers["WWW-Authenticate"] = challenge
         return response
 
 
@@ -559,17 +600,18 @@ class Resource(MethodView):
     from the url rule used when adding the resource to an Api instance. See
     :meth:`~flask_restful.Api.add_resource` for details.
     """
+
     representations = None
     method_decorators = []
 
     def dispatch_request(self, *args, **kwargs):
 
         # Taken from flask
-        #noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences
         meth = getattr(self, request.method.lower(), None)
-        if meth is None and request.method == 'HEAD':
-            meth = getattr(self, 'get', None)
-        assert meth is not None, 'Unimplemented method %r' % request.method
+        if meth is None and request.method == "HEAD":
+            meth = getattr(self, "get", None)
+        assert meth is not None, "Unimplemented method %r" % request.method
 
         if isinstance(self.method_decorators, Mapping):
             decorators = self.method_decorators.get(request.method.lower(), [])
@@ -586,12 +628,12 @@ class Resource(MethodView):
 
         representations = self.representations or OrderedDict()
 
-        #noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences
         mediatype = request.accept_mimetypes.best_match(representations, default=None)
         if mediatype in representations:
             data, code, headers = unpack(resp)
             resp = representations[mediatype](data, code, headers)
-            resp.headers['Content-Type'] = mediatype
+            resp.headers["Content-Type"] = mediatype
             return resp
 
         return resp
@@ -626,16 +668,24 @@ def marshal(data, fields, envelope=None):
         return cls
 
     if isinstance(data, (list, tuple)):
-        return (OrderedDict([(envelope, [marshal(d, fields) for d in data])])
-                if envelope else [marshal(d, fields) for d in data])
+        return (
+            OrderedDict([(envelope, [marshal(d, fields) for d in data])])
+            if envelope
+            else [marshal(d, fields) for d in data]
+        )
 
-    items = ((k, marshal(data, v) if isinstance(v, dict)
-              else make(v).output(k, data))
-             for k, v in fields.items())
-    return OrderedDict([(envelope, OrderedDict(items))]) if envelope else OrderedDict(items)
+    items = (
+        (k, marshal(data, v) if isinstance(v, dict) else make(v).output(k, data))
+        for k, v in fields.items()
+    )
+    return (
+        OrderedDict([(envelope, OrderedDict(items))])
+        if envelope
+        else OrderedDict(items)
+    )
 
 
-class marshal_with(object):
+class marshal_with():
     """A decorator that apply marshalling to the return values of your methods.
 
     >>> from flask_restful import fields, marshal_with
@@ -658,6 +708,7 @@ class marshal_with(object):
 
     see :meth:`flask_restful.marshal`
     """
+
     def __init__(self, fields, envelope=None):
         """
         :param fields: a dict of whose keys will make up the final
@@ -677,10 +728,11 @@ class marshal_with(object):
                 return marshal(data, self.fields, self.envelope), code, headers
             else:
                 return marshal(resp, self.fields, self.envelope)
+
         return wrapper
 
 
-class marshal_with_field(object):
+class marshal_with_field():
     """
     A decorator that formats the return values of your methods with a single field.
 
@@ -694,6 +746,7 @@ class marshal_with_field(object):
 
     see :meth:`flask_restful.marshal_with`
     """
+
     def __init__(self, field):
         """
         :param field: a single field with which to marshal the output.

@@ -1,7 +1,7 @@
+import re
 from calendar import timegm
 from datetime import datetime, time, timedelta
-from email.utils import parsedate_tz, mktime_tz
-import re
+from email.utils import mktime_tz, parsedate_tz
 
 import aniso8601
 import pytz
@@ -14,15 +14,17 @@ END_OF_DAY = time(23, 59, 59, 999999, tzinfo=pytz.UTC)
 # basic auth added by frank
 
 url_regex = re.compile(
-    r'^(?:http|ftp)s?://'  # http:// or https://
-    r'(?:[^:@]+?:[^:@]*?@|)'  # basic auth
-    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
-    r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
-    r'localhost|'  # localhost...
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|'  # ...or ipv4
-    r'\[?[A-F0-9]*:[A-F0-9:]+\]?)'  # ...or ipv6
-    r'(?::\d+)?'  # optional port
-    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    r"^(?:http|ftp)s?://"  # http:// or https://
+    r"(?:[^:@]+?:[^:@]*?@|)"  # basic auth
+    r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+"
+    r"(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
+    r"localhost|"  # localhost...
+    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|"  # ...or ipv4
+    r"\[?[A-F0-9]*:[A-F0-9:]+\]?)"  # ...or ipv6
+    r"(?::\d+)?"  # optional port
+    r"(?:/?|[/?]\S+)$",
+    re.IGNORECASE,
+)
 
 
 def url(value):
@@ -33,14 +35,14 @@ def url(value):
     :raises: ValueError
     """
     if not url_regex.search(value):
-        message = u"{0} is not a valid URL".format(value)
-        if url_regex.search('http://' + value):
-            message += u". Did you mean: http://{0}".format(value)
+        message = "{0} is not a valid URL".format(value)
+        if url_regex.search("http://" + value):
+            message += ". Did you mean: http://{0}".format(value)
         raise ValueError(message)
     return value
 
 
-class regex(object):
+class regex():
     """Validate a string based on a regular expression.
 
     Example::
@@ -110,9 +112,9 @@ def _expand_datetime(start, value):
     else:
         # Expand a datetime based on the finest resolution provided
         # in the original input string.
-        time = value.split('T')[1]
-        time_without_offset = re.sub('[+-].+', '', time)
-        num_separators = time_without_offset.count(':')
+        time = value.split("T")[1]
+        time_without_offset = re.sub("[+-].+", "", time)
+        num_separators = time_without_offset.count(":")
         if num_separators == 0:
             # Hour resolution
             end = start + timedelta(hours=1)
@@ -139,7 +141,7 @@ def _parse_interval(value):
             return aniso8601.parse_date(value), None
 
 
-def iso8601interval(value, argument='argument'):
+def iso8601interval(value, argument="argument"):
     """Parses ISO 8601-formatted datetime intervals into tuples of datetimes.
 
     Accepts both a single date(time) or a full interval using either start/end
@@ -194,32 +196,36 @@ def _get_integer(value):
     try:
         return int(value)
     except (TypeError, ValueError):
-        raise ValueError('{0} is not a valid integer'.format(value))
+        raise ValueError("{0} is not a valid integer".format(value))
 
 
-def natural(value, argument='argument'):
-    """ Restrict input type to the natural numbers (0, 1, 2, 3...) """
+def natural(value, argument="argument"):
+    """Restrict input type to the natural numbers (0, 1, 2, 3...)"""
     value = _get_integer(value)
     if value < 0:
-        error = ('Invalid {arg}: {value}. {arg} must be a non-negative '
-                 'integer'.format(arg=argument, value=value))
+        error = (
+            "Invalid {arg}: {value}. {arg} must be a non-negative "
+            "integer".format(arg=argument, value=value)
+        )
         raise ValueError(error)
     return value
 
 
-def positive(value, argument='argument'):
-    """ Restrict input type to the positive integers (1, 2, 3...) """
+def positive(value, argument="argument"):
+    """Restrict input type to the positive integers (1, 2, 3...)"""
     value = _get_integer(value)
     if value < 1:
-        error = ('Invalid {arg}: {value}. {arg} must be a positive '
-                 'integer'.format(arg=argument, value=value))
+        error = "Invalid {arg}: {value}. {arg} must be a positive " "integer".format(
+            arg=argument, value=value
+        )
         raise ValueError(error)
     return value
 
 
-class int_range(object):
-    """ Restrict input to an integer in a range (inclusive) """
-    def __init__(self, low, high, argument='argument'):
+class int_range():
+    """Restrict input to an integer in a range (inclusive)"""
+
+    def __init__(self, low, high, argument="argument"):
         self.low = low
         self.high = high
         self.argument = argument
@@ -227,8 +233,9 @@ class int_range(object):
     def __call__(self, value):
         value = _get_integer(value)
         if value < self.low or value > self.high:
-            error = ('Invalid {arg}: {val}. {arg} must be within the range {lo} - {hi}'
-                     .format(arg=self.argument, val=value, lo=self.low, hi=self.high))
+            error = "Invalid {arg}: {val}. {arg} must be within the range {lo} - {hi}".format(
+                arg=self.argument, val=value, lo=self.low, hi=self.high
+            )
             raise ValueError(error)
 
         return value
@@ -247,9 +254,15 @@ def boolean(value):
     if not value:
         raise ValueError("boolean type must be non-null")
     value = value.lower()
-    if value in ('true', '1',):
+    if value in (
+        "true",
+        "1",
+    ):
         return True
-    if value in ('false', '0',):
+    if value in (
+        "false",
+        "0",
+    ):
         return False
     raise ValueError("Invalid literal for boolean(): {0}".format(value))
 
