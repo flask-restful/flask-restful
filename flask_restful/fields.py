@@ -1,18 +1,35 @@
 from calendar import timegm
-from decimal import Decimal as MyDecimal, ROUND_HALF_EVEN
+from decimal import ROUND_HALF_EVEN
+from decimal import Decimal as MyDecimal
 from email.utils import formatdate
+
 import six
+
 try:
     from urlparse import urlparse, urlunparse
 except ImportError:
     # python3
     from urllib.parse import urlparse, urlunparse
-from flask_restful import marshal
-from flask import url_for, request
 
-__all__ = ["String", "FormattedString", "Url", "DateTime", "Float",
-           "Integer", "Arbitrary", "Nested", "List", "Raw", "Boolean",
-           "Fixed", "Price"]
+from flask import request, url_for
+
+from flask_restful import marshal
+
+__all__ = [
+    "String",
+    "FormattedString",
+    "Url",
+    "DateTime",
+    "Float",
+    "Integer",
+    "Arbitrary",
+    "Nested",
+    "List",
+    "Raw",
+    "Boolean",
+    "Fixed",
+    "Price",
+]
 
 
 class MarshallingException(Exception):
@@ -23,7 +40,7 @@ class MarshallingException(Exception):
     def __init__(self, underlying_exception):
         # just put the contextual representation of the error to hint on what
         # went wrong without exposing internals
-        super(MarshallingException, self).__init__(six.text_type(underlying_exception))
+        super().__init__(six.text_type(underlying_exception))
 
 
 def is_indexable_but_not_string(obj):
@@ -37,7 +54,7 @@ def get_value(key, obj, default=None):
     elif callable(key):
         return key(obj)
     else:
-        return _get_value_for_keys(key.split('.'), obj, default)
+        return _get_value_for_keys(key.split("."), obj, default)
 
 
 def _get_value_for_keys(keys, obj, default):
@@ -45,7 +62,8 @@ def _get_value_for_keys(keys, obj, default):
         return _get_value_for_key(keys[0], obj, default)
     else:
         return _get_value_for_keys(
-            keys[1:], _get_value_for_key(keys[0], obj, default), default)
+            keys[1:], _get_value_for_key(keys[0], obj, default), default
+        )
 
 
 def _get_value_for_key(key, obj, default):
@@ -63,16 +81,16 @@ def to_marshallable_type(obj):
     if obj is None:
         return None  # make it idempotent for None
 
-    if hasattr(obj, '__marshallable__'):
+    if hasattr(obj, "__marshallable__"):
         return obj.__marshallable__()
 
-    if hasattr(obj, '__getitem__'):
+    if hasattr(obj, "__getitem__"):
         return obj  # it is indexable it is ok
 
     return dict(obj.__dict__)
 
 
-class Raw(object):
+class Raw():
     """Raw provides a base field class from which others should extend. It
     applies no formatting by default, and should only be used in cases where
     data does not need to be formatted before being serialized. Fields should
@@ -139,7 +157,7 @@ class Nested(Raw):
     def __init__(self, nested, allow_null=False, **kwargs):
         self.nested = nested
         self.allow_null = allow_null
-        super(Nested, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def output(self, key, obj):
         value = get_value(key if self.attribute is None else self.attribute, obj)
@@ -162,9 +180,11 @@ class List(Raw):
     """
 
     def __init__(self, cls_or_instance, **kwargs):
-        super(List, self).__init__(**kwargs)
-        error_msg = ("The type of the list elements must be a subclass of "
-                     "flask_restful.fields.Raw")
+        super().__init__(**kwargs)
+        error_msg = (
+            "The type of the list elements must be a subclass of "
+            "flask_restful.fields.Raw"
+        )
         if isinstance(cls_or_instance, type):
             if not issubclass(cls_or_instance, Raw):
                 raise MarshallingException(error_msg)
@@ -180,13 +200,20 @@ class List(Raw):
             value = list(value)
 
         return [
-            self.container.output(idx,
-                val if (isinstance(val, dict)
-                        or (self.container.attribute
-                            and hasattr(val, self.container.attribute)))
-                        and not isinstance(self.container, Nested)
-                        and not type(self.container) is Raw
-                    else value)
+            self.container.output(
+                idx,
+                val
+                if (
+                    isinstance(val, dict)
+                    or (
+                        self.container.attribute
+                        and hasattr(val, self.container.attribute)
+                    )
+                )
+                and not isinstance(self.container, Nested)
+                and not isinstance(self.container, Raw)
+                else value,
+            )
             for idx, val in enumerate(value)
         ]
 
@@ -208,6 +235,7 @@ class String(Raw):
     be converted to :class:`unicode` in python2 and :class:`str` in
     python3.
     """
+
     def format(self, value):
         try:
             return six.text_type(value)
@@ -216,13 +244,14 @@ class String(Raw):
 
 
 class Integer(Raw):
-    """ Field for outputting an integer value.
+    """Field for outputting an integer value.
 
     :param int default: The default value for the field, if no value is
         specified.
     """
+
     def __init__(self, default=0, **kwargs):
-        super(Integer, self).__init__(default=default, **kwargs)
+        super().__init__(default=default, **kwargs)
 
     def format(self, value):
         try:
@@ -240,6 +269,7 @@ class Boolean(Raw):
     Empty collections such as ``""``, ``{}``, ``[]``, etc. will be converted to
     ``False``.
     """
+
     def format(self, value):
         return bool(value)
 
@@ -262,12 +292,13 @@ class FormattedString(Raw):
         }
         marshal(data, fields)
     """
+
     def __init__(self, src_str):
         """
         :param string src_str: the string to format with the other
         values from the response.
         """
-        super(FormattedString, self).__init__()
+        super().__init__()
         self.src_str = six.text_type(src_str)
 
     def output(self, key, obj):
@@ -291,8 +322,9 @@ class Url(Raw):
     :param scheme: URL scheme specifier (e.g. ``http``, ``https``)
     :type scheme: str
     """
+
     def __init__(self, endpoint=None, absolute=False, scheme=None, **kwargs):
-        super(Url, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.endpoint = endpoint
         self.absolute = absolute
         self.scheme = scheme
@@ -326,8 +358,8 @@ class Float(Raw):
 
 class Arbitrary(Raw):
     """
-        A floating point number with an arbitrary precision
-          ex: 634271127864378216478362784632784678324.23432
+    A floating point number with an arbitrary precision
+      ex: 634271127864378216478362784632784678324.23432
     """
 
     def format(self, value):
@@ -347,22 +379,24 @@ class DateTime(Raw):
     :param dt_format: ``'rfc822'`` or ``'iso8601'``
     :type dt_format: str
     """
-    def __init__(self, dt_format='rfc822', **kwargs):
-        super(DateTime, self).__init__(**kwargs)
+
+    def __init__(self, dt_format="rfc822", **kwargs):
+        super().__init__(**kwargs)
         self.dt_format = dt_format
 
     def format(self, value):
         try:
-            if self.dt_format == 'rfc822':
+            if self.dt_format == "rfc822":
                 return _rfc822(value)
-            elif self.dt_format == 'iso8601':
+            elif self.dt_format == "iso8601":
                 return _iso8601(value)
             else:
                 raise MarshallingException(
-                    'Unsupported date format %s' % self.dt_format
+                    "Unsupported date format %s" % self.dt_format
                 )
         except AttributeError as ae:
             raise MarshallingException(ae)
+
 
 ZERO = MyDecimal()
 
@@ -371,14 +405,15 @@ class Fixed(Raw):
     """
     A decimal number with a fixed precision.
     """
+
     def __init__(self, decimals=5, **kwargs):
-        super(Fixed, self).__init__(**kwargs)
-        self.precision = MyDecimal('0.' + '0' * (decimals - 1) + '1')
+        super().__init__(**kwargs)
+        self.precision = MyDecimal("0." + "0" * (decimals - 1) + "1")
 
     def format(self, value):
         dvalue = MyDecimal(value)
         if not dvalue.is_normal() and dvalue != ZERO:
-            raise MarshallingException('Invalid Fixed precision number.')
+            raise MarshallingException("Invalid Fixed precision number.")
         return six.text_type(dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN))
 
 

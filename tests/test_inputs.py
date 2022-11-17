@@ -1,11 +1,15 @@
-from datetime import datetime, timedelta, tzinfo
-import unittest
-import pytz
 import re
+import unittest
+from datetime import datetime, timedelta, tzinfo
 
-#noinspection PyUnresolvedReferences
-from nose.tools import assert_equal, assert_raises  # you need it for tests in form of continuations
+import pytz
 import six
+
+# noinspection PyUnresolvedReferences
+from nose.tools import (  # you need it for tests in form of continuations
+    assert_equal,
+    assert_raises,
+)
 
 from flask_restful import inputs
 
@@ -13,8 +17,14 @@ from flask_restful import inputs
 def test_reverse_rfc822_datetime():
     dates = [
         ("Sat, 01 Jan 2011 00:00:00 -0000", datetime(2011, 1, 1, tzinfo=pytz.utc)),
-        ("Sat, 01 Jan 2011 23:59:59 -0000", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
-        ("Sat, 01 Jan 2011 21:59:59 -0200", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+        (
+            "Sat, 01 Jan 2011 23:59:59 -0000",
+            datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+        ),
+        (
+            "Sat, 01 Jan 2011 21:59:59 -0200",
+            datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+        ),
     ]
 
     for date_string, expected in dates:
@@ -24,9 +34,18 @@ def test_reverse_rfc822_datetime():
 def test_reverse_iso8601_datetime():
     dates = [
         ("2011-01-01T00:00:00+00:00", datetime(2011, 1, 1, tzinfo=pytz.utc)),
-        ("2011-01-01T23:59:59+00:00", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
-        ("2011-01-01T23:59:59.001000+00:00", datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc)),
-        ("2011-01-01T23:59:59+02:00", datetime(2011, 1, 1, 21, 59, 59, tzinfo=pytz.utc))
+        (
+            "2011-01-01T23:59:59+00:00",
+            datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+        ),
+        (
+            "2011-01-01T23:59:59.001000+00:00",
+            datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc),
+        ),
+        (
+            "2011-01-01T23:59:59+02:00",
+            datetime(2011, 1, 1, 21, 59, 59, tzinfo=pytz.utc),
+        ),
     ]
 
     for date_string, expected in dates:
@@ -35,22 +54,22 @@ def test_reverse_iso8601_datetime():
 
 def test_urls():
     urls = [
-        'http://www.djangoproject.com/',
-        'http://localhost/',
-        'http://example.com/',
-        'http://www.example.com/',
-        'http://www.example.com:8000/test',
-        'http://valid-with-hyphens.com/',
-        'http://subdomain.example.com/',
-        'http://200.8.9.10/',
-        'http://200.8.9.10:8000/test',
-        'http://valid-----hyphens.com/',
-        'http://example.com?something=value',
-        'http://example.com/index.php?something=value&another=value2',
-        'http://foo:bar@example.com',
-        'http://foo:@example.com',
-        'http://foo:@2001:db8:85a3::8a2e:370:7334',
-        'http://foo2:qd1%r@example.com',
+        "http://www.djangoproject.com/",
+        "http://localhost/",
+        "http://example.com/",
+        "http://www.example.com/",
+        "http://www.example.com:8000/test",
+        "http://valid-with-hyphens.com/",
+        "http://subdomain.example.com/",
+        "http://200.8.9.10/",
+        "http://200.8.9.10:8000/test",
+        "http://valid-----hyphens.com/",
+        "http://example.com?something=value",
+        "http://example.com/index.php?something=value&another=value2",
+        "http://foo:bar@example.com",
+        "http://foo:@example.com",
+        "http://foo:@2001:db8:85a3::8a2e:370:7334",
+        "http://foo2:qd1%r@example.com",
     ]
 
     for value in urls:
@@ -62,25 +81,25 @@ def check_bad_url_raises(value):
         inputs.url(value)
         assert False, "shouldn't get here"
     except ValueError as e:
-        assert_equal(six.text_type(e), u"{0} is not a valid URL".format(value))
+        assert_equal(six.text_type(e), "{0} is not a valid URL".format(value))
 
 
 def test_bad_urls():
     values = [
-        'foo',
-        'http://',
-        'http://example',
-        'http://example.',
-        'http://.com',
-        'http://invalid-.com',
-        'http://-invalid.com',
-        'http://inv-.alid-.com',
-        'http://inv-.-alid.com',
-        'foo bar baz',
-        u'foo \u2713',
-        'http://@foo:bar@example.com',
-        'http://:bar@example.com',
-        'http://bar:bar:bar@example.com',
+        "foo",
+        "http://",
+        "http://example",
+        "http://example.",
+        "http://.com",
+        "http://invalid-.com",
+        "http://-invalid.com",
+        "http://inv-.alid-.com",
+        "http://inv-.-alid.com",
+        "foo bar baz",
+        "foo \u2713",
+        "http://@foo:bar@example.com",
+        "http://:bar@example.com",
+        "http://bar:bar:bar@example.com",
     ]
 
     for value in values:
@@ -89,10 +108,10 @@ def test_bad_urls():
 
 def test_bad_url_error_message():
     values = [
-        'google.com',
-        'domain.google.com',
-        'kevin:pass@google.com/path?query',
-        u'google.com/path?\u2713',
+        "google.com",
+        "domain.google.com",
+        "kevin:pass@google.com/path?query",
+        "google.com/path?\u2713",
     ]
 
     for value in values:
@@ -102,21 +121,23 @@ def test_bad_url_error_message():
 def check_url_error_message(value):
     try:
         inputs.url(value)
-        assert False, u"inputs.url({0}) should raise an exception".format(value)
+        assert False, "inputs.url({0}) should raise an exception".format(value)
     except ValueError as e:
-        assert_equal(six.text_type(e),
-                     (u"{0} is not a valid URL. Did you mean: http://{0}".format(value)))
+        assert_equal(
+            six.text_type(e),
+            ("{0} is not a valid URL. Did you mean: http://{0}".format(value)),
+        )
 
 
 def test_regex_bad_input():
     cases = (
-        'abc',
-        '123abc',
-        'abc123',
-        '',
+        "abc",
+        "123abc",
+        "abc123",
+        "",
     )
 
-    num_only = inputs.regex(r'^[0-9]+$')
+    num_only = inputs.regex(r"^[0-9]+$")
 
     for value in cases:
         yield assert_raises, ValueError, lambda: num_only(value)
@@ -124,12 +145,12 @@ def test_regex_bad_input():
 
 def test_regex_good_input():
     cases = (
-        '123',
-        '1234567890',
-        '00000',
+        "123",
+        "1234567890",
+        "00000",
     )
 
-    num_only = inputs.regex(r'^[0-9]+$')
+    num_only = inputs.regex(r"^[0-9]+$")
 
     for value in cases:
         yield assert_equal, num_only(value), value
@@ -137,36 +158,32 @@ def test_regex_good_input():
 
 def test_regex_bad_pattern():
     """Regex error raised immediately when regex input parser is created."""
-    assert_raises(re.error, inputs.regex, '[')
+    assert_raises(re.error, inputs.regex, "[")
 
 
 def test_regex_flags_good_input():
     cases = (
-        'abcd',
-        'ABCabc',
-        'ABC',
+        "abcd",
+        "ABCabc",
+        "ABC",
     )
 
-    case_insensitive = inputs.regex(r'^[A-Z]+$', re.IGNORECASE)
+    case_insensitive = inputs.regex(r"^[A-Z]+$", re.IGNORECASE)
 
     for value in cases:
         yield assert_equal, case_insensitive(value), value
 
 
 def test_regex_flags_bad_input():
-    cases = (
-        'abcd',
-        'ABCabc'
-    )
+    cases = ("abcd", "ABCabc")
 
-    case_sensitive = inputs.regex(r'^[A-Z]+$')
+    case_sensitive = inputs.regex(r"^[A-Z]+$")
 
     for value in cases:
         yield assert_raises, ValueError, lambda: case_sensitive(value)
 
 
 class TypesTestCase(unittest.TestCase):
-
     def test_boolean_false(self):
         assert_equal(inputs.boolean("False"), False)
 
@@ -210,7 +227,7 @@ class TypesTestCase(unittest.TestCase):
         assert_equal(3, inputs.natural(3))
 
     def test_natual_string(self):
-        assert_raises(ValueError, lambda: inputs.natural('foo'))
+        assert_raises(ValueError, lambda: inputs.natural("foo"))
 
     def test_positive(self):
         assert_equal(1, inputs.positive(1))
@@ -395,7 +412,7 @@ def test_isointerval():
 
 def test_invalid_isointerval_error():
     try:
-        inputs.iso8601interval('2013-01-01/blah')
+        inputs.iso8601interval("2013-01-01/blah")
     except ValueError as error:
         assert_equal(
             str(error),
@@ -403,15 +420,15 @@ def test_invalid_isointerval_error():
             "date/time interval.",
         )
         return
-    assert False, 'Should raise a ValueError'
+    assert False, "Should raise a ValueError"
 
 
 def test_bad_isointervals():
     bad_intervals = [
-        '2013-01T14:',
-        '',
-        'asdf',
-        '01/01/2013',
+        "2013-01T14:",
+        "",
+        "asdf",
+        "01/01/2013",
     ]
 
     for bad_interval in bad_intervals:
@@ -422,5 +439,6 @@ def test_bad_isointervals():
             bad_interval,
         )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

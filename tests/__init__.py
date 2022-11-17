@@ -13,5 +13,6 @@ def expected_failure(test):
         except Exception:
             raise SkipTest
         else:
-            raise AssertionError('Failure expected')
+            raise AssertionError("Failure expected")
+
     return inner
