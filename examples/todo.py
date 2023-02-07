@@ -76,6 +76,7 @@ class TodoList(Resource):
         return TODOS[todo_id], 201
 
 
+# Actually setup the Api resources routing here - An API resource and its endpoint
 # Notice we determine the parameter type of todo_id to a string
 api.add_resource(TodoList, '/todos')
 api.add_resource(Todo, '/todos/<string:todo_id>')
