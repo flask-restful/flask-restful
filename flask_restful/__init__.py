@@ -10,15 +10,13 @@ from werkzeug.exceptions import HTTPException, MethodNotAllowed, NotFound, NotAc
 from werkzeug.wrappers import Response as ResponseBase
 from flask_restful.utils import http_status_message, unpack, OrderedDict
 from flask_restful.representations.json import output_json
-
+import sys
 from types import MethodType
 import operator
 try:
     from collections.abc import Mapping
 except ImportError:
     from collections import Mapping
-
-import sys
 
 _PROPAGATE_EXCEPTIONS = 'PROPAGATE_EXCEPTIONS'
 
