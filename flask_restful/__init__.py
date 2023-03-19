@@ -41,7 +41,7 @@ def abort(http_status_code, **kwargs):
 def _get_propagate_exceptions_bool(app):
     """Handle Flask's propagate_exceptions.
 
-    If propagate_exceptions is set to True the exceptions are re-raised rather than being handled
+    If propagate_exceptions is set to True then the exceptions are re-raised rather than being handled
     by the app’s error handlers. The behavior here checks whether either TESTING or DEBUG has been set
     to True, and if so, propagate_exceptions is set to True.
     """
