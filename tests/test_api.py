@@ -136,7 +136,6 @@ class APITestCase(unittest.TestCase):
         mock_sys_exc_info.return_value = (KeyError, ValueError, Exception.__traceback__)
         with setup.app.test_request_context(_APP_ENDPOINT):
             self.assertRaises(KeyError, setup.api.handle_error, KeyError)
-            self.assertTrue(True)
 
     @patch(_FLASK_RESTFUL_SYS_EXC_INFO)
     def test_handle_error_propagate_exceptions2(self, mock_sys_exc_info):
@@ -144,7 +143,6 @@ class APITestCase(unittest.TestCase):
         mock_sys_exc_info.return_value = (KeyError, ValueError, Exception.__traceback__)
         with setup.app.test_request_context(_APP_ENDPOINT):
             self.assertRaises(Exception, setup.api.handle_error, ValueError)
-            self.assertTrue(True)
 
     def test_handle_error_does_not_swallow_custom_exceptions(self):
         app = Flask(__name__)
