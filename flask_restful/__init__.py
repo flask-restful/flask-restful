@@ -42,6 +42,9 @@ def _get_propagate_exceptions_bool(app):
     If propagate_exceptions is set to True then the exceptions are re-raised rather than being handled
     by the app’s error handlers. The behavior here checks whether either TESTING or DEBUG has been set
     to True, and if so, propagate_exceptions is set to True.
+
+    The default value for Flask's app.config['PROPAGATE_EXCEPTIONS'] is None, and is handled appropriately
+    here in the code: as if it was False.
     """
     propagate = app.config.get(_PROPAGATE_EXCEPTIONS, False)
     debug = app.debug
