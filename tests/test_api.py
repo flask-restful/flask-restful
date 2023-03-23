@@ -131,16 +131,24 @@ class APITestCase(unittest.TestCase):
             self.assertEqual(resp.get_data(), b'{"message": "x"}\n')
 
     @patch(_FLASK_RESTFUL_SYS_EXC_INFO)
-    def test_handle_error_propagate_exceptions(self, mock_sys_exc_info):
+    def test_handle_error_propagate_exceptions_raise_exception(self, mock_sys_exc_info):
         setup = setup_propagate_exceptions(True)
         mock_sys_exc_info.return_value = (KeyError, ValueError, Exception.__traceback__)
         with setup.app.test_request_context(_APP_ENDPOINT):
             self.assertRaises(KeyError, setup.api.handle_error, KeyError)
 
     @patch(_FLASK_RESTFUL_SYS_EXC_INFO)
-    def test_handle_error_propagate_exceptions2(self, mock_sys_exc_info):
+    def test_handle_error_propagate_exceptions_raise(self, mock_sys_exc_info):
         setup = setup_propagate_exceptions(True)
         mock_sys_exc_info.return_value = (KeyError, ValueError, Exception.__traceback__)
+        with setup.app.test_request_context(_APP_ENDPOINT):
+            self.assertRaises(Exception, setup.api.handle_error, ValueError)
+
+    @patch(_FLASK_RESTFUL_SYS_EXC_INFO)
+    def test_handle_error_propagate_exceptions_none(self, mock_sys_exc_info):
+        setup = setup_propagate_exceptions(None)
+        mock_sys_exc_info.return_value = (KeyError, ValueError, Exception.__traceback__)
+        setup.app.debug = True
         with setup.app.test_request_context(_APP_ENDPOINT):
             self.assertRaises(Exception, setup.api.handle_error, ValueError)
 
