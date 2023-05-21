@@ -3,6 +3,11 @@ Flask-RESTful Changelog
 
 Here you can see the full list of changes between each Flask-RESTful release.
 
+Version 0.3.10
+-------------
+
+- Compatibility with Flask 2.3 ([#962](https://github.com/flask-restful/flask-restful/pull/962))
+
 Version 0.3.9
 -------------
 
