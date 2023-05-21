@@ -18,6 +18,7 @@ try:
 except ImportError:
     from collections import Mapping
 
+_PROPAGATE_EXCEPTIONS = 'PROPAGATE_EXCEPTIONS'
 
 __all__ = ('Api', 'Resource', 'marshal', 'marshal_with', 'marshal_with_field', 'abort')
 
@@ -26,13 +27,39 @@ def abort(http_status_code, **kwargs):
     """Raise a HTTPException for the given http_status_code. Attach any keyword
     arguments to the exception for later processing.
     """
-    #noinspection PyUnresolvedReferences
+    # noinspection PyUnresolvedReferences
     try:
         original_flask_abort(http_status_code)
     except HTTPException as e:
         if len(kwargs):
             e.data = kwargs
         raise
+
+
+def _get_propagate_exceptions_bool(app):
+    """Handle Flask's propagate_exceptions.
+
+    If propagate_exceptions is set to True then the exceptions are re-raised rather than being handled
+    by the app’s error handlers.
+
+    The default value for Flask's app.config['PROPAGATE_EXCEPTIONS'] is None. In this case return a sensible
+    value: self.testing or self.debug.
+    """
+    propagate_exceptions = app.config.get(_PROPAGATE_EXCEPTIONS, False)
+    if propagate_exceptions is None:
+        return app.testing or app.debug
+    return propagate_exceptions
+
+
+def _handle_flask_propagate_exceptions_config(app, e):
+    propagate_exceptions = _get_propagate_exceptions_bool(app)
+    if not isinstance(e, HTTPException) and propagate_exceptions:
+        exc_type, exc_value, tb = sys.exc_info()
+        if exc_value is e:
+            raise
+        else:
+            raise e
+
 
 DEFAULT_REPRESENTATIONS = [('application/json', output_json)]
 
@@ -280,19 +307,14 @@ class Api(object):
         """
         got_request_exception.send(current_app._get_current_object(), exception=e)
 
-        if not isinstance(e, HTTPException) and current_app.propagate_exceptions:
-            exc_type, exc_value, tb = sys.exc_info()
-            if exc_value is e:
-                raise
-            else:
-                raise e
+        _handle_flask_propagate_exceptions_config(current_app, e)
 
         headers = Headers()
         if isinstance(e, HTTPException):
             if e.response is not None:
                 # If HTTPException is initialized with a response, then return e.get_response().
                 # This prevents specified error response from being overridden.
-                # eg. HTTPException(response=Response("Hello World"))
+                # e.g., HTTPException(response=Response("Hello World"))
                 resp = e.get_response()
                 return resp
 

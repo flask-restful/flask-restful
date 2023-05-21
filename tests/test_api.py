@@ -18,6 +18,19 @@ from flask_restful import OrderedDict
 from json import dumps, loads, JSONEncoder
 from nose.tools import assert_equal  # you need it for tests in form of continuations
 import six
+from types import SimpleNamespace
+from unittest.mock import patch
+
+_FLASK_RESTFUL_SYS_EXC_INFO = 'flask_restful.sys.exc_info'
+_PROPAGATE_EXCEPTIONS = 'PROPAGATE_EXCEPTIONS'
+_APP_ENDPOINT = '/foo'
+
+
+def setup_propagate_exceptions(propagate_exceptions):
+    app = Flask(__name__)
+    app.config[_PROPAGATE_EXCEPTIONS] = propagate_exceptions
+    api = flask_restful.Api(app)
+    return SimpleNamespace(app=app, api=api)
 
 
 def check_unpack(expected, value):
@@ -117,6 +130,27 @@ class APITestCase(unittest.TestCase):
             self.assertEqual(resp.status_code, 400)
             self.assertEqual(resp.get_data(), b'{"message": "x"}\n')
 
+    @patch(_FLASK_RESTFUL_SYS_EXC_INFO)
+    def test_handle_error_propagate_exceptions_raise_exception(self, mock_sys_exc_info):
+        setup = setup_propagate_exceptions(True)
+        mock_sys_exc_info.return_value = (KeyError, ValueError, Exception.__traceback__)
+        with setup.app.test_request_context(_APP_ENDPOINT):
+            self.assertRaises(KeyError, setup.api.handle_error, KeyError)
+
+    @patch(_FLASK_RESTFUL_SYS_EXC_INFO)
+    def test_handle_error_propagate_exceptions_raise(self, mock_sys_exc_info):
+        setup = setup_propagate_exceptions(True)
+        mock_sys_exc_info.return_value = (KeyError, ValueError, Exception.__traceback__)
+        with setup.app.test_request_context(_APP_ENDPOINT):
+            self.assertRaises(Exception, setup.api.handle_error, ValueError)
+
+    @patch(_FLASK_RESTFUL_SYS_EXC_INFO)
+    def test_handle_error_propagate_exceptions_none(self, mock_sys_exc_info):
+        setup = setup_propagate_exceptions(None)
+        mock_sys_exc_info.return_value = (KeyError, ValueError, Exception.__traceback__)
+        setup.app.debug = True
+        with setup.app.test_request_context(_APP_ENDPOINT):
+            self.assertRaises(Exception, setup.api.handle_error, ValueError)
 
     def test_handle_error_does_not_swallow_custom_exceptions(self):
         app = Flask(__name__)
