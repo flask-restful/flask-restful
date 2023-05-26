@@ -264,6 +264,21 @@ class ReqParseTestCase(unittest.TestCase):
             args = parser.parse_args()
             self.assertEqual(args['foo'], 'bar')
 
+    def test_get_list_issue_411(self):
+        app = Flask(__name__)
+
+        parser = RequestParser()
+        parser.add_argument("foo")
+
+        with app.test_request_context('/bubble', method="post",
+                                      data=json.dumps([
+                                          {"bar": "foo"},
+                                          [{"foo": "bar"}],
+                                      ]),
+                                      content_type='application/json'):
+            args = parser.parse_args()
+            self.assertEquals(args['foo'], 'bar')
+
     def test_parse_append_ignore(self):
         req = Request.from_values("/bubble?foo=bar")
 
