@@ -62,7 +62,7 @@ def check_bad_url_raises(value):
         inputs.url(value)
         assert False, "shouldn't get here"
     except ValueError as e:
-        assert_equal(six.text_type(e), u"{0} is not a valid URL".format(value))
+        assert_equal(six.text_type(e), f"{value} is not a valid URL")
 
 
 def test_bad_urls():
@@ -102,10 +102,10 @@ def test_bad_url_error_message():
 def check_url_error_message(value):
     try:
         inputs.url(value)
-        assert False, u"inputs.url({0}) should raise an exception".format(value)
+        assert False, f"inputs.url({value}) should raise an exception"
     except ValueError as e:
         assert_equal(six.text_type(e),
-                     (u"{0} is not a valid URL. Did you mean: http://{0}".format(value)))
+                     (f"{value} is not a valid URL. Did you mean: http://{value}"))
 
 
 def test_regex_bad_input():

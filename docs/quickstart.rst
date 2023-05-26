@@ -232,7 +232,7 @@ Save this example in api.py ::
 
     def abort_if_todo_doesnt_exist(todo_id):
         if todo_id not in TODOS:
-            abort(404, message="Todo {} doesn't exist".format(todo_id))
+            abort(404, message=f"Todo {todo_id} doesn't exist")
 
     parser = reqparse.RequestParser()
     parser.add_argument('task')

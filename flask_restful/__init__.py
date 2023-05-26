@@ -499,7 +499,7 @@ class Api(object):
         Works like :func:`flask.url_for`."""
         endpoint = resource.endpoint
         if self.blueprint:
-            endpoint = '{0}.{1}'.format(self.blueprint.name, endpoint)
+            endpoint = f'{self.blueprint.name}.{endpoint}'
         return url_for(endpoint, **values)
 
     def make_response(self, data, *args, **kwargs):
@@ -565,7 +565,7 @@ class Api(object):
 
         if self.serve_challenge_on_401:
             realm = current_app.config.get("HTTP_BASIC_AUTH_REALM", "flask-restful")
-            challenge = u"{0} realm=\"{1}\"".format("Basic", realm)
+            challenge = f'Basic realm=\"{realm}\"'
 
             response.headers['WWW-Authenticate'] = challenge
         return response

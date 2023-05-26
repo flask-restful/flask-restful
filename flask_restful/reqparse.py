@@ -99,15 +99,12 @@ class Argument(object):
             choices.append(self.choices[-1])
         else:
             choices = self.choices
-        return 'Name: {0}, type: {1}, choices: {2}'.format(self.name, self.type, choices)
+        return f'Name: {self.name}, type: {self.type}, choices: {choices}'
 
     def __repr__(self):
-        return "{0}('{1}', default={2}, dest={3}, required={4}, ignore={5}, location={6}, " \
-               "type=\"{7}\", choices={8}, action='{9}', help={10}, case_sensitive={11}, " \
-               "operators={12}, store_missing={13}, trim={14}, nullable={15})".format(
-                self.__class__.__name__, self.name, self.default, self.dest, self.required, self.ignore, self.location,
-                self.type, self.choices, self.action, self.help, self.case_sensitive,
-                self.operators, self.store_missing, self.trim, self.nullable)
+        return f"{self.__class__.__name__}('{self.name}', default={self.default}, dest={self.dest}, required={self.required}, ignore={self.ignore}, location={self.location}, " \
+               "type=\"{self.type}\", choices={self.choices}, action='{self.action}', help={self.help}, case_sensitive={self.case_sensitive}, " \
+               "operators={self.operators}, store_missing={self.store_missing}, trim={self.trim}, nullable={self.nullable})"
 
     def source(self, request):
         """Pulls values off the request in the provided location
@@ -220,11 +217,9 @@ class Argument(object):
                     if self.choices and value not in self.choices:
                         if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
                             return self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
+                                ValueError(f"{value} is not a valid choice"), bundle_errors)
                         self.handle_validation_error(
-                                ValueError(u"{0} is not a valid choice".format(
-                                    value)), bundle_errors)
+                                ValueError(f"{value} is not a valid choice"), bundle_errors)
 
                     if name in request.unparsed_arguments:
                         request.unparsed_arguments.pop(name)
@@ -232,15 +227,11 @@ class Argument(object):
 
         if not results and self.required:
             if isinstance(self.location, six.string_types):
-                error_msg = u"Missing required parameter in {0}".format(
-                    _friendly_location.get(self.location, self.location)
-                )
+                error_msg = f"Missing required parameter in {_friendly_location.get(self.location, self.location)}"
             else:
                 friendly_locations = [_friendly_location.get(loc, loc)
                                       for loc in self.location]
-                error_msg = u"Missing required parameter in {0}".format(
-                    ' or '.join(friendly_locations)
-                )
+                error_msg = f"Missing required parameter in {' or '.join(friendly_locations)}"
             if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
                 return self.handle_validation_error(ValueError(error_msg), bundle_errors)
             self.handle_validation_error(ValueError(error_msg), bundle_errors)

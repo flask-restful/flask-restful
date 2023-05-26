@@ -98,7 +98,7 @@ cases where you want to reference the name in the error message. ::
 
     def odd_number(value, name):
         if value % 2 == 0:
-            raise ValueError("The parameter '{}' is not odd. You gave us the value: {}".format(name, value))
+            raise ValueError(f"The parameter '{name}' is not odd. You gave us the value: {value}")
 
         return value
 
