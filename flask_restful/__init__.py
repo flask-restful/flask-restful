@@ -96,13 +96,15 @@ class Api(object):
     :param errors: A dictionary to define a custom response for each
         exception or error raised during a request
     :type errors: dict
+    :type skip_error_handling: bool to skip error handling done by flask
+    restful to allow app's default error handler to handle the errors
 
     """
 
     def __init__(self, app=None, prefix='',
                  default_mediatype='application/json', decorators=None,
                  catch_all_404s=False, serve_challenge_on_401=False,
-                 url_part_order='bae', errors=None):
+                 url_part_order='bae', errors=None, skip_error_handling=False):
         self.representations = OrderedDict(DEFAULT_REPRESENTATIONS)
         self.urls = {}
         self.prefix = prefix
@@ -117,6 +119,7 @@ class Api(object):
         self.resources = []
         self.app = None
         self.blueprint = None
+        self.skip_error_handling = skip_error_handling
 
         if app is not None:
             self.app = app
@@ -278,7 +281,8 @@ class Api(object):
     def error_router(self, original_handler, e):
         """This function decides whether the error occured in a flask-restful
         endpoint or not. If it happened in a flask-restful endpoint, our
-        handler will be dispatched. If it happened in an unrelated view, the
+        handler will be dispatched provided the `skip_error_handling` is false.
+        If it happened in an unrelated view, the
         app's original error handler will be dispatched.
         In the event that the error occurred in a flask-restful endpoint but
         the local handler can't resolve the situation, the router will fall
@@ -290,7 +294,7 @@ class Api(object):
         :type e: Exception
 
         """
-        if self._has_fr_route():
+        if self._has_fr_route() and not self.skip_error_handling:
             try:
                 return self.handle_error(e)
             except Exception:
