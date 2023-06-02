@@ -276,7 +276,7 @@ class Api(object):
         return self.owns_endpoint(request.url_rule.endpoint)
 
     def error_router(self, original_handler, e):
-        """This function decides whether the error occured in a flask-restful
+        """This function decides whether the error occurred in a flask-restful
         endpoint or not. If it happened in a flask-restful endpoint, our
         handler will be dispatched. If it happened in an unrelated view, the
         app's original error handler will be dispatched.
