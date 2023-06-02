@@ -245,6 +245,9 @@ complex objects: ::
         'name': fields.String,
     }
 
-    user_list_fields = {
-        fields.List(fields.Nested(user_fields)),
-    }
+    user_list_fields = fields.List(fields.Nested(user_fields))
+    
+    class UserList(Resource):
+       @marshal_with_field(user_list_fields)
+       def get(self):
+           return db_get_users()  # Some function that queries the db
