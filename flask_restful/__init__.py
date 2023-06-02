@@ -338,6 +338,8 @@ class Api(object):
             headers.pop(header, None)
 
         data = getattr(e, 'data', default_data)
+        if not isinstance(data, dict):
+            data = {'data': data}
 
         if code and code >= 500:
             exc_info = sys.exc_info()
