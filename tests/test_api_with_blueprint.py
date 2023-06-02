@@ -1,5 +1,6 @@
 import unittest
-from flask import Flask, Blueprint, request
+from datetime import datetime
+from flask import Flask, Blueprint, request, json
 try:
     from mock import Mock
 except:
@@ -25,6 +26,14 @@ class GoodbyeWorld(flask_restful.Resource):
     def get(self):
         flask.abort(self.err)
 
+
+class WithDatetime(flask_restful.Resource):
+    current_datetime = datetime.utcnow()
+
+    def get(self):
+        return {
+            'current_datetime': self.current_datetime
+        }
 
 class APIWithBlueprintTestCase(unittest.TestCase):
 
@@ -187,6 +196,37 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         with app.test_request_context('/blueprint/bye'):
             assert_true(api._has_fr_route())
 
+    def test_blueprint_with_custom_json_encoder(self):
+        class CustomJSONEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, datetime):
+                    print('executed', obj)
+                    return obj.isoformat()
+
+                return super().default(self, obj)
+
+        blueprint = Blueprint('test', __name__)
+        api = flask_restful.Api(blueprint)
+        api.add_resource(WithDatetime(), '/test', endpoint="test")
+        app = Flask(__name__)
+
+        # `Blueprint` in Flask < 1.0.0 does not have `json_encoder` property
+        try:
+            blueprint.json_encoder
+            # Flask >= 1.0.0
+            blueprint.json_encoder = CustomJSONEncoder
+        except AttributeError:
+            app.json_encoder = CustomJSONEncoder
+
+        app.register_blueprint(blueprint, url_prefix='/blueprint')
+
+        client = app.test_client()
+        resp = client.get('/blueprint/test')
+
+        # `Response` in Flask < 1.0.0 does not have `json` property
+        data = json.loads(resp.data)
+
+        self.assertEquals(data.get('current_datetime'), WithDatetime.current_datetime.isoformat())
 
 if __name__ == '__main__':
     unittest.main()

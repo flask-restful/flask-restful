@@ -957,6 +957,56 @@ class APITestCase(unittest.TestCase):
         expected = b'{"foo": "bar"}\n'
         self.assertEqual(data, expected)
 
+    def test_use_custom_flask_jsonencoder(self):
+        class CustomFlaskEncoder(JSONEncoder):
+            def default(self, obj):
+                return 'custom_flask_encoder'
+
+        app = Flask(__name__)
+        app.json_encoder = CustomFlaskEncoder
+        api = flask_restful.Api(app)
+
+        class TestResource(flask_restful.Resource):
+            def get(self):
+                return {'json_test': object()}
+
+        api.add_resource(TestResource, '/test')
+
+        with app.test_client() as client:
+            data = client.get('/test').data
+
+        expected = b'{"json_test": "custom_flask_encoder"}\n'
+        self.assertEquals(data, expected)
+
+    def test_override_custom_flask_jsonencoder(self):
+        class CustomFlaskEncoder(JSONEncoder):
+            def default(self, obj):
+                return 'custom_flask_encoder'
+
+        class CustomFlaskRESTFulEncoder(JSONEncoder):
+            def default(self, obj):
+                return 'custom_flask_resftul_encoder'
+
+        class TestConfig(object):
+            RESTFUL_JSON = {'cls': CustomFlaskRESTFulEncoder}
+
+        app = Flask(__name__)
+        app.config.from_object(TestConfig())
+        app.json_encoder = CustomFlaskEncoder
+        api = flask_restful.Api(app)
+
+        class TestResource(flask_restful.Resource):
+            def get(self):
+                return {'json_test': object()}
+
+        api.add_resource(TestResource, '/test')
+
+        with app.test_client() as client:
+            data = client.get('/test').data
+
+        expected = b'{"json_test": "custom_flask_resftul_encoder"}\n'
+        self.assertEquals(data, expected)
+
     def test_redirect(self):
         app = Flask(__name__)
         api = flask_restful.Api(app)
