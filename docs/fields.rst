@@ -224,7 +224,7 @@ structures and render them appropriately. ::
     >>> address2 = {'addr1': '555 nowhere', 'city': 'New York', 'state': 'NY', 'zip': '10468'}
     >>> data = { 'name': 'bob', 'billing_address': address1, 'shipping_address': address2}
     >>>
-    >>> json.dumps(marshal_with(data, resource_fields))
+    >>> json.dumps(marshal(data, resource_fields))
     '{"billing_address": {"line 1": "123 fake street", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}, "name": "bob", "shipping_address": {"line 1": "555 nowhere", "line 2": null, "state": "NY", "zip": "10468", "city": "New York"}}'
 
 This example uses two ``Nested`` fields. The ``Nested`` constructor takes a
