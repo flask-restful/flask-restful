@@ -756,6 +756,27 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo", method="HEAD"):
             self.assertRaises(AssertionError, lambda: resource.dispatch_request())
 
+    def test_abort_with_jsonify(self):
+
+        class HelloBombAbort(flask_restful.Resource):
+            def get(self):
+                flask_restful.abort(
+                    flask.jsonify(dict(code=404, msg="error message 1"))
+                )
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+        api.add_resource(HelloBombAbort, '/bomb')
+
+        app = app.test_client()
+        resp = app.get('/bomb')
+
+        resp_dict = json.loads(resp.data.decode())
+
+        self.assertEquals(resp.status_code, 404)
+        self.assertDictEqual(resp_dict,
+                             {'code': 404, 'msg': 'error message 1'})
+
     def test_abort_data(self):
         try:
             flask_restful.abort(404, foo='bar')
