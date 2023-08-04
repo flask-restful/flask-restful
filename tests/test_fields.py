@@ -9,7 +9,7 @@ from flask_restful import fields
 from datetime import datetime, timedelta, tzinfo
 from flask import Flask, Blueprint
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals  # you need it for tests in form of continuations
+from nose.tools import assert_equals, assert_raises  # you need it for tests in form of continuations
 
 
 class Foo(object):
@@ -78,6 +78,30 @@ def test_iso8601_datetime_formatters():
     ]
     for date_obj, expected in dates:
         yield assert_equals, fields._iso8601(date_obj), expected
+
+
+def test_rfc3339_datetime_formatters():
+    # no naive datetimes
+    assert_raises(MarshallingException, lambda: fields._rfc3339(datetime(2011, 1, 1)))
+
+    dates = [
+        (datetime(2012, 1, 1, 0, 0, tzinfo=pytz.utc), "2012-01-01T00:00:00Z"),
+        (datetime(2011, 1, 1, tzinfo=pytz.utc), "2011-01-01T00:00:00Z"),
+        (datetime(2011, 1, 1, tzinfo=pytz.timezone('CET')), "2010-12-31T23:00:00Z"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+         "2011-01-01T23:59:59Z"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+         "2011-01-01T23:59:59Z"),
+        (datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc),
+         "2011-01-01T23:59:59.001Z"),
+        (datetime(2011, 1, 1, 23, 59, 59, 123456, tzinfo=pytz.utc),
+         "2011-01-01T23:59:59.123456Z"),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+         "2011-01-01T22:59:59Z")
+    ]
+
+    for date_obj, expected in dates:
+        yield assert_equals, fields._rfc3339(date_obj), expected
 
 
 class FieldsTestCase(unittest.TestCase):

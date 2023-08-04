@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, tzinfo
 import unittest
+import strict_rfc3339
 import pytz
 import re
 
@@ -31,6 +32,20 @@ def test_reverse_iso8601_datetime():
 
     for date_string, expected in dates:
         yield assert_equal, inputs.datetime_from_iso8601(date_string), expected
+
+
+def test_reverse_rfc3339_datetime():
+    assert_raises(strict_rfc3339.InvalidRFC3339Error,
+                  lambda: inputs.datetime_from_rfc3339("2011-01-01T00:00:00"))
+
+    dates = [
+        ("2011-01-01T00:00:00+00:00", datetime(2011, 1, 1, tzinfo=pytz.utc)),
+        ("2011-01-01T23:59:59+00:00", datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc)),
+        ("2011-01-01T23:59:59+02:00", datetime(2011, 1, 1, 21, 59, 59, tzinfo=pytz.utc))
+    ]
+
+    for date_string, expected in dates:
+        yield assert_equal, inputs.datetime_from_rfc3339(date_string), expected
 
 
 def test_urls():

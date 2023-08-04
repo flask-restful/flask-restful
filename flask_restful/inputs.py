@@ -3,6 +3,7 @@ from datetime import datetime, time, timedelta
 from email.utils import parsedate_tz, mktime_tz
 import re
 
+import strict_rfc3339
 import aniso8601
 import pytz
 
@@ -280,3 +281,18 @@ def datetime_from_iso8601(datetime_str):
     :return: A datetime
     """
     return aniso8601.parse_datetime(datetime_str)
+
+
+def datetime_from_rfc3339(datetime_str):
+    """Turns an RFC3339 formatted date into a UTC datetime object.
+
+    Example::
+
+        inputs.datetime_from_rfc3339("2013-03-25T12:42:31+00:32")
+
+    :param datetime_str: The RFC3339-complying string to transform
+    :type datetime_str: str
+    :return: A datetime
+    """
+    ts = strict_rfc3339.rfc3339_to_timestamp(datetime_str)
+    return datetime.fromtimestamp(ts, tz=pytz.utc)
