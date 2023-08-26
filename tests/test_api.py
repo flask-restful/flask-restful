@@ -1011,6 +1011,27 @@ class APITestCase(unittest.TestCase):
             self.assertEqual(resp.status_code, 418)
             self.assertEqual(loads(resp.data.decode('utf8')), {"message": "api is foobar", "status": 418})
 
+    def test_custom_callable_error_message(self):
+        errors = {
+            'FooError': {
+                'message': lambda e: str(e) + "bar",
+                'status': 418,
+            },
+        }
+
+        class FooError(ValueError):
+            pass
+
+        app = Flask(__name__)
+        api = flask_restful.Api(app, errors=errors)
+
+        exception = FooError("api is foo")
+
+        with app.test_request_context("/foo"):
+            resp = api.handle_error(exception)
+            self.assertEquals(resp.status_code, 418)
+            self.assertEqual(loads(resp.data.decode('utf-8')), {"message": "api is foobar", "status": 418})
+
     def test_calling_owns_endpoint_before_api_init(self):
         api = flask_restful.Api()
 

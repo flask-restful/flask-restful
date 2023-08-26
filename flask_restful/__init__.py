@@ -348,6 +348,8 @@ class Api(object):
         error_cls_name = type(e).__name__
         if error_cls_name in self.errors:
             custom_data = self.errors.get(error_cls_name, {})
+            if callable(custom_data.get('message', None)):
+                custom_data['message'] = custom_data['message'](e)
             code = custom_data.get('status', 500)
             data.update(custom_data)
 

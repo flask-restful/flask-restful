@@ -251,17 +251,22 @@ are encountered during a request. You can tell Flask-RESTful how you want to
 handle each error/exception so you won't have to fill your API code with
 try/except blocks. ::
 
+    def format_resource_error(error):
+        return "A resource with ID {} no longer exists".format(error.resource_id)
+
     errors = {
         'UserAlreadyExistsError': {
             'message': "A user with that username already exists.",
             'status': 409,
         },
         'ResourceDoesNotExist': {
-            'message': "A resource with that ID no longer exists.",
+            'message': format_resource_error,
             'status': 410,
             'extra': "Any extra information you want.",
         },
     }
+
+The ``message`` key can be a string or a callable that takes the raised exception as argument.
 
 Including the `'status'` key will set the Response's status code. If not
 specified it will default to 500.
