@@ -86,8 +86,7 @@ class Raw(object):
     """
 
     def __init__(self, default=None, attribute=None):
-        self.attribute = attribute
-        self.default = default
+        self.attribute, self.default = attribute, default
 
     def format(self, value):
         """Formats a field's value. No-op by default - field classes that
@@ -137,8 +136,7 @@ class Nested(Raw):
     """
 
     def __init__(self, nested, allow_null=False, **kwargs):
-        self.nested = nested
-        self.allow_null = allow_null
+        self.nested, self.allow_null = nested, allow_null
         super(Nested, self).__init__(**kwargs)
 
     def output(self, key, obj):
@@ -293,9 +291,7 @@ class Url(Raw):
     """
     def __init__(self, endpoint=None, absolute=False, scheme=None, **kwargs):
         super(Url, self).__init__(**kwargs)
-        self.endpoint = endpoint
-        self.absolute = absolute
-        self.scheme = scheme
+        self.endpoint, self.absolute, self.scheme = endpoint, absolute, scheme
 
     def output(self, key, obj):
         try:
