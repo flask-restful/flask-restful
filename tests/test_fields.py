@@ -378,6 +378,11 @@ class FieldsTestCase(unittest.TestCase):
         field = fields.DateTime(dt_format='iso8601')
         self.assertEqual("2011-08-22T20:58:45+01:00", field.output("bar", obj))
 
+    def test_iso8601_date_field_with_sep(self):
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
+        field = fields.DateTime(dt_format='iso8601', iso8601_sep=' ')
+        self.assertEquals("2011-08-22 20:58:45", field.output("bar", obj))
+
     def test_unsupported_datetime_format(self):
         obj = {"bar": datetime(2011, 8, 22, 20, 58, 45)}
         field = fields.DateTime(dt_format='raw')
