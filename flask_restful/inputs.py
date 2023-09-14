@@ -139,6 +139,36 @@ def _parse_interval(value):
             return aniso8601.parse_date(value), None
 
 
+def _parse_datetime(value):
+    try:
+        return aniso8601.parse_datetime(value)
+    except ValueError:
+        return aniso8601.parse_date(value)
+
+    return None
+
+
+def any_iso8601(value, argument='argument'):
+    """
+    Examples::
+        "2013-01-01" -> date(2013, 1, 1)
+        "2013-01-01T12" -> datetime(2013, 1, 1, 12)
+        "2013-01-01T12:00" -> datetime(2013, 1, 1, 12)
+
+    :param str value: The ISO8601 date time as a string
+    :rtype: datetime | date
+    :raises: ValueError, if the string is invalid.
+    """
+
+    try:
+        return _parse_datetime(value)
+    except ValueError:
+        raise ValueError(
+            "Invalid {arg}: {value}. {arg} must be a valid ISO8601 date/time."
+            .format(arg=argument, value=value),
+        )
+
+
 def iso8601interval(value, argument='argument'):
     """Parses ISO 8601-formatted datetime intervals into tuples of datetimes.
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, tzinfo
+from datetime import date, datetime, timedelta, tzinfo
 import unittest
 import pytz
 import re
@@ -421,6 +421,18 @@ def test_bad_isointervals():
             inputs.iso8601interval,
             bad_interval,
         )
+
+
+def test_any_is8601():
+    values = (
+        ("2013-01-01", date(2013, 1, 1)),
+        ("2013-01-01T12", datetime(2013, 1, 1, 12)),
+        ("2013-01-01T12:00", datetime(2013, 1, 1, 12)),
+    )
+
+    for value, expected in values:
+        yield assert_equal, inputs.any_iso8601(value), expected
+
 
 if __name__ == '__main__':
     unittest.main()
