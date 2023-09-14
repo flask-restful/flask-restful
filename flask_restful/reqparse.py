@@ -326,7 +326,7 @@ class RequestParser(object):
         errors = {}
         for arg in self.args:
             value, found = arg.parse(req, self.bundle_errors)
-            if isinstance(value, ValueError):
+            if isinstance(value, ValueError) or isinstance(value, TypeError):
                 errors.update(found)
                 found = None
             if found or arg.store_missing:
