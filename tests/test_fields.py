@@ -9,7 +9,6 @@ from flask_restful import fields
 from datetime import datetime, timedelta, tzinfo
 from flask import Flask, Blueprint
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equals  # you need it for tests in form of continuations
 
 
 class Foo(object):
@@ -23,7 +22,7 @@ class Bar(object):
 
 
 def check_field(expected, field, value):
-    assert_equals(expected, field.output('a', {'a': value}))
+    assert expected == field.output('a', {'a': value})
 
 
 def test_float():

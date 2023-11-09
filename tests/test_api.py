@@ -16,7 +16,6 @@ import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
 from json import dumps, loads, JSONEncoder
-from nose.tools import assert_equal  # you need it for tests in form of continuations
 import six
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -34,7 +33,7 @@ def setup_propagate_exceptions(propagate_exceptions):
 
 
 def check_unpack(expected, value):
-    assert_equal(expected, value)
+    assert expected == value
 
 
 def test_unpack():
