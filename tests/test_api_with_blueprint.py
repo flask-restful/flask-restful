@@ -9,7 +9,6 @@ import flask
 import flask_restful
 import flask_restful.fields
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_true, assert_false  # you need it for tests in form of continuations
 
 
 # Add a dummy Resource to verify that the app is properly set.
@@ -125,11 +124,11 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         app = Flask(__name__)
         app.register_blueprint(blueprint)
         with app.test_request_context('/hi', method='POST'):
-            assert_true(api._should_use_fr_error_handler())
-            assert_true(api._has_fr_route())
+            assert api._should_use_fr_error_handler()
+            assert api._has_fr_route()
         with app.test_request_context('/bye'):
             api._should_use_fr_error_handler = Mock(return_value=False)
-            assert_true(api._has_fr_route())
+            assert api._has_fr_route()
 
     def test_non_blueprint_rest_error_routing(self):
         blueprint = Blueprint('test', __name__)
@@ -142,23 +141,23 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         api2.add_resource(HelloWorld(), '/hi', endpoint="hello")
         api2.add_resource(GoodbyeWorld(404), '/bye', endpoint="bye")
         with app.test_request_context('/hi', method='POST'):
-            assert_false(api._should_use_fr_error_handler())
-            assert_true(api2._should_use_fr_error_handler())
-            assert_false(api._has_fr_route())
-            assert_true(api2._has_fr_route())
+            assert not api._should_use_fr_error_handler()
+            assert api2._should_use_fr_error_handler()
+            assert not api._has_fr_route()
+            assert api2._has_fr_route()
         with app.test_request_context('/blueprint/hi', method='POST'):
-            assert_true(api._should_use_fr_error_handler())
-            assert_false(api2._should_use_fr_error_handler())
-            assert_true(api._has_fr_route())
-            assert_false(api2._has_fr_route())
+            assert api._should_use_fr_error_handler()
+            assert not api2._should_use_fr_error_handler()
+            assert api._has_fr_route()
+            assert not api2._has_fr_route()
         api._should_use_fr_error_handler = Mock(return_value=False)
         api2._should_use_fr_error_handler = Mock(return_value=False)
         with app.test_request_context('/bye'):
-            assert_false(api._has_fr_route())
-            assert_true(api2._has_fr_route())
+            assert not api._has_fr_route()
+            assert api2._has_fr_route()
         with app.test_request_context('/blueprint/bye'):
-            assert_true(api._has_fr_route())
-            assert_false(api2._has_fr_route())
+            assert api._has_fr_route()
+            assert not api2._has_fr_route()
 
     def test_non_blueprint_non_rest_error_routing(self):
         blueprint = Blueprint('test', __name__)
@@ -176,16 +175,16 @@ class APIWithBlueprintTestCase(unittest.TestCase):
         def bye():
             flask.abort(404)
         with app.test_request_context('/hi', method='POST'):
-            assert_false(api._should_use_fr_error_handler())
-            assert_false(api._has_fr_route())
+            assert not api._should_use_fr_error_handler()
+            assert not api._has_fr_route()
         with app.test_request_context('/blueprint/hi', method='POST'):
-            assert_true(api._should_use_fr_error_handler())
-            assert_true(api._has_fr_route())
+            assert api._should_use_fr_error_handler()
+            assert api._has_fr_route()
         api._should_use_fr_error_handler = Mock(return_value=False)
         with app.test_request_context('/bye'):
-            assert_false(api._has_fr_route())
+            assert not api._has_fr_route()
         with app.test_request_context('/blueprint/bye'):
-            assert_true(api._has_fr_route())
+            assert api._has_fr_route()
 
 
 if __name__ == '__main__':

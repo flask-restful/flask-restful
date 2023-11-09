@@ -4,7 +4,6 @@ import pytz
 import re
 
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equal, assert_raises  # you need it for tests in form of continuations
 import six
 
 from flask_restful import inputs
@@ -62,7 +61,7 @@ def check_bad_url_raises(value):
         inputs.url(value)
         assert False, "shouldn't get here"
     except ValueError as e:
-        assert_equal(six.text_type(e), u"{0} is not a valid URL".format(value))
+        assert six.text_type(e) == u"{0} is not a valid URL".format(value)
 
 
 def test_bad_urls():
@@ -104,7 +103,7 @@ def check_url_error_message(value):
         inputs.url(value)
         assert False, u"inputs.url({0}) should raise an exception".format(value)
     except ValueError as e:
-        assert_equal(six.text_type(e),
+        assert (six.text_type(e) ==
                      (u"{0} is not a valid URL. Did you mean: http://{0}".format(value)))
 
 
@@ -168,53 +167,53 @@ def test_regex_flags_bad_input():
 class TypesTestCase(unittest.TestCase):
 
     def test_boolean_false(self):
-        assert_equal(inputs.boolean("False"), False)
+        assert inputs.boolean("False") == False
 
     def test_boolean_is_false_for_0(self):
-        assert_equal(inputs.boolean("0"), False)
+        assert inputs.boolean("0") == False
 
     def test_boolean_true(self):
-        assert_equal(inputs.boolean("true"), True)
+        assert inputs.boolean("true") == True
 
     def test_boolean_is_true_for_1(self):
-        assert_equal(inputs.boolean("1"), True)
+        assert inputs.boolean("1") == True
 
     def test_boolean_upper_case(self):
-        assert_equal(inputs.boolean("FaLSE"), False)
+        assert inputs.boolean("FaLSE") == False
 
     def test_boolean(self):
-        assert_equal(inputs.boolean("FaLSE"), False)
+        assert inputs.boolean("FaLSE") == False
 
     def test_boolean_with_python_bool(self):
         """Input that is already a native python `bool` should be passed through
         without extra processing."""
-        assert_equal(inputs.boolean(True), True)
-        assert_equal(inputs.boolean(False), False)
+        assert inputs.boolean(True) == True
+        assert inputs.boolean(False) == False
 
     def test_bad_boolean(self):
         assert_raises(ValueError, lambda: inputs.boolean("blah"))
 
     def test_date_later_than_1900(self):
-        assert_equal(inputs.date("1900-01-01"), datetime(1900, 1, 1))
+        assert inputs.date("1900-01-01") == datetime(1900, 1, 1)
 
     def test_date_input_error(self):
         assert_raises(ValueError, lambda: inputs.date("2008-13-13"))
 
     def test_date_input(self):
-        assert_equal(inputs.date("2008-08-01"), datetime(2008, 8, 1))
+        assert inputs.date("2008-08-01") == datetime(2008, 8, 1)
 
     def test_natual_negative(self):
         assert_raises(ValueError, lambda: inputs.natural(-1))
 
     def test_natural(self):
-        assert_equal(3, inputs.natural(3))
+        assert 3 == inputs.natural(3)
 
     def test_natual_string(self):
         assert_raises(ValueError, lambda: inputs.natural('foo'))
 
     def test_positive(self):
-        assert_equal(1, inputs.positive(1))
-        assert_equal(10000, inputs.positive(10000))
+        assert 1 == inputs.positive(1)
+        assert 10000 == inputs.positive(10000)
 
     def test_positive_zero(self):
         assert_raises(ValueError, lambda: inputs.positive(0))
@@ -224,11 +223,11 @@ class TypesTestCase(unittest.TestCase):
 
     def test_int_range_good(self):
         int_range = inputs.int_range(1, 5)
-        assert_equal(3, int_range(3))
+        assert 3 == int_range(3)
 
     def test_int_range_inclusive(self):
         int_range = inputs.int_range(1, 5)
-        assert_equal(5, int_range(5))
+        assert 5 == int_range(5)
 
     def test_int_range_low(self):
         int_range = inputs.int_range(0, 5)
@@ -397,11 +396,10 @@ def test_invalid_isointerval_error():
     try:
         inputs.iso8601interval('2013-01-01/blah')
     except ValueError as error:
-        assert_equal(
-            str(error),
+        assert (
+            str(error) ==
             "Invalid argument: 2013-01-01/blah. argument must be a valid ISO8601 "
-            "date/time interval.",
-        )
+            "date/time interval.")
         return
     assert False, 'Should raise a ValueError'
 

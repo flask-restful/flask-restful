@@ -2,7 +2,6 @@
 
 import functools
 
-from nose import SkipTest
 
 
 def expected_failure(test):
