@@ -118,8 +118,7 @@ class Api(object):
         self.app = None
         self.blueprint = None
 
-        if app is not None:
-            self.app = app
+        if app is not None:          
             self.init_app(app)
 
     def init_app(self, app):
@@ -137,6 +136,7 @@ class Api(object):
             api.init_app(app)
 
         """
+        self.app = app  # Set the app here
         # If app is a blueprint, defer the initialization
         try:
             app.record(self._deferred_blueprint_init)
