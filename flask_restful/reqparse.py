@@ -146,7 +146,7 @@ class Argument(object):
 
         try:
             return self.type(value, self.name, op)
-        except TypeError:
+        except (Exception, TypeError):
             try:
                 if self.type is decimal.Decimal:
                     return self.type(str(value))
