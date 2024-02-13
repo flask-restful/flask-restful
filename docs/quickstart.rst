@@ -235,7 +235,7 @@ Save this example in api.py ::
             abort(404, message="Todo {} doesn't exist".format(todo_id))
 
     parser = reqparse.RequestParser()
-    parser.add_argument('task')
+    parser.add_argument('task', location='form')
 
 
     # Todo
