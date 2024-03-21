@@ -146,6 +146,9 @@ class Api(object):
         else:
             self.blueprint = app
 
+    def set_errors(self, errors):
+        self.errors = errors
+
     def _complete_url(self, url_part, registration_prefix):
         """This method is used to defer the construction of the final url in
         the case that the Api is created with a Blueprint.
