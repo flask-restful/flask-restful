@@ -127,8 +127,7 @@ class Api(object):
         application or :class:`flask.Blueprint` object.
 
         :param app: the Flask application or blueprint object
-        :type app: flask.Flask
-        :type app: flask.Blueprint
+        :type app: flask.Flask or flask.Blueprint
 
         Examples::
 
