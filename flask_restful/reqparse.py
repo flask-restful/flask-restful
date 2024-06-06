@@ -113,6 +113,12 @@ class Argument(object):
         """Pulls values off the request in the provided location
         :param request: The flask request object to parse arguments from
         """
+        location = self.location
+        if getattr(request, "content_type", "") != "application/json":
+            if self.location == "json":
+                return MultiDict()
+            elif "json" in self.location:
+                location = tuple(loc for loc in self.location if loc != 'json')
         if isinstance(self.location, six.string_types):
             value = getattr(request, self.location, MultiDict())
             if callable(value):
@@ -121,7 +127,7 @@ class Argument(object):
                 return value
         else:
             values = MultiDict()
-            for l in self.location:
+            for l in location:
                 value = getattr(request, l, None)
                 if callable(value):
                     value = value()
