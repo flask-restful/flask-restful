@@ -2,7 +2,10 @@ from decimal import Decimal
 from functools import partial
 import pytz
 import unittest
-from mock import Mock
+try:
+    from mock import Mock
+except ImportError:
+    from unittest.mock import Mock
 from flask_restful.fields import MarshallingException
 from flask_restful.utils import OrderedDict
 from flask_restful import fields

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import unittest
-from mock import Mock, patch
+try:
+    from mock import Mock, patch
+except ImportError:
+    from unittest.mock import Mock, patch
 from flask import Flask
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
