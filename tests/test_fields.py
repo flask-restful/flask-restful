@@ -1,12 +1,12 @@
 from decimal import Decimal
 from functools import partial
-import pytz
 import unittest
+import zoneinfo
 from mock import Mock
 from flask_restful.fields import MarshallingException
 from flask_restful.utils import OrderedDict
 from flask_restful import fields
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta, timezone, tzinfo
 from flask import Flask, Blueprint
 #noinspection PyUnresolvedReferences
 from nose.tools import assert_equals  # you need it for tests in form of continuations
@@ -53,9 +53,9 @@ def test_rfc822_datetime_formatters():
         (datetime(2011, 1, 1), "Sat, 01 Jan 2011 00:00:00 -0000"),
         (datetime(2011, 1, 1, 23, 59, 59),
          "Sat, 01 Jan 2011 23:59:59 -0000"),
-        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=timezone.utc),
          "Sat, 01 Jan 2011 23:59:59 -0000"),
-        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=zoneinfo.ZoneInfo('Africa/Lagos')),
          "Sat, 01 Jan 2011 22:59:59 -0000")
     ]
     for date_obj, expected in dates:
@@ -69,11 +69,11 @@ def test_iso8601_datetime_formatters():
          "2011-01-01T23:59:59"),
         (datetime(2011, 1, 1, 23, 59, 59, 1000),
          "2011-01-01T23:59:59.001000"),
-        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.utc),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=timezone.utc),
          "2011-01-01T23:59:59+00:00"),
-        (datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=pytz.utc),
+        (datetime(2011, 1, 1, 23, 59, 59, 1000, tzinfo=timezone.utc),
          "2011-01-01T23:59:59.001000+00:00"),
-        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=pytz.timezone('CET')),
+        (datetime(2011, 1, 1, 23, 59, 59, tzinfo=zoneinfo.ZoneInfo('Africa/Lagos')),
          "2011-01-01T23:59:59+01:00")
     ]
     for date_obj, expected in dates:
@@ -364,7 +364,7 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEqual("Mon, 22 Aug 2011 20:58:45 -0000", field.output("bar", obj))
 
     def test_rfc822_date_field_with_offset(self):
-        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=zoneinfo.ZoneInfo('Africa/Lagos'))}
         field = fields.DateTime()
         self.assertEqual("Mon, 22 Aug 2011 19:58:45 -0000", field.output("bar", obj))
 
@@ -374,7 +374,7 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEqual("2011-08-22T20:58:45", field.output("bar", obj))
 
     def test_iso8601_date_field_with_offset(self):
-        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=pytz.timezone('CET'))}
+        obj = {"bar": datetime(2011, 8, 22, 20, 58, 45, tzinfo=zoneinfo.ZoneInfo('Africa/Lagos'))}
         field = fields.DateTime(dt_format='iso8601')
         self.assertEqual("2011-08-22T20:58:45+01:00", field.output("bar", obj))
 
