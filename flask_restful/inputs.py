@@ -1,14 +1,13 @@
 from calendar import timegm
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 from email.utils import parsedate_tz, mktime_tz
 import re
 
 import aniso8601
-import pytz
 
 # Constants for upgrading date-based intervals to full datetimes.
-START_OF_DAY = time(0, 0, 0, tzinfo=pytz.UTC)
-END_OF_DAY = time(23, 59, 59, 999999, tzinfo=pytz.UTC)
+START_OF_DAY = time(0, 0, 0, tzinfo=timezone.utc)
+END_OF_DAY = time(23, 59, 59, 999999, tzinfo=timezone.utc)
 
 # https://code.djangoproject.com/browser/django/trunk/django/core/validators.py
 # basic auth added by frank
@@ -93,11 +92,11 @@ def _normalize_interval(start, end, value):
         end = datetime.combine(end, START_OF_DAY)
 
     if start.tzinfo is None:
-        start = pytz.UTC.localize(start)
-        end = pytz.UTC.localize(end)
+        start = start.replace(tzinfo=timezone.utc)
+        end = end.replace(tzinfo=timezone.utc)
     else:
-        start = start.astimezone(pytz.UTC)
-        end = end.astimezone(pytz.UTC)
+        start = start.astimezone(timezone.utc)
+        end = end.astimezone(timezone.utc)
 
     return start, end
 
@@ -265,7 +264,7 @@ def datetime_from_rfc822(datetime_str):
     :type datetime_str: str
     :return: A datetime
     """
-    return datetime.fromtimestamp(mktime_tz(parsedate_tz(datetime_str)), pytz.utc)
+    return datetime.fromtimestamp(mktime_tz(parsedate_tz(datetime_str)), timezone.utc)
 
 
 def datetime_from_iso8601(datetime_str):
