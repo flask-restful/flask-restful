@@ -9,8 +9,14 @@ import flask
 import flask_restful
 import flask_restful.fields
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_true, assert_false  # you need it for tests in form of continuations
+# from nose.tools import assert_true, assert_false  # you need it for tests in form of continuations
 
+
+def assert_true(expected):
+    assert expected is True
+
+def assert_false(expected):
+    assert expected is False
 
 # Add a dummy Resource to verify that the app is properly set.
 class HelloWorld(flask_restful.Resource):

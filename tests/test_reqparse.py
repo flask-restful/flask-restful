@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 from flask import Flask
 from werkzeug import exceptions
 from werkzeug.wrappers import Request
@@ -630,7 +630,7 @@ class ReqParseTestCase(unittest.TestCase):
         req = Request.from_values("/bubble?foo=1")
 
         parser = RequestParser()
-        parser.add_argument("foo", type=lambda x: x, required=False),
+        parser.add_argument("foo", type=lambda x: x, required=False,  location='args'),
 
         args = parser.parse_args(req)
         self.assertEqual(args['foo'], "1")
@@ -865,17 +865,17 @@ class ReqParseTestCase(unittest.TestCase):
     def test_trim_request_parser(self):
         req = Request.from_values("/bubble?foo= 1 &bar=bees&n=22")
         parser = RequestParser(trim=False)
-        parser.add_argument('foo')
+        parser.add_argument('foo', location='args')
         args = parser.parse_args(req)
         self.assertEqual(args['foo'], ' 1 ')
 
         parser = RequestParser(trim=True)
-        parser.add_argument('foo')
+        parser.add_argument('foo', location='args')
         args = parser.parse_args(req)
         self.assertEqual(args['foo'], '1')
 
         parser = RequestParser(trim=True)
-        parser.add_argument('foo', type=int)
+        parser.add_argument('foo', type=int, location='args')
         args = parser.parse_args(req)
         self.assertEqual(args['foo'], 1)
 

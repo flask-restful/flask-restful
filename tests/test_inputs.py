@@ -2,12 +2,21 @@ from datetime import datetime, timedelta, tzinfo
 import unittest
 import pytz
 import re
-
+import pytest
 #noinspection PyUnresolvedReferences
-from nose.tools import assert_equal, assert_raises  # you need it for tests in form of continuations
+# from nose.tools import assert_equal, assert_raises  # you need it for tests in form of continuations
 import six
 
 from flask_restful import inputs
+
+
+def assert_equal(expected, actual):
+    assert expected == actual
+
+
+def assert_raises(error, actual):
+    with pytest.raises(error):
+        actual()
 
 
 def test_reverse_rfc822_datetime():
@@ -18,7 +27,7 @@ def test_reverse_rfc822_datetime():
     ]
 
     for date_string, expected in dates:
-        yield assert_equal, inputs.datetime_from_rfc822(date_string), expected
+        assert_equal(inputs.datetime_from_rfc822(date_string), expected)
 
 
 def test_reverse_iso8601_datetime():
@@ -30,7 +39,7 @@ def test_reverse_iso8601_datetime():
     ]
 
     for date_string, expected in dates:
-        yield assert_equal, inputs.datetime_from_iso8601(date_string), expected
+        assert_equal(inputs.datetime_from_iso8601(date_string), expected)
 
 
 def test_urls():
@@ -54,7 +63,7 @@ def test_urls():
     ]
 
     for value in urls:
-        yield assert_equal, inputs.url(value), value
+        assert_equal(inputs.url(value), value)
 
 
 def check_bad_url_raises(value):
@@ -84,7 +93,7 @@ def test_bad_urls():
     ]
 
     for value in values:
-        yield check_bad_url_raises, value
+        check_bad_url_raises(value)
 
 
 def test_bad_url_error_message():
@@ -96,7 +105,7 @@ def test_bad_url_error_message():
     ]
 
     for value in values:
-        yield check_url_error_message, value
+        check_url_error_message(value)
 
 
 def check_url_error_message(value):
@@ -119,7 +128,7 @@ def test_regex_bad_input():
     num_only = inputs.regex(r'^[0-9]+$')
 
     for value in cases:
-        yield assert_raises, ValueError, lambda: num_only(value)
+        assert_raises(ValueError, lambda: num_only(value))
 
 
 def test_regex_good_input():
@@ -132,7 +141,7 @@ def test_regex_good_input():
     num_only = inputs.regex(r'^[0-9]+$')
 
     for value in cases:
-        yield assert_equal, num_only(value), value
+        assert_equal(num_only(value), value)
 
 
 def test_regex_bad_pattern():
@@ -150,7 +159,7 @@ def test_regex_flags_good_input():
     case_insensitive = inputs.regex(r'^[A-Z]+$', re.IGNORECASE)
 
     for value in cases:
-        yield assert_equal, case_insensitive(value), value
+        assert_equal(case_insensitive(value), value)
 
 
 def test_regex_flags_bad_input():
@@ -162,7 +171,7 @@ def test_regex_flags_bad_input():
     case_sensitive = inputs.regex(r'^[A-Z]+$')
 
     for value in cases:
-        yield assert_raises, ValueError, lambda: case_sensitive(value)
+        assert_raises(ValueError, lambda: case_sensitive(value))
 
 
 class TypesTestCase(unittest.TestCase):
@@ -390,7 +399,7 @@ def test_isointerval():
     ]
 
     for value, expected in intervals:
-        yield assert_equal, inputs.iso8601interval(value), expected
+        assert_equal(inputs.iso8601interval(value), expected)
 
 
 def test_invalid_isointerval_error():
@@ -415,8 +424,8 @@ def test_bad_isointervals():
     ]
 
     for bad_interval in bad_intervals:
-        yield (
-            assert_raises,
+
+            assert_raises(
             Exception,
             inputs.iso8601interval,
             bad_interval,

@@ -1,4 +1,4 @@
-nose>=1.1.2
+pytest
 mock>=0.8
 nosexcover
 blinker

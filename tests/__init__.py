@@ -2,7 +2,7 @@
 
 import functools
 
-from nose import SkipTest
+import pytest
 
 
 def expected_failure(test):
@@ -11,7 +11,7 @@ def expected_failure(test):
         try:
             test(*args, **kwargs)
         except Exception:
-            raise SkipTest
+            pytest.skip("Test failed as expected")
         else:
             raise AssertionError('Failure expected')
     return inner

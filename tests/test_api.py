@@ -1,7 +1,9 @@
 import unittest
 import json
+
+import pytest
 from flask import Flask, Blueprint, redirect, views, abort as flask_abort
-from flask.signals import got_request_exception, signals_available
+from flask.signals import got_request_exception
 try:
     from mock import Mock
 except:
@@ -16,7 +18,7 @@ import flask_restful
 import flask_restful.fields
 from flask_restful import OrderedDict
 from json import dumps, loads, JSONEncoder
-from nose.tools import assert_equal  # you need it for tests in form of continuations
+# from nose.tools import assert_equal  # you need it for tests in form of continuations
 import six
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -32,17 +34,20 @@ def setup_propagate_exceptions(propagate_exceptions):
     api = flask_restful.Api(app)
     return SimpleNamespace(app=app, api=api)
 
+def assert_equal(expected, actual):
+    assert expected == actual
+
 
 def check_unpack(expected, value):
     assert_equal(expected, value)
 
 
 def test_unpack():
-    yield check_unpack, ("hey", 200, {}), unpack("hey")
-    yield check_unpack, (("hey",), 200, {}), unpack(("hey",))
-    yield check_unpack, ("hey", 201, {}), unpack(("hey", 201))
-    yield check_unpack, ("hey", 201, "foo"), unpack(("hey", 201, "foo"))
-    yield check_unpack, (["hey", 201], 200, {}), unpack(["hey", 201])
+    check_unpack(("hey", 200, {}), unpack("hey"))
+    check_unpack((("hey",), 200, {}), unpack(("hey",)))
+    check_unpack(("hey", 201, {}), unpack(("hey", 201)))
+    check_unpack(("hey", 201, "foo"), unpack(("hey", 201, "foo")))
+    check_unpack((["hey", 201], 200, {}), unpack(["hey", 201]))
 
 
 # Add a dummy Resource to verify that the app is properly set.
@@ -491,10 +496,10 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(api.default_mediatype, resp.headers['Content-Type'])
 
     def test_handle_error_signal(self):
-        if not signals_available:
-            # This test requires the blinker lib to run.
-            print("Can't test signals without signal support")
-            return
+        # if not signals_available:
+        #     # This test requires the blinker lib to run.
+        #     print("Can't test signals without signal support")
+        #     return
         app = Flask(__name__)
         api = flask_restful.Api(app)
 
