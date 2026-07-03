@@ -434,11 +434,18 @@ class Api(object):
             return cls
         return decorator
 
+    def _get_resource_methods(self, resource):
+        methods = set(getattr(resource, 'methods', []) or [])
+        if hasattr(resource, 'query'):
+            methods.add('QUERY')
+        return methods
+
     def _register_view(self, app, resource, *urls, **kwargs):
         endpoint = kwargs.pop('endpoint', None) or resource.__name__.lower()
         self.endpoints.add(endpoint)
         resource_class_args = kwargs.pop('resource_class_args', ())
         resource_class_kwargs = kwargs.pop('resource_class_kwargs', {})
+        resource.methods = self._get_resource_methods(resource)
 
         # NOTE: 'view_functions' is cleaned up from Blueprint class in Flask 1.0
         if endpoint in getattr(app, 'view_functions', {}):

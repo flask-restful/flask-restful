@@ -756,6 +756,21 @@ class APITestCase(unittest.TestCase):
         with app.test_request_context("/foo", method="HEAD"):
             self.assertRaises(AssertionError, lambda: resource.dispatch_request())
 
+    def test_resource_query(self):
+        app = Flask(__name__)
+        api = flask_restful.Api(app)
+
+        class QueryResource(flask_restful.Resource):
+            def query(self):
+                return {'message': 'ok'}
+
+        api.add_resource(QueryResource, '/query')
+
+        with app.test_client() as client:
+            response = client.open('/query', method='QUERY')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data.decode(), '{"message": "ok"}\n')
+
     def test_abort_data(self):
         try:
             flask_restful.abort(404, foo='bar')
