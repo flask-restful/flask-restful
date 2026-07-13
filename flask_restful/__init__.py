@@ -261,7 +261,7 @@ class Api(object):
             return self.owns_endpoint(rule.endpoint)
         except NotFound:
             return self.catch_all_404s
-        except:
+        except Exception:
             # Werkzeug throws other kinds of exceptions, such as Redirect
             pass
 
