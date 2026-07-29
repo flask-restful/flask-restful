@@ -520,7 +520,8 @@ class Api(object):
             raise NotAcceptable()
         if mediatype in self.representations:
             resp = self.representations[mediatype](data, *args, **kwargs)
-            resp.headers['Content-Type'] = mediatype
+            if resp.mimetype in ('text/html', mediatype) or not resp.mimetype:
+                resp.headers['Content-Type'] = mediatype
             return resp
         elif mediatype == 'text/plain':
             resp = original_flask_make_response(str(data), *args, **kwargs)
@@ -613,7 +614,8 @@ class Resource(MethodView):
         if mediatype in representations:
             data, code, headers = unpack(resp)
             resp = representations[mediatype](data, code, headers)
-            resp.headers['Content-Type'] = mediatype
+            if resp.mimetype in ('text/html', mediatype) or not resp.mimetype:
+                resp.headers['Content-Type'] = mediatype
             return resp
 
         return resp
