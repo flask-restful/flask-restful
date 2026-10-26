@@ -1,4 +1,5 @@
 include Makefile CHANGES LICENSE AUTHORS.md
+include tox.ini
 recursive-include tests *
 recursive-include examples *
 recursive-include docs *
